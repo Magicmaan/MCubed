@@ -3,6 +3,7 @@ import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
 import * as THREE from "three";
+import { useThree } from "@react-three/fiber";
 import * as React from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Hud, PerspectiveCamera } from "@react-three/drei";
@@ -11,13 +12,21 @@ import Viewport from "./components/Viewport";
 function ModelView() {
 	const [count, setCount] = useState(0);
 	const [visible, setVisible] = React.useState(true);
+
+	const modelContext = React.createContext("Heyy");
+	const data = React.useContext(modelContext);
+
+	//const threeHook = getThree();
+
 	//WHY THE FUCK WONT THIS FUCKING WORK OH MY FUCKING GOD
 	return (
 		<>
 			<div className="flex flex-row min-w-full h-dvh flex-shrink overflow-hidden bg-red-300 flex-nowrap items-center justify-center">
 				<div
 					id="leftSidebar"
-					className="w-24 h-auto flex bg-slate-800 items-center justify-center"></div>
+					className="w-96 h-auto flex bg-slate-800 items-center justify-center">
+					<div id="Viewport Info"></div>
+				</div>
 
 				<div
 					id="viewportContainer"

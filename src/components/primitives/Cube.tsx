@@ -6,7 +6,15 @@ import * as React from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Hud, PerspectiveCamera } from "@react-three/drei";
 
-function Cube({ color = "orange", ...props }) {
+function Cube({
+	color = "orange",
+	size = [1, 1, 1],
+	...props
+}: {
+	color?: string;
+	size?: [number, number, number];
+	[key: string]: any;
+}) {
 	const ref = React.useRef<THREE.Mesh>(null!);
 	const [hovered, hover] = React.useState(false);
 	const [clicked, click] = React.useState(false);
@@ -21,7 +29,7 @@ function Cube({ color = "orange", ...props }) {
 			onClick={() => click(!clicked)}
 			onPointerOver={(event) => (event.stopPropagation(), hover(true))}
 			onPointerOut={() => hover(false)}>
-			<boxGeometry />
+			<boxGeometry args={[size[0], size[1], size[2]]} />
 			<meshStandardMaterial color={hovered ? "hotpink" : color} />
 		</mesh>
 	);
