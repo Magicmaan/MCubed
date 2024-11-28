@@ -4,7 +4,7 @@ import viteLogo from "/vite.svg";
 import * as THREE from "three";
 import * as React from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Hud, PerspectiveCamera } from "@react-three/drei";
+import { OrbitControls, Hud, PerspectiveCamera, Grid } from "@react-three/drei";
 import Cube from "./primitives/Cube";
 
 function Viewport({ color = "orange", ...props }) {
@@ -14,7 +14,7 @@ function Viewport({ color = "orange", ...props }) {
 	];
 
 	return (
-		<Canvas className="w-screen">
+		<Canvas className="w-full h-full">
 			<PerspectiveCamera makeDefault position={[0, 0, 5]} />
 			<ambientLight intensity={Math.PI / 2} />
 			<spotLight
@@ -26,7 +26,13 @@ function Viewport({ color = "orange", ...props }) {
 			/>
 			<pointLight position={[-10, -10, -10]} decay={0} intensity={Math.PI} />
 			{content}
-
+			<Grid
+				cellSize={1}
+				cellThickness={1}
+				cellColor={"#FF0000"}
+				sectionSize={2}
+				sectionThickness={2}
+			/>
 			<OrbitControls />
 		</Canvas>
 	);

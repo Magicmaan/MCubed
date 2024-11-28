@@ -1,8 +1,16 @@
 #root {
-	max-width: 1280px;
-	margin: 0 auto;
-	padding: 2rem;
+	min-width: 100vw;
+	min-height: 100vh;
+	margin: 0;
+	padding: 0;
 	text-align: center;
+}
+
+.navButton {
+	@apply bg-blue-500 text-white font-bold py-2 px-4;
+}
+.navButton:hover {
+	@apply bg-blue-300 scale-95;
 }
 
 .logo {
