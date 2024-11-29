@@ -7,9 +7,12 @@
 }
 
 .navButton {
-	@apply bg-blue-500 text-white font-bold py-2 px-4;
+	@apply bg-blue-500 text-white font-bold py-1 px-1;
 }
 .navButton:hover {
+	@apply bg-blue-300 scale-95;
+}
+.navButton:focus {
 	@apply bg-blue-300 scale-95;
 }
 
