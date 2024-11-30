@@ -1,29 +1,62 @@
-import React from "react";
+import { Dispatch, createContext, useContext, ReactNode, SetStateAction } from "react";
 import { CubeProps } from "../primitives/Cube";
 
 type ViewportContextType = {
 	camera: {
-		pos?: [Number, Number, Number]; // position of camera
-		rot?: [Number, Number]; // 2 axis of rotation on camera
-		zoom?: Number; // zoom level of camera
-		pivot?: [Number, Number, Number]; // pivot point of camera
+		pos?: [number, number, number]; // position of camera
+		rot?: [number, number]; // 2 axis of rotation on camera
+		zoom?: number; // zoom level of camera
+		pivot?: [number, number, number]; // pivot point of camera
 		projection?: "perspective" | "orthographic" | "Cube"; // camera projection
+		fov?: number; // field of view
 
 		props?: any; // additional camera properties
 	};
 
-	lookAt?: Number; // cube index to look at (if any)
+	lookAt?: number; // cube index to look at (if any)
+	background?: string; // background colour of viewport
 };
 
-const ViewportContext = React.createContext<ViewportContextType>({
+const defaultViewportContext: ViewportContextType = {
 	camera: {
 		pos: [10, 10, 10],
 		rot: [0, 0],
 		zoom: 0.5,
 		pivot: [0, 0, 0],
 		projection: "perspective",
+		fov: 75,
 	},
 	lookAt: undefined,
-});
+	background: "#000000",
+};
 
-export { ViewportContext };
+const viewportContext = createContext<ViewportContextType>({
+	camera: {
+		pos: [100, 10, 10],
+		rot: [0, 0],
+		zoom: 0.5,
+		pivot: [0, 0, 0],
+		projection: "perspective",
+		fov: 75,
+	},
+	lookAt: undefined,
+	background: "#000000",
+});
+const useViewportContext = () => useContext(viewportContext);
+
+function ViewportContextProvider({
+	children,
+	data,
+}: {
+	children: ReactNode;
+	data: ViewportContextType;
+}) {
+	return <viewportContext.Provider value={data}>{children}</viewportContext.Provider>;
+}
+
+export {
+	viewportContext,
+	ViewportContextProvider,
+	useViewportContext,
+	defaultViewportContext,
+};

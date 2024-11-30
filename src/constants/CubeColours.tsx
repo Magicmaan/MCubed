@@ -1,5 +1,5 @@
 import React from "react";
-import "../App.css";
+import "../styles/App.css";
 
 const cubeColours = {
 	red: "#EF4444",

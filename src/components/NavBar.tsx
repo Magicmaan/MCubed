@@ -1,26 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import * as React from "react";
 import { NavButton, NavChildButton, NavChildItem } from "./NavButton";
-import "../App.css";
+import "../styles/App.css";
 
-function NavBar() {
+const NavBar: React.FC = () => {
 	const hasOpened = useState(false);
 	const currentButton = useState("");
-
-	useEffect(() => {
-		const element = document.getElementById("navContainer");
-		if (element) {
-			const navHeight = element.clientHeight;
-		}
-	}, []);
 
 	return (
 		<div
 			id="navContainer"
-			className="flex flex-row w-auto h-auto min-h-8 bg-green-500 flex-nowrap items-center justify-between overflow-y-hidden pb-1">
+			className="flex flex-row w-auto h-auto min-h-8 bg-main border-secondary border-b-4 flex-nowrap items-center justify-between overflow-y-hidden pb-0.5">
 			<div
 				id="buttonContainer"
-				className="group flex flex-row w-1/3 h-auto min-h-1 bg-red-500 flex-nowrap items-center justify-start">
+				className="group flex flex-row w-1/3 h-auto min-h-1  flex-nowrap items-center justify-start  space-x-0.5">
 				<NavButton text="File" hasOpened={hasOpened} currentButton={currentButton}>
 					<NavChildButton text="New">
 						<NavChildButton text="Project">
@@ -52,14 +45,16 @@ function NavBar() {
 			</div>
 			<div
 				id="viewButtonContainer"
-				className="flex flex-row w-1/3 h-auto min-h-1 flex-nowrap bg-green-400 justify-center">
+				className="flex flex-row w-1/3 h-auto min-h-1 flex-nowrap  justify-center">
 				<NavButton text="Model" hasOpened={hasOpened} currentButton={currentButton} />
 				<NavButton text="Texture" hasOpened={hasOpened} currentButton={currentButton} />
 				<NavButton text="Render" hasOpened={hasOpened} currentButton={currentButton} />
 			</div>
-			<div id="spacer" className="w-1/3 min-h-1 bg-blue-500 justify-center"></div>
+			<div
+				id="settingButtonContainer"
+				className="flex flex-row w-1/3 h-auto min-h-1 flex-nowrap  justify-center"></div>
 		</div>
 	);
-}
+};
 
 export default NavBar;

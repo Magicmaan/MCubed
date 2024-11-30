@@ -6,12 +6,14 @@ import * as React from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Hud, PerspectiveCamera } from "@react-three/drei";
 import { modelContext } from "../context/ModelContext";
+
 let cubeCount = 0;
 function setCubeCount(count: number) {
 	cubeCount = count;
 }
 
 type CubeProps = {
+	name?: string;
 	colour?: string;
 	size?: [number, number, number];
 	pos?: [number, number, number];
@@ -24,6 +26,7 @@ type CubeProps = {
 
 // returns an array representing cube data
 function Cube({
+	name = "Cube",
 	colour = "orange",
 	size = [1, 1, 1],
 	pos = [0, 0, 0],
@@ -34,7 +37,11 @@ function Cube({
 }: CubeProps) {
 	setCubeCount(cubeCount + 1);
 	const id = cubeCount;
+	if (name === "Cube") {
+		name = `Cube_${id}`;
+	}
 	return {
+		name,
 		colour,
 		size,
 		pos,

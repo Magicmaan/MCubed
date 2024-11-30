@@ -14,6 +14,7 @@ const NavButton = (props: {
 	const handleOpen = () => {
 		clearTimeout(timeoutId);
 		props.currentButton[1](props.text);
+
 		props.hasOpened[1](true);
 	};
 
@@ -21,6 +22,7 @@ const NavButton = (props: {
 		timeoutId = setTimeout(() => {
 			if (props.currentButton[0] === props.text) {
 				props.hasOpened[1](false);
+				document.getElementById(props.text)?.dataset;
 				props.currentButton[1]("");
 			}
 		}, 1000);
@@ -35,9 +37,9 @@ const NavButton = (props: {
 	}, [props.currentButton]);
 
 	return (
-		<>
+		<React.Fragment>
 			<button
-				className="bg-blue-500 text-white font-bold py-1 px-1"
+				className=" bg-button border-1 border-button-border hover:bg-button-hover rounded-md text-white font-bold py-1 px-1 h-full"
 				id={props.text}
 				onTouchMove={() => console.log("touchmove")}
 				onClick={handleOpen}
@@ -48,22 +50,27 @@ const NavButton = (props: {
 				}}>
 				<h2 className="text-lg text-white font-Inter">{props.text}</h2>
 			</button>
-			{isOpen && (
+			{
 				<div
-					className="absolute h-auto min-w-48 bg-blue-500 text-white font-bold pt-3 pb-5 px-0.5 transition transform duration-500 ease-in-out origin-top-left scale-y-0 scale-x-0 group-hover:scale-y-100 group-hover:scale-x-100 rounded-xl"
+					data-open
+					aria-expanded={isOpen}
+					id="navDropdown"
+					className="absolute h-auto min-w-48 bg-blue-500 text-white font-bold pt-3 pb-5 px-0.5 expand-element-group-500 rounded-xl"
 					style={{
 						left: document.getElementById(props.text)?.offsetLeft,
 						top: document.getElementById("navContainer")?.offsetHeight,
 					}}
 					onMouseLeave={handleClose}
 					onMouseEnter={() => clearTimeout(timeoutId)}>
-					<div className="h-auto w-auto items-start justify-start bg-amber-800 px-1 transition transform ease-in duration-200 origin-top scale-y-0 group-hover:scale-y-100 flex flex-nowrap flex-col">
+					<div
+						aria-expanded={isOpen}
+						className="h-auto w-auto items-start justify-start bg-amber-800 px-1 expand-element-group-200 flex flex-nowrap flex-col">
 						{props.children}
 						<div className="h-0.5 w-full flex bg-red-500 mt-2 rounded-lg -scale-x-90" />
 					</div>
 				</div>
-			)}
-		</>
+			}
+		</React.Fragment>
 	);
 };
 
@@ -77,7 +84,7 @@ const NavChildItem = (props: { text: string }) => (
 
 const NavChildButton = (props: { text: string; children?: React.ReactNode }) => (
 	<div className="group/navChild w-full h-auto items-stretch bg-amber-400 rounded-lg">
-		<div className="w-auto min-w-48 h-auto bg-gray-500 translate-x-full right-0 absolute pb-5 px-1 pt-1 transition transform origin-top-left duration-200 ease-in-out absolute scale-x-0 scale-y-50 group-hover/navChild:scale-x-100 group-hover/navChild:scale-y-100 rounded-lg">
+		<div className="w-auto min-w-48 h-auto bg-gray-500 translate-x-full right-0 absolute pb-5 px-1 pt-1 transition transform origin-top-left duration-200 ease-in-out scale-x-0 scale-y-50 group-hover/navChild:scale-x-100 group-hover/navChild:scale-y-100 rounded-lg">
 			<div className="h-auto w-auto items-start justify-start px-1 transition transform ease-in duration-200 origin-top scale-y-0 group-hover:scale-y-100 flex flex-nowrap flex-col">
 				{props.children}
 				<div className="h-0.5 w-full flex bg-red-500 mt-2 rounded-lg -scale-x-90" />

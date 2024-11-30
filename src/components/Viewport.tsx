@@ -6,8 +6,10 @@ import { BoxGeometry } from "three";
 import * as React from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Hud, PerspectiveCamera, Grid } from "@react-three/drei";
-import { modelContext } from "../context/ModelContext";
+import { modelContext, useModelContext } from "../context/ModelContext";
 import { CubeProps } from "../primitives/Cube";
+import { useViewportContext } from "../context/ViewportContext";
+import { Stats } from "@react-three/drei";
 
 function unpackModel(model: CubeProps[]) {
 	let unpackedModel: React.ReactNode[] = [];
@@ -29,16 +31,25 @@ function unpackModel(model: CubeProps[]) {
 }
 
 function Viewport() {
-	const { model, selected } = React.useContext(modelContext);
+	const { model, selected } = useModelContext();
 	const [modelData, setModelData] = React.useState<React.ReactNode[]>([]);
+	const settings = useViewportContext();
 
+	// Unpack the model data and bind it to the model
 	React.useEffect(() => {
 		setModelData(unpackModel(model));
 	}, [model]);
 
+	console.log(settings);
 	return (
-		<Canvas className="w-full h-full">
-			<PerspectiveCamera makeDefault position={[0, 0, 5]} />
+		<Canvas
+			className="w-full h-full pattern-1"
+			camera={{ fov: settings.camera.fov, position: settings.camera.pos }}>
+			<PerspectiveCamera
+				makeDefault
+				position={settings.camera.pos}
+				fov={settings.camera.fov}
+			/>
 			<ambientLight intensity={Math.PI / 2} />
 			<spotLight
 				position={[10, 10, 10]}
@@ -58,6 +69,7 @@ function Viewport() {
 				sectionThickness={2}
 			/>
 			<OrbitControls />
+			<Stats />
 		</Canvas>
 	);
 }
