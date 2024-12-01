@@ -1,10 +1,18 @@
-import { Dispatch, createContext, useContext, ReactNode, SetStateAction } from "react";
+import {
+	Dispatch,
+	createContext,
+	useContext,
+	ReactNode,
+	SetStateAction,
+	useMemo,
+} from "react";
 import { CubeProps } from "../primitives/Cube";
 
 type ModelContextType = {
 	model: CubeProps[]; // array of model parts
 	set: Dispatch<SetStateAction<CubeProps[]>>; // function to set the model / modify
 	selected?: Number[]; // array of selected model parts
+	setSelected?: Dispatch<SetStateAction<Number[]>>; // function to set the selected model parts
 	count?: Number; // count of model parts
 };
 
@@ -13,7 +21,8 @@ type ModelContextType = {
 const modelContext = createContext({
 	model: [], // array of model parts
 	set: () => {}, // function to set the model / modify
-	selected: [], // array of selected model parts
+	selected: [0, 1, 2, 3, 4], // array of selected model parts
+	setSelected: () => {}, // function to set the selected model parts
 } as ModelContextType);
 
 const useModelContext = () => useContext(modelContext);
@@ -27,7 +36,10 @@ function ModelContextProvider({
 	data: ModelContextType;
 }) {
 	data.count = data.model.length;
-	return <modelContext.Provider value={data}>{children}</modelContext.Provider>;
+	// Memoize the data to prevent unnecessary re-renders when the data changes
+	const memoizedData = useMemo(() => data, [data]);
+
+	return <modelContext.Provider value={memoizedData}>{children}</modelContext.Provider>;
 }
 
 export { modelContext, ModelContextProvider, useModelContext };

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { lazy } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "../styles/App.css";
@@ -7,7 +8,6 @@ import { useThree } from "@react-three/fiber";
 import * as React from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Hud, PerspectiveCamera } from "@react-three/drei";
-import Viewport from "../components/Viewport";
 import Cube from "../primitives/Cube.tsx";
 import { CubeProps } from "../primitives/Cube.tsx";
 import { modelContext, ModelContextProvider } from "../context/ModelContext";
@@ -21,34 +21,43 @@ import ContextMenu from "../components/ContextMenu.tsx";
 import useContextMenu from "../hooks/useContextMenu.tsx";
 import CubePartView from "../components/CubePartView.tsx";
 
+const Viewport = lazy(() => import("../components/Viewport"));
 function ModelView() {
-	const [count, setCount] = useState(0);
-	const [visible, setVisible] = React.useState(true);
 	const [model, setModel] = React.useState<CubeProps[]>([]);
+	const [selected, setSelected] = React.useState<Number[]>([]);
+	// https://github.com/pmndrs/drei/blob/master/src/web/Select.tsx
+	// look at this to improve
 	const { menuVisible, menuItems, menuPosition, showMenu, hideMenu, handleContextMenu } =
 		useContextMenu();
-
 	const [viewportSettings, setViewportSettings] = React.useState(defaultViewportContext);
-
 	React.useEffect(() => {
-		setModel([
-			Cube({ colour: randomCubeColour(), pos: [1.2, 0, 0], scale: 0.5 }),
-			Cube({ colour: randomCubeColour(), pos: [-1.2, 0, 0], scale: 1 }),
-			Cube({ colour: randomCubeColour(), pos: [0, 1.2, 0], scale: 2 }),
-		]);
+		setModel([Cube({ colour: randomCubeColour(), pos: [5, 0, 0], scale: 1 })]);
+		setSelected([1]);
 	}, []);
 
 	return (
 		<React.Fragment>
-			<div className="flex flex-row min-w-full h-lvh overflow-y-hidden flex-shrink overflow-hidden bg-blue-400 flex-nowrap items-start justify-center">
+			<div className="flex flex-row min-w-full h-full overflow-y-hidden flex-shrink overflow-hidden bg-blue-400 flex-nowrap items-start justify-center">
 				<div
 					id="leftSidebar"
-					className="w-96 h-auto flex flex-col bg-blue-400 items-center justify-center m-1 rounded  space-y-36">
-					<ModelContextProvider data={{ model: model, set: setModel }}>
+					className="w-96 h-full flex flex-col bg-blue-400 items-stretch justify-center m-1 rounded  space-y-2">
+					<ModelContextProvider
+						data={{
+							model: model,
+							set: setModel,
+							selected: selected,
+							setSelected: setSelected,
+						}}>
 						<ModelPartView />
 					</ModelContextProvider>
 
-					<ModelContextProvider data={{ model: model, set: setModel }}>
+					<ModelContextProvider
+						data={{
+							model: model,
+							set: setModel,
+							selected: selected,
+							setSelected: setSelected,
+						}}>
 						<CubePartView />
 					</ModelContextProvider>
 
@@ -57,10 +66,18 @@ function ModelView() {
 
 				<div
 					id="viewportContainer"
-					className="w-full h-full flex flex-shrink bg-slate-900 items-center justify-center overflow-hidden">
+					className="w-full h-full flex flex-shrink bg-slate-900 items-center justify-center">
 					<ViewportContextProvider data={viewportSettings}>
-						<ModelContextProvider data={{ model: model, set: setModel }}>
-							<Viewport />
+						<ModelContextProvider
+							data={{
+								model: model,
+								set: setModel,
+								selected: selected,
+								setSelected: setSelected,
+							}}>
+							<React.Suspense fallback={<div>Loading...</div>}>
+								<Viewport />
+							</React.Suspense>
 						</ModelContextProvider>
 					</ViewportContextProvider>
 				</div>
@@ -75,7 +92,7 @@ function ModelView() {
 			<div
 				id="bottomBar"
 				onContextMenu={handleContextMenu}
-				className="w-full h-12 bg-slate-800 items-center justify-center absolute bottom-0  overflow-hidden">
+				className="w-full h-12 bg-slate-800 items-center justify-center overflow-hidden">
 				<h2 className="text-white">Bottom Bar</h2>
 			</div>
 		</React.Fragment>

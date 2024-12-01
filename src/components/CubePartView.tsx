@@ -1,7 +1,12 @@
-import React, { useEffect, useContext, useRef } from "react";
+import React, { useEffect, useContext, useRef, useState } from "react";
 import SideBarWidget from "./templates/SideBarWidget";
 import Icon from "../assets/icons/solid/.all";
 import { modifiers, modifierIncrement } from "../constants/KeyModifiers";
+import { modelContext } from "../context/ModelContext";
+import { useScroll } from "@react-three/drei";
+import type { CubeProps } from "../primitives/Cube";
+import Cube from "../primitives/Cube";
+import { it } from "node:test";
 
 const InputSingle = ({ name, value }: { name: string; value: string }) => {
 	const [valueRef, setValueRef] = React.useState(value);
@@ -112,6 +117,8 @@ const InputTriple = ({
 	if (name === "Rotate") {
 		append = "°";
 	}
+	const data = React.useContext(modelContext);
+
 	return (
 		<React.Fragment>
 			<div
@@ -121,7 +128,19 @@ const InputTriple = ({
 					{children}
 					<p className="text-xs text-gray-400 m-0 p-0">{name}</p>
 				</div>
-				<div className=" flex flex-row space-x-2 w-auto h-auto bg-secondary p-1 px-3 rounded-xl">
+				<div
+					className=" flex flex-row space-x-2 w-auto h-auto bg-secondary p-1 px-3 rounded-xl"
+					onClick={() => {
+						console.log("press lol");
+						data.set((prev) => {
+							return prev.map((item) => {
+								if (item.id === data.selected[0]) {
+									item.pos = [0, 0, 0];
+								}
+								return item;
+							});
+						});
+					}}>
 					<InputSingle name="X" value={value[0].toString() + append} />
 
 					<InputSingle name="Y" value={value[1].toString() + append} />
@@ -134,46 +153,75 @@ const InputTriple = ({
 };
 
 const CubePartView: React.FC = () => {
+	const data = React.useContext(modelContext);
+	const [currentCube, setCurrentCube] = useState<CubeProps | null>(
+		Cube({ pos: [0, 0, 0] })
+	);
+
+	const handleSelection = React.useCallback(() => {
+		console.log("selected in cube ", data.selected);
+		var index = data.selected[0];
+		var item = null;
+		data.model.forEach((i) => {
+			if (i.id == index) {
+				i.pos = [10, 10, 10];
+				item = i;
+			}
+		});
+		if (item) {
+			setCurrentCube(item);
+		}
+
+		console.log("item in cubeview ", item);
+	}, [data]);
+
+	useEffect(() => {
+		handleSelection();
+	}, [handleSelection]);
+
 	return (
 		<React.Fragment>
-			<SideBarWidget name="Cube">
-				<InputTriple name="Position" value={[100000, 11, 12]}>
-					<Icon
-						name="arrow-up-right"
-						height={16}
-						width={16}
-						colour="red"
-						alt_text="Position"
-					/>
-				</InputTriple>
-
-				<InputTriple name="Size" value={[100000, 11, 12]}>
-					<Icon
-						name="arrows-up-down-left-right"
-						height={16}
-						width={16}
-						colour="red"
-						alt_text="Size"
-					/>
-				</InputTriple>
-				<InputTriple name="Pivot" value={[100000, 11, 12]}>
-					<Icon
-						name="arrows-to-dot"
-						height={16}
-						width={16}
-						colour="red"
-						alt_text="Pivot"
-					/>
-				</InputTriple>
-				<InputTriple name="Rotate" value={[100000, 11, 12]}>
-					<Icon
-						name="arrows-rotate"
-						height={16}
-						width={16}
-						colour="red"
-						alt_text="rotate"
-					/>
-				</InputTriple>
+			<SideBarWidget name={currentCube?.name ?? ""} style={{ maxHeight: "14rem" }}>
+				{currentCube ? (
+					<React.Fragment>
+						<InputTriple name="Position" value={currentCube.pos}>
+							<Icon
+								name="arrow-up-right"
+								height={16}
+								width={16}
+								colour="red"
+								alt_text="Position"
+							/>
+						</InputTriple>
+						<InputTriple name="Size" value={currentCube.size}>
+							<Icon
+								name="arrows-up-down-left-right"
+								height={16}
+								width={16}
+								colour="red"
+								alt_text="Size"
+							/>
+						</InputTriple>
+						<InputTriple name="Pivot" value={currentCube.piv}>
+							<Icon
+								name="arrows-to-dot"
+								height={16}
+								width={16}
+								colour="red"
+								alt_text="Pivot"
+							/>
+						</InputTriple>
+						<InputTriple name="Rotate" value={currentCube.rot}>
+							<Icon
+								name="arrows-rotate"
+								height={16}
+								width={16}
+								colour="red"
+								alt_text="rotate"
+							/>
+						</InputTriple>{" "}
+					</React.Fragment>
+				) : null}
 			</SideBarWidget>
 		</React.Fragment>
 	);

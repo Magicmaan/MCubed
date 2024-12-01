@@ -1,4 +1,11 @@
-import { Dispatch, createContext, useContext, ReactNode, SetStateAction } from "react";
+import {
+	Dispatch,
+	createContext,
+	useContext,
+	ReactNode,
+	SetStateAction,
+	useMemo,
+} from "react";
 import { CubeProps } from "../primitives/Cube";
 
 type ViewportContextType = {
@@ -51,7 +58,10 @@ function ViewportContextProvider({
 	children: ReactNode;
 	data: ViewportContextType;
 }) {
-	return <viewportContext.Provider value={data}>{children}</viewportContext.Provider>;
+	const memoizedData = useMemo(() => data, [data]);
+	return (
+		<viewportContext.Provider value={memoizedData}>{children}</viewportContext.Provider>
+	);
 }
 
 export {

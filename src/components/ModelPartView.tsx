@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Cube from "../primitives/Cube"; // Make sure to import the Cube component
 import { modelContext, ModelContextProvider } from "../context/ModelContext";
 import "../styles/App.css";
@@ -11,9 +11,14 @@ import Icon from "../assets/icons/solid/.all";
 import { Menu, Item, Separator, Submenu, useContextMenu } from "react-contexify";
 import "react-contexify/dist/ReactContexify.css";
 import SideBarWidget from "./templates/SideBarWidget";
+import { setServers } from "dns";
 
-const ModelItem = (item: any, key: number) => {
-	item = item.item;
+const ModelItem: React.FC<{
+	item: any;
+	itemKey: number;
+	selected: number[];
+	setSelected: React.Dispatch<React.SetStateAction<Number[]>>;
+}> = ({ item, itemKey, selected, setSelected }) => {
 	const MENU_ID = "context_model_part_" + item.id;
 	const { show } = useContextMenu({
 		id: MENU_ID,
@@ -27,26 +32,24 @@ const ModelItem = (item: any, key: number) => {
 			},
 		});
 	}
-	const handleItemClick = ({
-		id,
-		event,
-		props,
-	}: {
-		id: string;
-		event: Event;
-		props: any;
-	}) => {
+	const handleItemClick = ({ event }: { id: string; event: Event }) => {
+		console.log("item clicked", id);
+		setSelected([parseInt(id)]);
 		console.log(id, event, props);
 	};
 
 	return (
 		<button
 			id={"model_part_" + item.id}
-			key={key}
+			aria-pressed={selected.includes(item.id)}
+			key={itemKey}
 			data-test={"hi"}
 			onContextMenu={handleContextMenu}
-			onClick={() => console.log(item.id)}
-			className="bg-secondary rounded-md w-auto h-10 flex flex-nowrap flex-row justify-stretch items-center focus:bg-button-hover">
+			onClick={() => {
+				console.log(item.id);
+				setSelected([parseInt(item.id)]);
+			}}
+			className="bg-secondary rounded-md w-full h-10 flex flex-nowrap flex-row justify-stretch items-center focus:bg-button-hover aria-pressed:bg-button-hover">
 			<Icon name="cube" height={16} width={16} colour="red" />
 
 			<EditText name="cubeName" defaultValue={item.name} />
@@ -79,7 +82,8 @@ const ModelItem = (item: any, key: number) => {
 
 const ModelPartView: React.FC = () => {
 	const data = React.useContext(modelContext);
-	const { model, set } = data;
+	const { model, set, selected, setSelected } = data;
+	console.log("from model view ", data);
 
 	return (
 		<React.Fragment>
@@ -94,13 +98,27 @@ const ModelPartView: React.FC = () => {
 								scale: 1,
 							}),
 						]);
+
+						setSelected([model.length - 1]);
+
+						console.log("from modelpartview ", data);
 					}}>
 					Update Model
 				</button>
 
-				{data.model
-					? data.model.map((item) => <ModelItem item={item} key={item.id} />)
-					: null}
+				<div className="flex flex-col flex-nowrap space-y-1 items-center justify-center w-full h-auto overflow-y-scroll">
+					{model
+						? model.map((item) => (
+								<ModelItem
+									item={item}
+									key={item.id}
+									itemKey={item.id}
+									selected={selected}
+									setSelected={setSelected}
+								/>
+						  ))
+						: null}
+				</div>
 			</SideBarWidget>
 		</React.Fragment>
 	);
