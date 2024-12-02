@@ -6,7 +6,7 @@ import {
 	SetStateAction,
 	useMemo,
 } from "react";
-import { CubeProps } from "../primitives/Cube";
+import { CubeProps } from "../../primitives/Cube";
 import * as THREE from "three";
 
 type ModelContextType = {

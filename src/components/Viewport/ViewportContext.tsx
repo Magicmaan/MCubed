@@ -6,7 +6,7 @@ import {
 	SetStateAction,
 	useMemo,
 } from "react";
-import { CubeProps } from "../primitives/Cube";
+import { CubeProps } from "../../primitives/Cube";
 import useToggle from "../hooks/useToggle";
 
 type ViewportContextType = {

@@ -14,17 +14,17 @@ import {
 	Outlines,
 	Html,
 } from "@react-three/drei";
-import { modelContext, useModelContext } from "../context/ModelContext";
-import { CubeProps } from "../primitives/Cube";
-import { useViewportContext } from "../context/ViewportContext";
+import { modelContext, useModelContext } from "./ModelContext";
+import { CubeProps } from "../../primitives/Cube";
+import { useViewportContext } from "./ViewportContext";
 import { Stats } from "@react-three/drei";
 import { useLoader } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { color } from "three/webgpu";
-import Icon from "../assets/icons/solid/.all";
+import Icon from "../../assets/icons/solid/.all";
 import icon from "../assets/arrow.png";
-import { PivotControls } from "./custom_PivotControl";
-import textureTemplate, { createTexture } from "../util/textureUtil";
+import { PivotControls } from "../custom_PivotControl";
+import { createTexture } from "../../util/textureUtil";
 
 // TODO
 // create custom camera component
@@ -39,13 +39,13 @@ import textureTemplate, { createTexture } from "../util/textureUtil";
 function CubeMesh(
 	cube: CubeProps,
 	isSelected: boolean,
+	setSelected: React.Dispatch<React.SetStateAction<[number]>>,
 	useGimbal: [boolean, React.Dispatch<React.SetStateAction<boolean>>]
 ) {
 	if (isSelected) {
 		console.log("Selected from VPort");
 	}
 
-	const { setSelected } = useModelContext();
 	return (
 		<PivotControls
 			onDragStart={(e) => {
@@ -93,12 +93,13 @@ function CubeMesh(
 function unpackModel(
 	model: CubeProps[],
 	selected: Number[],
+	setSelected: React.Dispatch<React.SetStateAction<[number]>>,
 	useGimbal: [boolean, React.Dispatch<React.SetStateAction<boolean>>]
 ) {
 	let unpackedModel: React.ReactNode[] = [];
 	model.forEach((item: CubeProps) => {
 		var isSelected = selected.includes(item.id);
-		unpackedModel.push(CubeMesh(item, isSelected, useGimbal));
+		unpackedModel.push(CubeMesh(item, isSelected, setSelected, useGimbal));
 	});
 	return unpackedModel;
 }
@@ -128,8 +129,15 @@ const Viewport: React.FC = () => {
 	// Unpack the model data and bind it to the model
 	React.useMemo(() => {
 		console.log("Camera lock: ", cameraLock);
-		setModelData(unpackModel(model, selected, useGimbal));
+		setModelData(unpackModel(model, selected, setSelected, useGimbal));
 	}, [model, selected, threeScene]);
+
+	const handleSelection = React.useCallback(() => {
+		//TODO
+	}, [selected]);
+	useEffect(() => {
+		handleSelection();
+	}, [handleSelection]);
 
 	return (
 		<Canvas

@@ -5,7 +5,7 @@ import * as THREE from "three";
 import * as React from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Hud, PerspectiveCamera } from "@react-three/drei";
-import { modelContext } from "../context/ModelContext";
+import { modelContext } from "../components/Viewport/ModelContext";
 
 let cubeCount = 0;
 function setCubeCount(count: number) {

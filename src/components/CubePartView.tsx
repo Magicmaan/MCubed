@@ -2,7 +2,7 @@ import React, { useEffect, useContext, useRef, useState } from "react";
 import SideBarWidget from "./templates/SideBarWidget";
 import Icon from "../assets/icons/solid/.all";
 import { modifiers, modifierIncrement } from "../constants/KeyModifiers";
-import { modelContext } from "../context/ModelContext";
+import { modelContext } from "./Viewport/ModelContext";
 import { useScroll } from "@react-three/drei";
 import type { CubeProps } from "../primitives/Cube";
 import Cube from "../primitives/Cube";

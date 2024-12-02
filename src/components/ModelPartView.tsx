@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Cube from "../primitives/Cube"; // Make sure to import the Cube component
-import { modelContext, ModelContextProvider } from "../context/ModelContext";
+import { modelContext, ModelContextProvider } from "./Viewport/ModelContext";
 import "../styles/App.css";
 import { randomCubeColour } from "../constants/CubeColours";
 import { EditText, EditTextarea } from "react-edit-text";

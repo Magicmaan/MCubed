@@ -10,18 +10,21 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Hud, PerspectiveCamera } from "@react-three/drei";
 import Cube from "../primitives/Cube.tsx";
 import { CubeProps } from "../primitives/Cube.tsx";
-import { modelContext, ModelContextProvider } from "../context/ModelContext";
+import {
+	modelContext,
+	ModelContextProvider,
+} from "../components/Viewport/ModelContext.tsx";
 import {
 	defaultViewportContext,
 	ViewportContextProvider,
-} from "../context/ViewportContext";
+} from "../components/Viewport/ViewportContext";
 import ModelPartView from "../components/ModelPartView";
 import { randomCubeColour } from "../constants/CubeColours.tsx";
 import ContextMenu from "../components/ContextMenu.tsx";
 import useContextMenu from "../hooks/useContextMenu.tsx";
 import CubePartView from "../components/CubePartView.tsx";
 
-const Viewport = lazy(() => import("../components/Viewport"));
+const Viewport = lazy(() => import("../components/Viewport/Viewport.tsx"));
 function ModelView() {
 	const [model, setModel] = React.useState<CubeProps[]>([]);
 	const [selected, setSelected] = React.useState<Number[]>([]);
