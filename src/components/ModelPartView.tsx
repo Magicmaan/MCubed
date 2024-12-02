@@ -12,6 +12,7 @@ import { Menu, Item, Separator, Submenu, useContextMenu } from "react-contexify"
 import "react-contexify/dist/ReactContexify.css";
 import SideBarWidget from "./templates/SideBarWidget";
 import { setServers } from "dns";
+import * as THREE from "three";
 
 const ModelItem: React.FC<{
 	item: any;
@@ -82,7 +83,7 @@ const ModelItem: React.FC<{
 
 const ModelPartView: React.FC = () => {
 	const data = React.useContext(modelContext);
-	const { model, set, selected, setSelected } = data;
+	const { model, set, selected, setSelected, sceneRef } = data;
 	console.log("from model view ", data);
 
 	return (
@@ -102,6 +103,14 @@ const ModelPartView: React.FC = () => {
 						setSelected([model.length - 1]);
 
 						console.log("from modelpartview ", data);
+
+						if (sceneRef !== null) {
+							sceneRef.traverse((child) => {
+								if (child instanceof THREE.Mesh && child["type"] === "mesh_cube") {
+									console.log("Mesh in Scene (will be 1 behind): ", child);
+								}
+							});
+						}
 					}}>
 					Update Model
 				</button>

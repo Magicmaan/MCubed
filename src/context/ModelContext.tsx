@@ -7,6 +7,7 @@ import {
 	useMemo,
 } from "react";
 import { CubeProps } from "../primitives/Cube";
+import * as THREE from "three";
 
 type ModelContextType = {
 	model: CubeProps[]; // array of model parts
@@ -14,6 +15,8 @@ type ModelContextType = {
 	selected?: Number[]; // array of selected model parts
 	setSelected?: Dispatch<SetStateAction<Number[]>>; // function to set the selected model parts
 	count?: Number; // count of model parts
+	sceneRef?: THREE.Scene | null; // reference to the React Three scene
+	setSceneRef?: Dispatch<SetStateAction<React.MutableRefObject<THREE.Scene | null>>>;
 };
 
 // Holds data for the model
@@ -23,6 +26,8 @@ const modelContext = createContext({
 	set: () => {}, // function to set the model / modify
 	selected: [0, 1, 2, 3, 4], // array of selected model parts
 	setSelected: () => {}, // function to set the selected model parts
+	sceneRef: null, // initialize the scene reference to undefined
+	setSceneRef: () => {}, // function to set the scene reference
 } as ModelContextType);
 
 const useModelContext = () => useContext(modelContext);

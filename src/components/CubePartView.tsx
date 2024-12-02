@@ -7,31 +7,45 @@ import { useScroll } from "@react-three/drei";
 import type { CubeProps } from "../primitives/Cube";
 import Cube from "../primitives/Cube";
 import { it } from "node:test";
+import { Canvas, useThree } from "@react-three/fiber";
+import GetSceneRef, { getTheRef } from "../util/GetSceneRef";
+import * as THREE from "three";
+import { match } from "assert";
 
-const InputSingle = ({ name, value }: { name: string; value: string }) => {
+//TODO Seperate the input components into their own files
+const InputSingle = ({
+	name,
+	inputType,
+	value,
+	setValue,
+}: {
+	name: string;
+	inputType: "Position" | "Size" | "Pivot" | "Rotate";
+	value: string;
+	setValue: (arg0: number) => void;
+}) => {
 	const [valueRef, setValueRef] = React.useState(value);
 	//store two most recent key presses
 	const key_press = useRef<string[]>(["", ""]);
-
 	const handleDecrement = () => {
 		// Get the most recent key presses
 		// if valid modifier / modifier combination, get the modifier
 		// decrement value
 		const modifierKey = key_press.current.join("") as keyof typeof modifierIncrement;
 		const modifier = modifierIncrement[modifierKey] || 1;
-		const newValue = Math.round((parseFloat(valueRef) - modifier) * 100) / 100;
-		setValueRef(newValue.toString());
+		const newValue = ((parseFloat(value) - modifier) * 100) / 100;
+		setValue(newValue);
 	};
 	const handleIncrement = () => {
 		// Get the most recent key presses
 		// if valid modifier / modifier combination, get the modifier
 		// increment value
+		console.log("Tryna increment");
 		const modifierKey = key_press.current.join("") as keyof typeof modifierIncrement;
 		const modifier = modifierIncrement[modifierKey] || 1;
-		const newValue = Math.round((parseFloat(valueRef) + modifier) * 100) / 100;
-		setValueRef(newValue.toString());
+		const newValue = ((parseFloat(value) + modifier) * 100) / 100;
+		setValue(newValue);
 	};
-
 	// Add event listeners for key press to capture
 	useEffect(() => {
 		document.addEventListener("keydown", (e: KeyboardEvent) => {
@@ -72,9 +86,9 @@ const InputSingle = ({ name, value }: { name: string; value: string }) => {
 				</div>
 				<div
 					className=" w-fit min-w-4 max-w-12 flex-shrink flex justify-center items-center text-center z-0"
-					title={valueRef}>
+					title={value}>
 					<p className="m-0 p-0 inset-0 text-center justify-center font-Inter hover:">
-						{valueRef}
+						{value}
 					</p>
 				</div>
 
@@ -98,26 +112,34 @@ const InputSingle = ({ name, value }: { name: string; value: string }) => {
 	);
 };
 
-const InputDouble = (props: { name: string; value: number[] }) => {
-	return (
-		<div className="flex flex-row space-x-2 bg-tertiary p-1 px-3 rounded-xl">X val</div>
-	);
-};
-
 const InputTriple = ({
 	name,
-	value,
+	cube,
 	children,
+	set,
 }: {
-	name: string;
-	value: number[];
+	name: "Position" | "Size" | "Pivot" | "Rotate";
+	cube: [CubeProps, React.Dispatch<React.SetStateAction<CubeProps>>];
 	children?: React.ReactNode;
+	set: (cube: CubeProps) => void;
 }) => {
-	var append = "";
-	if (name === "Rotate") {
-		append = "°";
+	let append = "";
+	let data = [0, 0, 0];
+	switch (name) {
+		case "Position":
+			data = cube[0].pos;
+			break;
+		case "Size":
+			data = cube[0].size;
+			break;
+		case "Pivot":
+			data = cube[0].piv;
+			break;
+		case "Rotate":
+			data = cube[0].rot;
+			append = "°";
+			break;
 	}
-	const data = React.useContext(modelContext);
 
 	return (
 		<React.Fragment>
@@ -128,24 +150,31 @@ const InputTriple = ({
 					{children}
 					<p className="text-xs text-gray-400 m-0 p-0">{name}</p>
 				</div>
-				<div
-					className=" flex flex-row space-x-2 w-auto h-auto bg-secondary p-1 px-3 rounded-xl"
-					onClick={() => {
-						console.log("press lol");
-						data.set((prev) => {
-							return prev.map((item) => {
-								if (item.id === data.selected[0]) {
-									item.pos = [0, 0, 0];
-								}
-								return item;
-							});
-						});
-					}}>
-					<InputSingle name="X" value={value[0].toString() + append} />
-
-					<InputSingle name="Y" value={value[1].toString() + append} />
-
-					<InputSingle name="Z" value={value[2].toString() + append} />
+				<div className=" flex flex-row space-x-2 w-auto h-auto bg-secondary p-1 px-3 rounded-xl">
+					<InputSingle
+						name="X"
+						inputType={name}
+						value={data[0].toString() + append}
+						setValue={(val: number) =>
+							set({ ...cube[0], pos: [val, cube[0].pos[1], cube[0].pos[2]] })
+						}
+					/>
+					<InputSingle
+						name="Y"
+						inputType={name}
+						value={data[1].toString() + append}
+						setValue={(val: number) =>
+							set({ ...cube[0], pos: [cube[0].pos[0], val, cube[0].pos[2]] })
+						}
+					/>
+					<InputSingle
+						name="Z"
+						inputType={name}
+						value={data[2].toString() + append}
+						setValue={(val: number) =>
+							set({ ...cube[0], pos: [cube[0].pos[0], cube[0].pos[1], val] })
+						}
+					/>
 				</div>
 			</div>
 		</React.Fragment>
@@ -154,37 +183,44 @@ const InputTriple = ({
 
 const CubePartView: React.FC = () => {
 	const data = React.useContext(modelContext);
-	const [currentCube, setCurrentCube] = useState<CubeProps | null>(
-		Cube({ pos: [0, 0, 0] })
-	);
-
+	const currentCube = useState<CubeProps | null>(Cube({ pos: [0, 0, 0] }));
+	// Update the current cube when the selected cube changes
 	const handleSelection = React.useCallback(() => {
-		console.log("selected in cube ", data.selected);
-		var index = data.selected[0];
-		var item = null;
+		var item;
+		var index = data.selected ? data.selected[0] : null;
 		data.model.forEach((i) => {
 			if (i.id == index) {
-				i.pos = [10, 10, 10];
 				item = i;
 			}
 		});
 		if (item) {
-			setCurrentCube(item);
+			currentCube[1](item);
 		}
-
-		console.log("item in cubeview ", item);
 	}, [data]);
-
 	useEffect(() => {
 		handleSelection();
 	}, [handleSelection]);
 
 	return (
 		<React.Fragment>
-			<SideBarWidget name={currentCube?.name ?? ""} style={{ maxHeight: "14rem" }}>
-				{currentCube ? (
+			<SideBarWidget name={currentCube[0]?.name ?? ""} style={{ maxHeight: "14rem" }}>
+				{currentCube[0] ? (
 					<React.Fragment>
-						<InputTriple name="Position" value={currentCube.pos}>
+						{/* position */}
+						<InputTriple
+							name="Position"
+							cube={currentCube}
+							set={(cube: CubeProps) => {
+								data.set(
+									data.model.map((item) => {
+										if (item.id == cube.id) {
+											return cube;
+										} else {
+											return item;
+										}
+									})
+								);
+							}}>
 							<Icon
 								name="arrow-up-right"
 								height={16}
@@ -193,7 +229,21 @@ const CubePartView: React.FC = () => {
 								alt_text="Position"
 							/>
 						</InputTriple>
-						<InputTriple name="Size" value={currentCube.size}>
+						{/* size */}
+						<InputTriple
+							name="Size"
+							cube={currentCube}
+							set={(cube: CubeProps) => {
+								data.set(
+									data.model.map((item) => {
+										if (item.id == cube.id) {
+											return cube;
+										} else {
+											return item;
+										}
+									})
+								);
+							}}>
 							<Icon
 								name="arrows-up-down-left-right"
 								height={16}
@@ -202,7 +252,21 @@ const CubePartView: React.FC = () => {
 								alt_text="Size"
 							/>
 						</InputTriple>
-						<InputTriple name="Pivot" value={currentCube.piv}>
+						{/* pivot */}
+						<InputTriple
+							name="Pivot"
+							cube={currentCube}
+							set={(cube: CubeProps) => {
+								data.set(
+									data.model.map((item) => {
+										if (item.id == cube.id) {
+											return cube;
+										} else {
+											return item;
+										}
+									})
+								);
+							}}>
 							<Icon
 								name="arrows-to-dot"
 								height={16}
@@ -211,7 +275,21 @@ const CubePartView: React.FC = () => {
 								alt_text="Pivot"
 							/>
 						</InputTriple>
-						<InputTriple name="Rotate" value={currentCube.rot}>
+						{/* rotate */}
+						<InputTriple
+							name="Rotate"
+							cube={currentCube}
+							set={(cube: CubeProps) => {
+								data.set(
+									data.model.map((item) => {
+										if (item.id == cube.id) {
+											return cube;
+										} else {
+											return item;
+										}
+									})
+								);
+							}}>
 							<Icon
 								name="arrows-rotate"
 								height={16}

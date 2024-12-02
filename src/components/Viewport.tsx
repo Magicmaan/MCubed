@@ -4,7 +4,7 @@ import viteLogo from "/vite.svg";
 import * as THREE from "three";
 import { BoxGeometry } from "three";
 import * as React from "react";
-import { Canvas, useFrame, useThree, getRootState } from "@react-three/fiber";
+import { Canvas, useFrame, useThree, getRootState, RootState } from "@react-three/fiber";
 import { useEffect } from "react";
 import {
 	OrbitControls,
@@ -13,7 +13,6 @@ import {
 	Grid,
 	Outlines,
 	Html,
-	PivotControls,
 } from "@react-three/drei";
 import { modelContext, useModelContext } from "../context/ModelContext";
 import { CubeProps } from "../primitives/Cube";
@@ -24,14 +23,45 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { color } from "three/webgpu";
 import Icon from "../assets/icons/solid/.all";
 import icon from "../assets/arrow.png";
+import { PivotControls } from "./custom_PivotControl";
+import textureTemplate, { createTexture } from "../util/textureUtil";
 
-// https://drei.docs.pmnd.rs/gizmos/pivot-controls
-// https://github.com/pmndrs/drei/blob/master/src/web/pivotControls/index.tsx
+// TODO
+// create custom camera component
+// - implement camera controls
+// - add context to control camera
 
-function CubeMesh(cube: CubeProps, isSelected: boolean) {
+// Simplify PivotControls
+// - remove unnecessary code
+// - make it more readable
+// - implement interaction with outside components
+
+function CubeMesh(
+	cube: CubeProps,
+	isSelected: boolean,
+	useGimbal: [boolean, React.Dispatch<React.SetStateAction<boolean>>]
+) {
+	if (isSelected) {
+		console.log("Selected from VPort");
+	}
+
+	const { setSelected } = useModelContext();
 	return (
-		<PivotControls anchor={[0, 0, 0]} scale={2} rotation={[0, 0, 0]} renderOrder={1}>
+		<PivotControls
+			onDragStart={(e) => {
+				useGimbal[1](false);
+			}}
+			onDragEnd={() => {
+				useGimbal[1](true);
+			}}
+			anchor={[0, 0, 0]}
+			scale={2}
+			rotation={[0, 0, 0]}
+			depthTest={false}
+			enabled={isSelected}>
 			<mesh
+				type="mesh_cube"
+				name={cube.name}
 				key={cube.id}
 				position={cube.pos}
 				rotation={cube.rot}
@@ -40,70 +70,66 @@ function CubeMesh(cube: CubeProps, isSelected: boolean) {
 				onClick={(e) => {
 					const { id, name, color } = e.object.userData;
 					console.log(`Clicked ${name} with id ${id} and color ${color}`);
+
+					setSelected([parseInt(id)]);
 				}}>
-				<boxGeometry args={cube.size} />
-				<meshStandardMaterial color={isSelected ? "white" : cube.colour} />
+				<boxGeometry args={cube.size} attach="geometry" />
+
+				<meshStandardMaterial
+					attach="material"
+					map={createTexture(16, 16, cube.colour)}
+					color={cube.colour}
+					transparent={true}
+					alphaTest={0.5} // Use alpha of the texture
+					side={THREE.DoubleSide} // Render texture on both sides
+					shadowSide={THREE.DoubleSide}
+					toneMapped={false} // Render texture at full brightness
+				/>
 			</mesh>
 		</PivotControls>
 	);
 }
 
-// Let's make the marker into a component so that we can abstract some shared logic
-function Marker({ children, ...props }) {
-	const ref = React.useRef();
-	// This holds the local occluded state
-	const [isOccluded, setOccluded] = useState();
-	const [isInRange, setInRange] = useState();
-	const isVisible = isInRange && !isOccluded;
-	// Test distance
-	const vec = new THREE.Vector3();
-	useFrame((state) => {
-		const range =
-			state.camera.position.distanceTo(ref.current.getWorldPosition(vec)) <= 10;
-		if (range !== isInRange) setInRange(range);
-		console.log(ref.current.getWorldPosition(vec));
-	});
-	return (
-		<group ref={ref}>
-			<Html
-				position={[0, 0, 0]}
-				// 3D-transform contents
-				transform
-				// Hide contents "behind" other meshes
-				occlude
-				// Tells us when contents are occluded (or not)
-				onOcclude={setOccluded}
-				// We just interpolate the visible state into css opacity and transforms
-				style={{
-					transition: "all 0.2s",
-					opacity: 1,
-				}}
-				{...props}>
-				{children}
-			</Html>
-		</group>
-	);
-}
-
-function unpackModel(model: CubeProps[], selected: Number[]) {
+function unpackModel(
+	model: CubeProps[],
+	selected: Number[],
+	useGimbal: [boolean, React.Dispatch<React.SetStateAction<boolean>>]
+) {
 	let unpackedModel: React.ReactNode[] = [];
 	model.forEach((item: CubeProps) => {
 		var isSelected = selected.includes(item.id);
-		unpackedModel.push(CubeMesh(item, isSelected));
+		unpackedModel.push(CubeMesh(item, isSelected, useGimbal));
 	});
 	return unpackedModel;
 }
 
+const GetSceneRef: React.FC<{
+	setRef: React.Dispatch<
+		React.SetStateAction<React.MutableRefObject<THREE.Scene | null>>
+	>;
+	setThree: React.Dispatch<React.SetStateAction<RootState | undefined>>;
+}> = ({ setRef, setThree }) => {
+	const { scene, camera } = useThree();
+	const threeScene = useThree();
+	setRef(scene);
+	setThree(threeScene);
+
+	return null;
+};
+
 const Viewport: React.FC = () => {
-	const { model, selected, setSelected } = useModelContext();
+	const { model, selected, setSelected, sceneRef, setSceneRef } = useModelContext();
+	const { camera, lookAt, background, cameraLock } = useViewportContext();
 	const [modelData, setModelData] = React.useState<React.ReactNode[]>([]);
 	const settings = useViewportContext();
-	const cameraRef = React.createRef();
+	const [threeScene, setThreeScene] = useState<RootState>();
+	const useGimbal = useState(true);
 
 	// Unpack the model data and bind it to the model
 	React.useMemo(() => {
-		setModelData(unpackModel(model, selected));
-	}, [model, selected]);
+		console.log("Camera lock: ", cameraLock);
+		setModelData(unpackModel(model, selected, useGimbal));
+	}, [model, selected, threeScene]);
 
 	return (
 		<Canvas
@@ -114,21 +140,14 @@ const Viewport: React.FC = () => {
 				position: settings.camera.pos,
 				manual: true,
 			}}>
+			<GetSceneRef setRef={setSceneRef} setThree={setThreeScene} />
 			<PerspectiveCamera
 				makeDefault
 				position={settings.camera.pos}
 				fov={settings.camera.fov}
 			/>
-			<ambientLight intensity={Math.PI / 2} />
-			<spotLight
-				position={[10, 10, 10]}
-				angle={0.15}
-				penumbra={1}
-				decay={0}
-				intensity={Math.PI}
-			/>
-			<pointLight position={[-10, -10, -10]} decay={0} intensity={Math.PI} />
 
+			<ambientLight intensity={0.5} />
 			{modelData}
 			<Grid
 				cellSize={1}
@@ -136,8 +155,13 @@ const Viewport: React.FC = () => {
 				cellColor={"#FF0000"}
 				sectionSize={2}
 				sectionThickness={2}
+				side={THREE.DoubleSide}
 			/>
-			<OrbitControls />
+			<OrbitControls
+				enableZoom={useGimbal[0]}
+				enablePan={useGimbal[0]}
+				enableRotate={useGimbal[0]}
+			/>
 			<Stats />
 		</Canvas>
 	);

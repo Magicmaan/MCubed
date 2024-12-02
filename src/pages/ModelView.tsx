@@ -25,13 +25,14 @@ const Viewport = lazy(() => import("../components/Viewport"));
 function ModelView() {
 	const [model, setModel] = React.useState<CubeProps[]>([]);
 	const [selected, setSelected] = React.useState<Number[]>([]);
+	const [sceneRef, setSceneRef] = React.useState<THREE.Scene | null>(null);
 	// https://github.com/pmndrs/drei/blob/master/src/web/Select.tsx
 	// look at this to improve
 	const { menuVisible, menuItems, menuPosition, showMenu, hideMenu, handleContextMenu } =
 		useContextMenu();
 	const [viewportSettings, setViewportSettings] = React.useState(defaultViewportContext);
 	React.useEffect(() => {
-		setModel([Cube({ colour: randomCubeColour(), pos: [5, 0, 0], scale: 1 })]);
+		setModel([Cube({ colour: randomCubeColour(), pos: [9, 0, 0], scale: 1 })]);
 		setSelected([1]);
 	}, []);
 
@@ -47,6 +48,7 @@ function ModelView() {
 							set: setModel,
 							selected: selected,
 							setSelected: setSelected,
+							sceneRef: sceneRef,
 						}}>
 						<ModelPartView />
 					</ModelContextProvider>
@@ -57,6 +59,7 @@ function ModelView() {
 							set: setModel,
 							selected: selected,
 							setSelected: setSelected,
+							sceneRef: sceneRef,
 						}}>
 						<CubePartView />
 					</ModelContextProvider>
@@ -74,6 +77,8 @@ function ModelView() {
 								set: setModel,
 								selected: selected,
 								setSelected: setSelected,
+								sceneRef: sceneRef,
+								setSceneRef: setSceneRef,
 							}}>
 							<React.Suspense fallback={<div>Loading...</div>}>
 								<Viewport />

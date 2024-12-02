@@ -7,6 +7,7 @@ import {
 	useMemo,
 } from "react";
 import { CubeProps } from "../primitives/Cube";
+import useToggle from "../hooks/useToggle";
 
 type ViewportContextType = {
 	camera: {
@@ -16,12 +17,13 @@ type ViewportContextType = {
 		pivot?: [number, number, number]; // pivot point of camera
 		projection?: "perspective" | "orthographic" | "Cube"; // camera projection
 		fov?: number; // field of view
-
 		props?: any; // additional camera properties
 	};
 
 	lookAt?: number; // cube index to look at (if any)
 	background?: string; // background colour of viewport
+
+	cameraLock?: [boolean, any]; // lock camera to object
 };
 
 const defaultViewportContext: ViewportContextType = {
@@ -35,20 +37,10 @@ const defaultViewportContext: ViewportContextType = {
 	},
 	lookAt: undefined,
 	background: "#000000",
+	cameraLock: [false, () => {}],
 };
 
-const viewportContext = createContext<ViewportContextType>({
-	camera: {
-		pos: [100, 10, 10],
-		rot: [0, 0],
-		zoom: 0.5,
-		pivot: [0, 0, 0],
-		projection: "perspective",
-		fov: 75,
-	},
-	lookAt: undefined,
-	background: "#000000",
-});
+const viewportContext = createContext<ViewportContextType>(defaultViewportContext);
 const useViewportContext = () => useContext(viewportContext);
 
 function ViewportContextProvider({
