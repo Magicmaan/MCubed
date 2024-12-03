@@ -25,6 +25,7 @@ import Icon from "../../assets/icons/solid/.all";
 import icon from "../assets/arrow.png";
 import { PivotControls } from "../custom_PivotControl";
 import { createTexture } from "../../util/textureUtil";
+import GridPlane from "./GridPlane";
 
 // TODO
 // create custom camera component
@@ -157,14 +158,7 @@ const Viewport: React.FC = () => {
 
 			<ambientLight intensity={0.5} />
 			{modelData}
-			<Grid
-				cellSize={1}
-				cellThickness={1}
-				cellColor={"#FF0000"}
-				sectionSize={2}
-				sectionThickness={2}
-				side={THREE.DoubleSide}
-			/>
+			<GridPlane size={32} />
 			<OrbitControls
 				enableZoom={useGimbal[0]}
 				enablePan={useGimbal[0]}
