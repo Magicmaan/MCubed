@@ -40,7 +40,7 @@ const InputSingle = ({
 		// Get the most recent key presses
 		// if valid modifier / modifier combination, get the modifier
 		// increment value
-		console.log("Tryna increment");
+		//console.log("Tryna increment");
 		const modifierKey = key_press.current.join("") as keyof typeof modifierIncrement;
 		const modifier = modifierIncrement[modifierKey] || 1;
 		const newValue = ((parseFloat(value) + modifier) * 100) / 100;
@@ -142,9 +142,9 @@ const InputTriple = ({
 	}
 
 	return (
-		<React.Fragment>
+		<div className="select-none">
 			<div
-				className="group flex flex-col flex-nowrap space-y-0.5 items-center justify-center"
+				className="group flex flex-col flex-nowrap space-y-0.5 items-center justify-center select-none"
 				title={name}>
 				<div className="flex flex-row flex-nowrap space-x-1 items-center justify-center">
 					{children}
@@ -177,7 +177,7 @@ const InputTriple = ({
 					/>
 				</div>
 			</div>
-		</React.Fragment>
+		</div>
 	);
 };
 
@@ -188,6 +188,7 @@ const CubePartView: React.FC = () => {
 	const handleSelection = React.useCallback(() => {
 		var item;
 		var index = data.selected ? data.selected[0] : null;
+
 		data.model.forEach((i) => {
 			if (i.id == index) {
 				item = i;
@@ -200,6 +201,12 @@ const CubePartView: React.FC = () => {
 	useEffect(() => {
 		handleSelection();
 	}, [handleSelection]);
+
+	useEffect(() => {
+		data.sceneRef?.children.forEach((i) => {
+			//console.log(i);
+		});
+	});
 
 	return (
 		<React.Fragment>

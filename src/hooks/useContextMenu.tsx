@@ -9,7 +9,7 @@ const useContextMenu = () => {
 	]);
 	const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
 
-	const showMenu = useCallback((event, items) => {
+	const showMenu = useCallback((event: React.MouseEvent, items) => {
 		event.preventDefault();
 		setMenuPosition({ x: event.pageX, y: event.pageY });
 		setMenuItems(items);

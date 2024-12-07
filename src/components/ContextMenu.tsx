@@ -17,10 +17,6 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ items, position, visible, id 
 	React.useEffect(() => {
 		parentElement = document.getElementById(id)?.parentElement || null;
 		setParent(parentElement);
-		console.log("contextid", id);
-		console.log("Parent id:", parent?.id);
-		console.log(parentElement?.dataset);
-		console.log("Parent Data:", parentElement);
 	}, [id]);
 
 	return (

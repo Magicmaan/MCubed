@@ -7,6 +7,8 @@ import caret_down from "./caret-down.jsx";
 import caret_left from "./caret-left";
 import caret_right from "./caret-right";
 import caret_up from "./caret-up";
+import question from "./question.js";
+import xmark from "./xmark";
 // prettier-ignore
 const icons: { [key: string]: string } = {
 	"cube": cube,
@@ -18,6 +20,8 @@ const icons: { [key: string]: string } = {
 	"caret-left": caret_left,
 	"caret-right": caret_right,
 	"caret-up": caret_up,
+	"question": question,
+	"xmark": xmark,
 };
 
 type IconProps = {

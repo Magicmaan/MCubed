@@ -12,7 +12,9 @@ import { Menu, Item, Separator, Submenu, useContextMenu } from "react-contexify"
 import "react-contexify/dist/ReactContexify.css";
 import SideBarWidget from "./templates/SideBarWidget";
 import { setServers } from "dns";
+import meshSlice, { meshAddRandom, testReducer } from "../reducers/someReducer";
 import * as THREE from "three";
+import { useAppDispatch, useAppSelector } from "../hooks/useRedux";
 
 const ModelItem: React.FC<{
 	item: any;
@@ -34,9 +36,8 @@ const ModelItem: React.FC<{
 		});
 	}
 	const handleItemClick = ({ event }: { id: string; event: Event }) => {
-		console.log("item clicked", id);
+		//console.log("item clicked", id);
 		setSelected([parseInt(id)]);
-		console.log(id, event, props);
 	};
 
 	return (
@@ -84,49 +85,66 @@ const ModelItem: React.FC<{
 const ModelPartView: React.FC = () => {
 	const data = React.useContext(modelContext);
 	const { model, set, selected, setSelected, sceneRef } = data;
-	console.log("from model view ", data);
-
+	// const [partList, setPartList] = useState<Set<THREE.Mesh>>(new Set());
+	const partList = useAppSelector((state) => state.mesh.meshArray);
+	const addCube = useAppDispatch();
+	const MESH_WHITELIST = ["Mesh_Cube"];
+	const dispatch = useAppDispatch();
+	// useEffect(() => {
+	// 	if (sceneRef?.children) {
+	// 		sceneRef.children.forEach((child) => {
+	// 			if (child instanceof THREE.Mesh && MESH_WHITELIST.includes(child.type)) {
+	// 				//console.log("Mesh in Scene: ", child);
+	// 				setPartList((prevList) => new Set(prevList).add(child));
+	// 			}
+	// 		});
+	// 	}
+	// }, [sceneRef?.children]);
+	partList.forEach((item) => {
+		console.log("item", item);
+	});
 	return (
 		<React.Fragment>
 			<SideBarWidget name="Model Part View">
 				<button
 					onClick={() => {
-						set([
-							...model,
-							Cube({
-								colour: randomCubeColour(),
-								pos: [Math.random() * 5, Math.random() * 5, Math.random() * 5],
-								scale: 1,
-							}),
-						]);
+						// set([
+						// 	...model,
+						// 	Cube({
+						// 		colour: randomCubeColour(),
+						// 		pos: [Math.random() * 10, Math.random() * 10, Math.random() * 10],
+						// 		scale: 1,
+						// 		size: [16, 16, 16],
+						// 	}),
+						// ]);
 
-						setSelected([model.length - 1]);
+						// setSelected([model.length - 1]);
 
-						console.log("from modelpartview ", data);
+						// console.log("from modelpartview ", data);
 
-						if (sceneRef !== null) {
-							sceneRef.traverse((child) => {
-								if (child instanceof THREE.Mesh && child["type"] === "mesh_cube") {
-									console.log("Mesh in Scene (will be 1 behind): ", child);
-								}
-							});
-						}
+						// if (sceneRef !== null) {
+						// 	sceneRef.traverse((child) => {
+						// 		if (child instanceof THREE.Mesh && child["type"] === "mesh_cube") {
+						// 			console.log("Mesh in Scene (will be 1 behind): ", child);
+						// 		}
+						// 	});
+						// }
+						dispatch(meshAddRandom());
+						console.log("added cube");
 					}}>
 					Update Model
 				</button>
 
 				<div className="flex flex-col flex-nowrap space-y-1 items-center justify-center w-full h-auto overflow-y-scroll">
-					{model
-						? model.map((item) => (
-								<ModelItem
-									item={item}
-									key={item.id}
-									itemKey={item.id}
-									selected={selected}
-									setSelected={setSelected}
-								/>
-						  ))
-						: null}
+					{partList.map((item, index) => (
+						<ModelItem
+							item={item.props}
+							key={index}
+							itemKey={index}
+							selected={selected}
+							setSelected={setSelected}
+						/>
+					))}
 				</div>
 			</SideBarWidget>
 		</React.Fragment>

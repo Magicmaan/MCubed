@@ -8,9 +8,10 @@ import {
 } from "react";
 import { CubeProps } from "../../primitives/Cube";
 import useToggle from "../hooks/useToggle";
+import { Camera } from "@react-three/fiber";
 
 type ViewportContextType = {
-	camera: {
+	cameraSettings: {
 		pos?: [number, number, number]; // position of camera
 		rot?: [number, number]; // 2 axis of rotation on camera
 		zoom?: number; // zoom level of camera
@@ -20,14 +21,14 @@ type ViewportContextType = {
 		props?: any; // additional camera properties
 	};
 
+	camera?: Camera; // camera object
 	lookAt?: number; // cube index to look at (if any)
 	background?: string; // background colour of viewport
-
 	cameraLock?: [boolean, any]; // lock camera to object
 };
 
 const defaultViewportContext: ViewportContextType = {
-	camera: {
+	cameraSettings: {
 		pos: [10, 10, 10],
 		rot: [0, 0],
 		zoom: 0.5,
