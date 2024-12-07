@@ -4,7 +4,14 @@ import viteLogo from "/vite.svg";
 import * as THREE from "three";
 import { BoxGeometry } from "three";
 import * as React from "react";
-import { Canvas, useFrame, useThree, getRootState, RootState } from "@react-three/fiber";
+import {
+	Canvas,
+	useFrame,
+	useThree,
+	getRootState,
+	RootState,
+	Vector3,
+} from "@react-three/fiber";
 import { useEffect } from "react";
 import {
 	OrbitControls,
@@ -30,6 +37,7 @@ import GridPlane from "./GridPlane";
 import SideBarWidget from "../templates/SideBarWidget";
 import { useAppSelector, useMeshSelector } from "../../hooks/useRedux";
 import PivotControlsComponent from "./PivotControlsComponent";
+import { current } from "@reduxjs/toolkit";
 
 // TODO
 // create custom camera component
@@ -99,10 +107,19 @@ const GetSceneRef: React.FC<{
 	invalidate: React.MutableRefObject<(arg0: number) => void>;
 }> = ({ setRef, setThree, invalidate }) => {
 	const { scene, camera } = useThree();
+
 	const threeScene = useThree();
-	setRef(scene);
-	setThree(threeScene);
-	invalidate.current = threeScene.invalidate;
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setRef(scene);
+			setThree(threeScene);
+			invalidate.current = threeScene.invalidate;
+		}, 1000); // Refresh every 1 second
+
+		return () => clearInterval(interval); // Cleanup on unmount
+	}, [scene, threeScene, setRef, setThree, invalidate]);
+
 	return null;
 };
 
@@ -132,9 +149,7 @@ const Viewport: React.FC = () => {
 	const boxRef2 = React.useRef<THREE.Mesh>(null);
 	const pivotMatrix = new THREE.Matrix4();
 
-	var preMatrix = new THREE.Matrix4();
-	var preMatrixInv = new THREE.Matrix4();
-
+	const cameraRef = React.useRef<THREE.PerspectiveCamera>(null);
 	return (
 		<div style={{ position: "relative", width: "100%", height: "100%" }}>
 			<Canvas
@@ -155,7 +170,8 @@ const Viewport: React.FC = () => {
 					}
 					fov={camera.fov}
 					position={camera.pos}
-					manual={true}></PerspectiveCamera>
+					manual={true}
+					ref={cameraRef}></PerspectiveCamera>
 				<ambientLight intensity={0.5} />
 
 				{/* the model */}
@@ -166,6 +182,12 @@ const Viewport: React.FC = () => {
 					enableZoom={useGimbal[0]}
 					enablePan={useGimbal[0]}
 					enableRotate={useGimbal[0]}
+					onChange={() => {}}
+					onEnd={() => {
+						console.log("end");
+
+						invalidate.current(1);
+					}}
 				/>
 				<Stats />
 
@@ -179,13 +201,32 @@ const Viewport: React.FC = () => {
 					/>
 				</group>
 			</Canvas>
-			<InfoPanel />
+			<InfoPanel scene={threeScene} camera={cameraRef} />
 		</div>
 	);
 };
 
-const InfoPanel: React.FC = () => {
+const InfoPanel: React.FC<{
+	scene: RootState | undefined;
+	camera: React.RefObject<THREE.PerspectiveCamera> | null;
+}> = ({ scene, camera: camRef }) => {
 	const [showInfo, setShowInfo] = useState(false);
+	const [camera, setCamera] = useState<THREE.PerspectiveCamera | null>(camRef?.current);
+	const [refresh, setRefresh] = useState(0);
+
+	// used to refresh the data on demand
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setRefresh((prev) => prev + 1);
+		}, 200); // Toggle refresh every 1 second
+		return () => clearInterval(interval); // Cleanup on unmount
+	}, []);
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setCamera(camRef?.current);
+		}, 1); // Refresh every 1 second
+		return () => clearInterval(interval); // Cleanup on unmount
+	}, [camRef?.current]);
 
 	return (
 		<div className="absolute top-2 left-2 right-2 bottom-2 bg-primary items-start justify-start p-20 pointer-events-none">
@@ -216,18 +257,24 @@ const InfoPanel: React.FC = () => {
 					<div className="flex flex-col space-y-2">
 						<h2>Camera</h2>
 						<div className="flex flex-row space-x-2 pl-2">
-							<p className=" text-sm">Position</p> X Y Z
+							<p className=" text-sm">Position</p> {camera?.position.x.toFixed(2)}{" "}
+							{camera?.position.y.toFixed(2)} {camera?.position.z.toFixed(2)}
 						</div>
 						<div className="flex flex-row space-x-2 pl-2">
-							<p className=" text-sm">Angle</p> X Y Z
+							<p className=" text-sm">Rotation</p> {camera?.rotation.x.toFixed(2)}{" "}
+							{camera?.rotation.y.toFixed(2)} {camera?.rotation.z.toFixed(2)}
 						</div>
 						<div className="flex flex-row space-x-2 pl-2">
-							<p className=" text-sm">Pivot</p> X Y Z
+							<p className=" text-sm">FOV</p> {camera?.fov.toFixed(2)}
 						</div>
+					</div>
 
-						<div className="flex flex-row space-x-2 pl-2">
-							<p className=" text-sm">Fov</p>
-						</div>
+					<div className="flex flex-row space-x-2 pl-2">
+						<button
+							className="bg-blue-500 text-white px-2 py-1 rounded"
+							onClick={() => setRefresh((prev) => prev + 1)}>
+							Toggle Refresh
+						</button>
 					</div>
 				</SideBarWidget>
 			</div>
