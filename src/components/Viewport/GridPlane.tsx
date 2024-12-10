@@ -16,15 +16,7 @@ const GridPlane: React.FC<GridPlaneProps> = ({
 	density = 1,
 	color = "red",
 }) => {
-	return (
-		<Grid
-			args={[size, size]}
-			lineWidth={lineWidth}
-			cellSize={size / density}
-			side={DoubleSide}
-			color={color}
-		/>
-	);
+	return <Grid args={[size, size]} cellSize={size / density} side={DoubleSide} />;
 };
 
 export default GridPlane;

@@ -6,6 +6,7 @@ import { Html } from "@react-three/drei";
 import { context } from "./context";
 import { Canvas, useLoader } from "@react-three/fiber";
 import icon from "../../assets/arrow.png";
+import { darkenColor, lightenColor } from "../../util/textureUtil";
 
 const vec1 = /* @__PURE__ */ new THREE.Vector3();
 const vec2 = /* @__PURE__ */ new THREE.Vector3();
@@ -74,6 +75,7 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 	} | null>(null);
 	const offset0 = React.useRef<number>(0);
 	const [isHovered, setIsHovered] = React.useState(false);
+	const [dragOffset, setDragOffset] = React.useState(0);
 	const meshRef = React.useRef<THREE.Mesh>(null!);
 
 	const onPointerDown = React.useCallback(
@@ -98,7 +100,6 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 		},
 		[annotations, direction, camControls, onDragStart, translation, axis]
 	);
-
 	const onPointerMove = React.useCallback(
 		(e: ThreeEvent<PointerEvent>) => {
 			e.stopPropagation();
@@ -109,6 +110,7 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 				const [min, max] = translationLimits?.[axis] || [undefined, undefined];
 
 				let offset = calculateOffset(clickPoint, dir, e.ray.origin, e.ray.direction);
+				offset = Math.round(offset * 10) / 10;
 				if (min !== undefined) {
 					offset = Math.max(offset, min - offset0.current);
 				}
@@ -120,6 +122,8 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 					divRef.current.innerText = `${translation.current[axis].toFixed(2)}`;
 				}
 				offsetMatrix.makeTranslation(dir.x * offset, dir.y * offset, dir.z * offset);
+				setDragOffset(offset);
+				console.log("Drag offset: ", dragOffset);
 				onDrag(offsetMatrix);
 			}
 		},
@@ -137,6 +141,7 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 			camControls && (camControls.enabled = true);
 			// @ts-ignore - releasePointerCapture & PointerEvent#pointerId is not in the type definition
 			e.target.releasePointerCapture(e.pointerId);
+			setDragOffset(0);
 		},
 		[annotations, camControls, onDragEnd]
 	);
@@ -173,6 +178,9 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 				return "Z";
 		}
 	};
+
+	console.log("Axis color:", axisColors[axis].toString());
+	console.log("Darkened color:", darkenColor(axisColors[axis].toString(), 2));
 
 	return (
 		<>
@@ -260,12 +268,19 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 						<Html position={[0, scale * 1.07, 0]} center>
 							<div
 								id="test-123"
-								className="w-auto h-auto  p-1 px-2 rounded-md justify-center items-center pointer-events-none select-none"
+								aria-busy={(dragOffset != 0).toString()}
+								className={
+									"aria-busy:w-16 w-8 transition-all ease-in-out duration-75 h-8 p-1 px-2 rounded-md justify-center items-center text-center pointer-events-none select-none"
+								}
 								style={{
 									backgroundColor: axisColors[axis].toString(),
+									borderColor: "#" + darkenColor(axisColors[axis].toString(), 0.2),
+									borderWidth: "5px",
 									display: isHovered && visible ? "block" : "none",
 								}}>
-								{axisValToString(axis)}
+								<div className="text-white text-sm w-auto h-full flex justify-center items-center">
+									{dragOffset != 0 ? dragOffset.toFixed(2) : axisValToString(axis)}
+								</div>
 							</div>
 						</Html>
 					</group>

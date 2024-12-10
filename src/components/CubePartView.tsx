@@ -86,9 +86,9 @@ const InputSingle = ({
 				</div>
 				<div
 					className=" w-fit min-w-4 max-w-12 flex-shrink flex justify-center items-center text-center z-0"
-					title={value}>
+					title={parseFloat(value).toFixed(2)}>
 					<p className="m-0 p-0 inset-0 text-center justify-center font-Inter hover:">
-						{value}
+						{parseFloat(value).toFixed(2)}
 					</p>
 				</div>
 

@@ -2,6 +2,9 @@ import * as React from "react";
 import * as THREE from "three";
 import { Box } from "@react-three/drei";
 import { PivotControls } from "../custom_PivotControl";
+import { useAppDispatch, useViewportSelector } from "../../hooks/useRedux";
+import { testReducer } from "../../reducers/meshReducer";
+import { disableGimbal, enableGimbal } from "../../reducers/viewportReducer";
 
 // PLEASE DO NOT TOUCH
 // I HAVE NO IDEA HOW THIS WORKS BUT IT DOES
@@ -10,19 +13,22 @@ import { PivotControls } from "../custom_PivotControl";
 // useGimbal is a boolean that can be toggled to tell if the gimbal is being used
 
 const PivotControlsComponent: React.FC<{
-	useGimbal?: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
+	useGimbal?: { zoom: boolean; pan: boolean; rotate: boolean };
 	selected: React.RefObject<THREE.Mesh>;
-}> = ({ useGimbal, selected }) => {
+}> = ({ useGimbal: inlol, selected }) => {
 	const pivotMatrix = new THREE.Matrix4();
 	var preMatrix = new THREE.Matrix4();
 	var preMatrixInv = new THREE.Matrix4();
 
+	const useGimbal = useViewportSelector().useGimbal;
+	const dispatch = useAppDispatch();
+
 	return (
 		<PivotControls
-			onDragStart={(e) => {
-				useGimbal && useGimbal[1](false);
-
+			onDragStart={() => {
+				dispatch(disableGimbal());
 				if (!selected.current) return;
+
 				preMatrix.copy(selected.current?.matrix);
 				preMatrixInv.copy(preMatrix).invert();
 			}}
@@ -42,9 +48,15 @@ const PivotControlsComponent: React.FC<{
 				selected.current?.updateMatrixWorld(true);
 			}}
 			onDragEnd={() => {
-				useGimbal && useGimbal[1](true);
+				dispatch(enableGimbal());
 				if (!selected.current) return;
-				selected.current.updateMatrixWorld(true);
+				if (selected.current instanceof THREE.Object3D) {
+					selected.current.updateMatrixWorld(true);
+				}
+				const prePosition = new THREE.Vector3();
+				preMatrix.decompose(prePosition, new THREE.Quaternion(), new THREE.Vector3());
+				const distanceMoved = prePosition.distanceTo(selected.current.position);
+				console.log(`Distance moved: ${distanceMoved}`);
 			}}
 			autoTransform={true}
 			anchor={[0, 0, 0]}

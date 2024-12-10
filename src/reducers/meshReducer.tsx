@@ -10,16 +10,17 @@ type MeshState = {
 };
 const meshInitialState: MeshState = {
 	meshArray: [
-		CubeMesh({
-			name: "Cube_0",
-			colour: "orange",
-			size: [16, 16, 16],
-			pos: [0, 0, 0],
-			rot: [0, 0, 0],
-			piv: [0, 0, 0],
-			scale: 1,
-			id: 0,
-		}),
+		// causes react redux error due to none serializable object
+		// CubeMesh({
+		// 	name: "Cube_0",
+		// 	colour: "orange",
+		// 	size: [16, 16, 16],
+		// 	pos: [0, 0, 0],
+		// 	rot: [0, 0, 0],
+		// 	piv: [0, 0, 0],
+		// 	scale: 1,
+		// 	id: 0,
+		// }),
 	],
 	cubeCount: 1,
 };
@@ -51,14 +52,6 @@ const meshSlice = createSlice({
 		// 	// Action = CubeMesh
 		// 	state.mesh.push(action.payload);
 		// },
-		// Define your reducers here
-	},
-});
-
-const someSlice = createSlice({
-	name: "some",
-	initialState: {},
-	reducers: {
 		// Define your reducers here
 	},
 });

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import * as THREE from "three";
+
 import { BoxGeometry } from "three";
 import * as React from "react";
 import {
@@ -12,7 +13,7 @@ import {
 	RootState,
 	Vector3,
 } from "@react-three/fiber";
-import { useEffect } from "react";
+
 import {
 	OrbitControls,
 	Hud,
@@ -21,6 +22,7 @@ import {
 	Outlines,
 	Html,
 	Box,
+	Sphere,
 } from "@react-three/drei";
 import { modelContext, useModelContext } from "./ModelContext";
 import { CubeProps } from "../../primitives/Cube";
@@ -35,9 +37,17 @@ import { PivotControls } from "../custom_PivotControl";
 import { createTexture } from "../../util/textureUtil";
 import GridPlane from "./GridPlane";
 import SideBarWidget from "../templates/SideBarWidget";
-import { useAppSelector, useMeshSelector } from "../../hooks/useRedux";
+import {
+	useAppDispatch,
+	useAppSelector,
+	useMeshSelector,
+	useViewportSelector,
+} from "../../hooks/useRedux";
 import PivotControlsComponent from "./PivotControlsComponent";
 import { current } from "@reduxjs/toolkit";
+import InputSingle from "../ValueDisplay";
+import { toTrun, toTrunPercentage } from "../../util";
+import InfoPanel from "./InfoPanel";
 
 // TODO
 // create custom camera component
@@ -99,6 +109,20 @@ import { current } from "@reduxjs/toolkit";
 // 	return unpackedModel;
 // }
 
+const useSmoothedValue = (value: number, smoothingFactor: number = 0.1) => {
+	const [smoothedValue, setSmoothedValue] = useState(value);
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setSmoothedValue((prev) => prev + (value - prev) * smoothingFactor);
+		}, 100); // Update every 100ms
+
+		return () => clearInterval(interval);
+	}, [value, smoothingFactor]);
+
+	return smoothedValue;
+};
+
 const GetSceneRef: React.FC<{
 	setRef: React.Dispatch<
 		React.SetStateAction<React.MutableRefObject<THREE.Scene | null>>
@@ -133,9 +157,13 @@ const Viewport: React.FC = () => {
 	var invalidate = React.useRef<(arg0: number) => void>(() => {});
 	const { model, selected, setSelected, sceneRef, setSceneRef } = useModelContext();
 	//const [modelData, setModelData] = React.useState<React.ReactNode[]>([]);
-	const modelData = null; //useMeshSelector();
+	const modelData = useMeshSelector();
+	const viewportData = useViewportSelector();
 	const [threeScene, setThreeScene] = useState<RootState>();
-	const useGimbal = useState(true);
+	const useGimbal = viewportData.useGimbal;
+	const showGrid = viewportData.showGrid;
+	const showStats = viewportData.showStats;
+	const dispatch = useAppDispatch();
 
 	const handleSelection = React.useCallback(() => {
 		//TODO
@@ -150,6 +178,12 @@ const Viewport: React.FC = () => {
 	const pivotMatrix = new THREE.Matrix4();
 
 	const cameraRef = React.useRef<THREE.PerspectiveCamera>(null);
+
+	const orbitRef = React.useRef<typeof OrbitControls & { target: THREE.Vector3 }>(null!);
+	const cameraPivot = React.useRef<THREE.Vector3>(
+		orbitRef.current?.target ?? new THREE.Vector3(0, 0, 0)
+	);
+	const pivotPointRef = React.useRef<THREE.Mesh>(null);
 	return (
 		<div style={{ position: "relative", width: "100%", height: "100%" }}>
 			<Canvas
@@ -175,21 +209,30 @@ const Viewport: React.FC = () => {
 				<ambientLight intensity={0.5} />
 
 				{/* the model */}
-				{modelData}
+				{/* {modelData} */}
 
-				<GridPlane size={32} />
+				{showGrid ? <GridPlane size={16} /> : null}
 				<OrbitControls
-					enableZoom={useGimbal[0]}
-					enablePan={useGimbal[0]}
-					enableRotate={useGimbal[0]}
-					onChange={() => {}}
-					onEnd={() => {
-						console.log("end");
-
-						invalidate.current(1);
+					enableZoom={useGimbal?.zoom}
+					enablePan={useGimbal?.pan}
+					enableRotate={useGimbal?.rotate}
+					ref={orbitRef}
+					onStart={() => {
+						pivotPointRef.current?.position.copy(cameraPivot.current);
 					}}
+					onChange={(e) => {
+						invalidate.current();
+					}}
+					onEnd={() => {
+						cameraPivot.current = orbitRef.current?.target;
+
+						pivotPointRef.current?.position.copy(cameraPivot.current);
+					}}
+					target={cameraPivot.current}
 				/>
-				<Stats />
+				<Sphere ref={pivotPointRef} args={[0.5, 32, 32]} position={[0, 0, 0]} />
+
+				{showStats && <Stats className=" text-lg bg-red-500" />}
 
 				<PivotControlsComponent useGimbal={useGimbal} selected={boxRef2} />
 
@@ -201,83 +244,12 @@ const Viewport: React.FC = () => {
 					/>
 				</group>
 			</Canvas>
-			<InfoPanel scene={threeScene} camera={cameraRef} />
-		</div>
-	);
-};
-
-const InfoPanel: React.FC<{
-	scene: RootState | undefined;
-	camera: React.RefObject<THREE.PerspectiveCamera> | null;
-}> = ({ scene, camera: camRef }) => {
-	const [showInfo, setShowInfo] = useState(false);
-	const [camera, setCamera] = useState<THREE.PerspectiveCamera | null>(camRef?.current);
-	const [refresh, setRefresh] = useState(0);
-
-	// used to refresh the data on demand
-	useEffect(() => {
-		const interval = setInterval(() => {
-			setRefresh((prev) => prev + 1);
-		}, 200); // Toggle refresh every 1 second
-		return () => clearInterval(interval); // Cleanup on unmount
-	}, []);
-	useEffect(() => {
-		const interval = setInterval(() => {
-			setCamera(camRef?.current);
-		}, 1); // Refresh every 1 second
-		return () => clearInterval(interval); // Cleanup on unmount
-	}, [camRef?.current]);
-
-	return (
-		<div className="absolute top-2 left-2 right-2 bottom-2 bg-primary items-start justify-start p-20 pointer-events-none">
-			<div
-				className={
-					"pointer-events-auto transition-all duration-100  absolute right-0 aria-expanded:scale-0 scale-100 top-0 w-9 aspect-square bg-primary flex items-center justify-center bg-blue-500 rounded-full hover:border-2 border-highlight-200"
-				}
-				aria-expanded={showInfo}
-				onClick={() => {
-					setShowInfo(!showInfo);
-					console.log("press");
-				}}>
-				<Icon
-					name="question"
-					center_x
-					height={20}
-					width={20}
-					colour="red"
-					alt_text="increment"
-				/>
-			</div>
-			<div
-				aria-expanded={showInfo}
-				className={
-					" pointer-events-auto transition-all duration-800 absolute right-2 top-2 w-52 h-auto bg-primary flex items-center justify-center hover:border-2 border-highlight-200 scale-0 aria-expanded:scale-100 aria-expanded:rounded-xl aria-expanded:top-0 aria-expanded:right-0 origin-top-right"
-				}>
-				<SideBarWidget name="Info" showExitButton onExit={() => setShowInfo(!showInfo)}>
-					<div className="flex flex-col space-y-2">
-						<h2>Camera</h2>
-						<div className="flex flex-row space-x-2 pl-2">
-							<p className=" text-sm">Position</p> {camera?.position.x.toFixed(2)}{" "}
-							{camera?.position.y.toFixed(2)} {camera?.position.z.toFixed(2)}
-						</div>
-						<div className="flex flex-row space-x-2 pl-2">
-							<p className=" text-sm">Rotation</p> {camera?.rotation.x.toFixed(2)}{" "}
-							{camera?.rotation.y.toFixed(2)} {camera?.rotation.z.toFixed(2)}
-						</div>
-						<div className="flex flex-row space-x-2 pl-2">
-							<p className=" text-sm">FOV</p> {camera?.fov.toFixed(2)}
-						</div>
-					</div>
-
-					<div className="flex flex-row space-x-2 pl-2">
-						<button
-							className="bg-blue-500 text-white px-2 py-1 rounded"
-							onClick={() => setRefresh((prev) => prev + 1)}>
-							Toggle Refresh
-						</button>
-					</div>
-				</SideBarWidget>
-			</div>
+			<InfoPanel
+				scene={threeScene}
+				camera={cameraRef}
+				pivot={cameraPivot}
+				useGimbal={useGimbal}
+			/>
 		</div>
 	);
 };

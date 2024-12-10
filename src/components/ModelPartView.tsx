@@ -12,7 +12,7 @@ import { Menu, Item, Separator, Submenu, useContextMenu } from "react-contexify"
 import "react-contexify/dist/ReactContexify.css";
 import SideBarWidget from "./templates/SideBarWidget";
 import { setServers } from "dns";
-import meshSlice, { meshAddRandom, testReducer } from "../reducers/someReducer";
+import meshSlice, { meshAddRandom, testReducer } from "../reducers/meshReducer";
 import * as THREE from "three";
 import { useAppDispatch, useAppSelector } from "../hooks/useRedux";
 

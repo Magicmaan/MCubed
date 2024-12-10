@@ -49,7 +49,7 @@ const splitColorToRGB = (color: string) => {
 
 const darkenColor = (color: string, factor: number) => {
 	const ccolor = new THREE.Color(color);
-	ccolor.multiplyScalar(factor);
+	ccolor.offsetHSL(0, -factor / 1.5, -factor * 1.5);
 	return ccolor.getHexString();
 };
 const lightenColor = (color: string, factor: number) => {
@@ -130,4 +130,4 @@ const createTextureData = (width: number, height: number, color: string) => {
 	return data;
 };
 
-export { createTexture };
+export { createTexture, darkenColor, lightenColor };

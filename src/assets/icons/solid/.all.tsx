@@ -9,8 +9,9 @@ import caret_right from "./caret-right";
 import caret_up from "./caret-up";
 import question from "./question.js";
 import xmark from "./xmark";
+import check from "./check";
 // prettier-ignore
-const icons: { [key: string]: string } = {
+const icons: { [key: string]: string | {d:string,viewBox:string} } = {
 	"cube": cube,
 	"arrows-up-down-left-right": arrows_up_down_left_right,
 	"arrows-rotate": arrows_rotate,
@@ -22,6 +23,7 @@ const icons: { [key: string]: string } = {
 	"caret-up": caret_up,
 	"question": question,
 	"xmark": xmark,
+	"check": check,
 };
 
 type IconProps = {
@@ -44,10 +46,15 @@ const Icon = ({
 	center_y,
 }: IconProps) => {
 	var icon = icons[name];
+	var viewBox = "0 0 500 500";
 
 	if (!icon) {
 		console.log(`Icon not found: ${name}`);
 		return null;
+	}
+	if (typeof icon !== "string") {
+		viewBox = icon.viewBox;
+		icon = icon.d;
 	}
 	if (!width) width = 24;
 	if (!height) height = 24;
@@ -57,7 +64,7 @@ const Icon = ({
 			width={width}
 			height={height}
 			fill={colour}
-			viewBox="0 0 500 500"
+			viewBox={viewBox}
 			role="img"
 			xmlns="http://www.w3.org/2000/svg">
 			<title>{alt_text}</title>
