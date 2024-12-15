@@ -9,5 +9,6 @@ const selectViewport = (state: RootState) => state.viewport;
 export const useAppDispatch = useDispatch.withTypes<AppDispatch>();
 export const useAppSelector = useSelector.withTypes<RootState>();
 
-export const useMeshSelector = () => useAppSelector(selectMesh).meshArray;
+export const useMeshSelector = () => useAppSelector(selectMesh);
+export const useMeshArraySelector = () => useAppSelector(selectMesh).meshArray;
 export const useViewportSelector = () => useAppSelector(selectViewport);

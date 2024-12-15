@@ -3,100 +3,162 @@ import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import * as THREE from "three";
 import * as React from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Hud, PerspectiveCamera, Box } from "@react-three/drei";
+import { Canvas, ThreeEvent, useFrame, useLoader } from "@react-three/fiber";
+import {
+	OrbitControls,
+	Hud,
+	PerspectiveCamera,
+	Box,
+	CubeTexture,
+	useCubeTexture,
+	useTexture,
+	Texture,
+} from "@react-three/drei";
 import { BufferGeometry } from "@react-three/fiber";
 import { modelContext } from "../components/Viewport/ModelContext";
 import { createTexture } from "../util/textureUtil";
+import { useMeshSelector, useViewportSelector } from "../hooks/useRedux";
 
 let cubeCount = 0;
 function setCubeCount(count: number) {
 	cubeCount = count;
 }
 
-type CubeProps = {
-	name?: string;
-	colour?: string;
+type THREEObjectProps = {
+	type?: "Cube" | "Group";
 	size?: [number, number, number];
-	pos?: [number, number, number];
-	rot?: [number, number, number];
-	piv?: [number, number, number];
-	scale?: number;
-	props?: any[];
-	id?: number;
+	position: [number, number, number];
+	rotation: [number, number, number];
+	scale: number;
+	pivot: [number, number, number];
+
+	id: number;
+	props: any[];
+
+	ref?: React.RefObject<THREE.Mesh>;
+	name: string;
+	children?: CubeProps[] | GroupProps[];
+	colour?: string;
+	material?: THREE.Material;
 	cubeMesh?: JSX.Element;
+	texture?: THREE.Texture;
+
+	onClick?: (event: ThreeEvent<MouseEvent>) => void;
+	onHover?: (event: THREE.Event) => void;
+	onPointerOver?: (event: THREE.Event) => void;
+	onPointerOut?: (event: THREE.Event) => void;
 };
 
-function CubeMesh({ name, colour, size, pos, rot, piv, scale, id, ...props }: CubeProps) {
-	return (
-		<Box
-			matrixAutoUpdate={false}
-			name={name}
-			type="Mesh_Cube"
-			args={size}
-			position={pos}
-			rotation={rot}
-			scale={scale}
-			onClick={(e) => {
-				const { id, name, color } = e.object.userData;
-				console.log(`Clicked BALLS ${name} with id ${id} and color ${color}`);
+type CubeProps = {
+	type: "Cube";
+	name: string;
+	size: [number, number, number];
+	position: [number, number, number];
+	rotation: [number, number, number];
+	scale: number;
+	pivot: [number, number, number];
+	id: number;
 
-				//setSelected([parseInt(id)]);
+	// material
+	colour: string;
+	material?: THREE.Material;
+	texture?: THREE.Texture;
+	cubeMesh?: JSX.Element;
+
+	// callbacks
+	onClick?: (event: THREE.Event) => void;
+	onHover?: (event: THREE.Event) => void;
+	onPointerOver?: (event: THREE.Event) => void;
+	onPointerOut?: (event: THREE.Event) => void;
+};
+
+type GroupProps = {
+	type: "Group";
+	name: string;
+	size: [number, number, number];
+	position: [number, number, number];
+	rotation: [number, number, number];
+	scale: number;
+	pivot: [number, number, number];
+	id: number;
+
+	children: CubeProps[] | GroupProps[];
+};
+
+const CubeMesh: React.FC<CubeProps> = ({
+	name,
+	colour,
+	size,
+	position,
+	rotation,
+	pivot,
+	scale,
+	id,
+	type = "Cube",
+	texture,
+
+	onClick,
+	onHover,
+	onPointerOver,
+	onPointerOut,
+	...props
+}) => {
+	return (
+		<mesh
+			{...props}
+			position={position}
+			rotation={rotation}
+			scale={scale}
+			key={id}
+			type={type}
+			onUpdate={(self) => {
+				console.log("CubeMesh onUpdate");
+				self.updateMatrixWorld(true);
 			}}
-			userData={{ id: id, name: name, color: colour }}>
+			onClick={onClick}>
+			<boxGeometry args={size} />
 			<meshStandardMaterial
-				map={createTexture(16, 16, colour)}
-				color={colour}
+				map={texture} // Use the cube texture as environment map
+				envMapIntensity={1} // Ensure the environment map intensity is set
+				color={colour || "#ffffff"} // Fallback color
 				transparent={true}
 				alphaTest={0.5} // Use alpha of the texture
-				side={THREE.DoubleSide} // Render texture on both sides
-				shadowSide={THREE.DoubleSide}
+				side={THREE.FrontSide} // Render texture on both sides
+				shadowSide={THREE.FrontSide}
 				toneMapped={false} // Render texture at full brightness
 			/>
-		</Box>
+		</mesh>
 	);
-}
+};
+
+const GroupMesh: React.FC<GroupProps> = ({
+	name,
+	size,
+	position,
+	rotation,
+	scale,
+	pivot,
+	id,
+	children,
+	type = "Group",
+	...props
+}) => {
+	const testCube = CubeMesh({
+		type: "Cube",
+		name: "testCube",
+		colour: "#ff0000",
+		size: [8, 8, 8],
+		position: [0, 0, 0],
+		rotation: [0, 0, 0],
+		scale: 1,
+		pivot: [0, 0, 0],
+		id: 0,
+	});
+	return <group {...props}></group>;
+};
 
 // returns an array representing cube data
-function Cube({
-	name = "Cube",
-	colour = "orange",
-	size = [1, 1, 1],
-	pos = [0, 0, 0],
-	rot = [0, 0, 0],
-	piv = [0, 0, 0],
-	scale = 1,
-	...props
-}: CubeProps) {
-	setCubeCount(cubeCount + 1);
-	const id = cubeCount;
-	if (name === "Cube") {
-		name = `Cube_${id}`;
-	}
-	const cubeMesh = CubeMesh({
-		name,
-		colour,
-		size,
-		pos,
-		rot,
-		piv,
-		scale,
-		id,
-		...props,
-	});
-	return {
-		name,
-		colour,
-		size,
-		pos,
-		rot,
-		piv,
-		scale,
-		id,
-		cubeMesh,
-	} as CubeProps;
-}
 
-export default Cube;
+export default CubeMesh;
 export { CubeMesh, setCubeCount };
-export type { CubeProps };
+export type { CubeProps, GroupProps, THREEObjectProps };

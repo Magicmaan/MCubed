@@ -4,13 +4,14 @@ import Icon from "../assets/icons/solid/.all";
 import { modifiers, modifierIncrement } from "../constants/KeyModifiers";
 import { modelContext } from "./Viewport/ModelContext";
 import { useScroll } from "@react-three/drei";
-import type { CubeProps } from "../primitives/Cube";
+import type { CubeProps, THREEObjectProps } from "../primitives/Cube";
 import Cube from "../primitives/Cube";
 import { it } from "node:test";
 import { Canvas, useThree } from "@react-three/fiber";
 import GetSceneRef, { getTheRef } from "../util/GetSceneRef";
 import * as THREE from "three";
 import { match } from "assert";
+import { useMeshSelector, useViewportSelector } from "../hooks/useRedux";
 
 //TODO Seperate the input components into their own files
 const InputSingle = ({
@@ -127,16 +128,16 @@ const InputTriple = ({
 	let data = [0, 0, 0];
 	switch (name) {
 		case "Position":
-			data = cube[0].pos;
+			data = cube[0].position;
 			break;
 		case "Size":
 			data = cube[0].size;
 			break;
 		case "Pivot":
-			data = cube[0].piv;
+			data = cube[0].pivot;
 			break;
 		case "Rotate":
-			data = cube[0].rot;
+			data = cube[0].rotation;
 			append = "°";
 			break;
 	}
@@ -183,24 +184,38 @@ const InputTriple = ({
 
 const CubePartView: React.FC = () => {
 	const data = React.useContext(modelContext);
-	const currentCube = useState<CubeProps | null>(Cube({ pos: [0, 0, 0] }));
+
+	const meshStore = useMeshSelector();
+	const viewportStore = useViewportSelector();
+	const selected = viewportStore.selected;
+	const currentCube = React.useState<THREEObjectProps | undefined>(undefined);
+
 	// Update the current cube when the selected cube changes
 	const handleSelection = React.useCallback(() => {
 		var item;
-		var index = data.selected ? data.selected[0] : null;
+		var index = viewportStore.selected;
 
-		data.model.forEach((i) => {
+		meshStore.mesh.forEach((i) => {
 			if (i.id == index) {
 				item = i;
 			}
 		});
+
+		// data.model.forEach((i) => {
+		// 	if (i.id == index) {
+		// 		item = i;
+		// 	}
+		// });
 		if (item) {
+			//console.log("Selected item: ", item);
 			currentCube[1](item);
 		}
-	}, [data]);
+	}, [viewportStore.selected, meshStore.mesh]);
 	useEffect(() => {
-		handleSelection();
-	}, [handleSelection]);
+		if (selected) {
+			currentCube[1](meshStore.mesh[selected]);
+		}
+	}, [selected]);
 
 	useEffect(() => {
 		data.sceneRef?.children.forEach((i) => {

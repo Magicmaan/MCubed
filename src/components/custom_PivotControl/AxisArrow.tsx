@@ -110,7 +110,7 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 				const [min, max] = translationLimits?.[axis] || [undefined, undefined];
 
 				let offset = calculateOffset(clickPoint, dir, e.ray.origin, e.ray.direction);
-				offset = Math.round(offset * 10) / 10;
+				offset = Math.round(offset);
 				if (min !== undefined) {
 					offset = Math.max(offset, min - offset0.current);
 				}
@@ -179,8 +179,8 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 		}
 	};
 
-	console.log("Axis color:", axisColors[axis].toString());
-	console.log("Darkened color:", darkenColor(axisColors[axis].toString(), 2));
+	//console.log("Axis color:", axisColors[axis].toString());
+	//console.log("Darkened color:", darkenColor(axisColors[axis].toString(), 2));
 
 	return (
 		<>

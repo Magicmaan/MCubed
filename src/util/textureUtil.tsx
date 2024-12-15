@@ -130,4 +130,21 @@ const createTextureData = (width: number, height: number, color: string) => {
 	return data;
 };
 
-export { createTexture, darkenColor, lightenColor };
+const loadTexture = (url: string) => {
+	const loader = new THREE.TextureLoader();
+	const texture = loader.load(
+		url, // Ensure this path is correct
+		() => {
+			console.log("Texture loaded successfully");
+			texture.minFilter = THREE.NearestFilter;
+			texture.magFilter = THREE.NearestFilter;
+		},
+		undefined,
+		(err) => {
+			console.error("An error occurred loading the texture", err);
+		}
+	);
+	return texture;
+};
+
+export { createTexture, darkenColor, lightenColor, loadTexture };

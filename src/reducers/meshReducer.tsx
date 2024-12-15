@@ -2,27 +2,46 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Box } from "@react-three/drei"; // Adjust the import path as necessary
 import { createTexture } from "../util/textureUtil";
 import * as THREE from "three";
-import { CubeMesh } from "../primitives/Cube";
+import Cube, {
+	CubeMesh,
+	CubeProps,
+	GroupProps,
+	THREEObjectProps,
+} from "../primitives/Cube";
 
 type MeshState = {
-	meshArray: Array<React.ReactNode>;
+	mesh: THREEObjectProps[];
 	cubeCount: number;
 };
+const cubeCount = 1;
 const meshInitialState: MeshState = {
-	meshArray: [
-		// causes react redux error due to none serializable object
-		// CubeMesh({
-		// 	name: "Cube_0",
-		// 	colour: "orange",
-		// 	size: [16, 16, 16],
-		// 	pos: [0, 0, 0],
-		// 	rot: [0, 0, 0],
-		// 	piv: [0, 0, 0],
-		// 	scale: 1,
-		// 	id: 0,
-		// }),
+	cubeCount: cubeCount,
+	mesh: [
+		{
+			type: "Cube",
+			name: "Cube_" + cubeCount,
+			colour: "#2f00ff",
+			size: [8, 16, 16],
+			position: [16, 0, 0],
+			rotation: [0, 0, 0],
+			pivot: [0, 0, 0],
+			scale: 1,
+			props: [],
+			id: cubeCount,
+		},
+		{
+			type: "Cube",
+			name: "Cube_2",
+			colour: "#ff0000",
+			size: [10, 10, 10],
+			position: [10, 10, 10],
+			rotation: [0, 0, 0],
+			pivot: [0, 0, 0],
+			scale: 1,
+			props: [],
+			id: 2,
+		},
 	],
-	cubeCount: 1,
 };
 
 const meshSlice = createSlice({
@@ -30,23 +49,50 @@ const meshSlice = createSlice({
 	initialState: meshInitialState,
 	reducers: {
 		meshAddRandom(state) {
-			state.meshArray.push(
-				CubeMesh({
-					name: "Cube_" + state.cubeCount,
-					colour: "orange",
-					size: [16, 16, 16],
-					pos: [Math.random() * 10, Math.random() * 10, Math.random() * 10],
-					rot: [0, 0, 0],
-					piv: [0, 0, 0],
-					scale: 1,
-					id: state.cubeCount,
-				})
-			);
+			state.mesh[0].children.push({
+				name: "Cube_" + state.cubeCount,
+				colour: "#0004ff",
+				size: [16, 16, 16],
+				pos: [Math.random() * 10, Math.random() * 10, Math.random() * 10],
+				rot: [0, 0, 0],
+				piv: [0, 0, 0],
+				scale: 1,
+				id: state.cubeCount,
+			});
 			state.cubeCount++;
 			console.log("Added cube from reducer");
 		},
 		testReducer(state) {
 			console.log("Test reducer");
+		},
+		meshModify(state, action: PayloadAction<number>) {
+			const index = state.mesh.findIndex((item) => item.id === action.payload);
+			if (index !== -1) {
+				state.mesh[index].colour = "red";
+			}
+		},
+		meshModifyIndex(
+			state,
+			action: PayloadAction<{
+				index: number;
+				position?: [number, number, number];
+				rotation?: [number, number, number];
+				scale?: number;
+				pivot?: [number, number, number];
+				colour?: string;
+			}>
+		) {
+			console.log("Mesh modify index");
+			console.log(action.payload);
+			state.mesh[action.payload.index].colour = action.payload.colour;
+			if (action.payload.position) {
+				state.mesh[action.payload.index].position = action.payload.position;
+			}
+			if (action.payload.rotation) {
+				state.mesh[action.payload.index].rotation = action.payload.rotation;
+			}
+
+			//state.mesh[action.payload.index].colour = "red";
 		},
 		// meshAdd(state, action: PayloadAction<typeof Box>) {
 		// 	// Action = CubeMesh
@@ -59,4 +105,5 @@ const meshSlice = createSlice({
 //export const { actions, reducer } = someSlice;
 //export default someSlice.reducer;
 export default meshSlice;
-export const { meshAddRandom, testReducer } = meshSlice.actions;
+export const { meshAddRandom, testReducer, meshModify, meshModifyIndex } =
+	meshSlice.actions;

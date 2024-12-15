@@ -12,6 +12,9 @@ import {
 	getRootState,
 	RootState,
 	Vector3,
+	ThreeEvent,
+	InstancedMeshProps,
+	invalidate,
 } from "@react-three/fiber";
 
 import {
@@ -23,105 +26,31 @@ import {
 	Html,
 	Box,
 	Sphere,
+	InstancedAttribute,
+	useCubeTexture,
+	Facemesh,
 } from "@react-three/drei";
 import { modelContext, useModelContext } from "./ModelContext";
-import { CubeProps } from "../../primitives/Cube";
+import CubeMesh, { CubeProps, GroupProps, THREEObjectProps } from "../../primitives/Cube";
 import { useViewportContext } from "./ViewportContext";
 import { Stats } from "@react-three/drei";
 import { useLoader } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
-import { color } from "three/webgpu";
-import Icon from "../../assets/icons/solid/.all";
-import icon from "../assets/arrow.png";
-import { PivotControls } from "../custom_PivotControl";
-import { createTexture } from "../../util/textureUtil";
+import { createTexture, loadTexture } from "../../util/textureUtil";
 import GridPlane from "./GridPlane";
 import SideBarWidget from "../templates/SideBarWidget";
 import {
 	useAppDispatch,
 	useAppSelector,
+	useMeshArraySelector,
 	useMeshSelector,
 	useViewportSelector,
 } from "../../hooks/useRedux";
 import PivotControlsComponent from "./PivotControlsComponent";
-import { current } from "@reduxjs/toolkit";
 import InputSingle from "../ValueDisplay";
 import { toTrun, toTrunPercentage } from "../../util";
 import InfoPanel from "./InfoPanel";
-
-// TODO
-// create custom camera component
-// - implement camera controls
-// - add context to control camera
-
-// Simplify PivotControls
-// - remove unnecessary code
-// - make it more readable
-// - implement interaction with outside components
-
-// function CubeMesh(
-// 	cube: CubeProps,
-// 	isSelected: boolean,
-// 	setSelected: React.Dispatch<React.SetStateAction<[number]>>,
-// 	useGimbal: [boolean, React.Dispatch<React.SetStateAction<boolean>>]
-// ) {
-// 	if (isSelected) {
-// 		console.log("Selected from VPort");
-// 	}
-// 	if (cube.cubeMesh) {
-// 		cube.cubeMesh = React.cloneElement(cube.cubeMesh, {
-// 			onClick: (e: any) => {
-// 				const { id, name, color } = e.object.userData;
-// 				console.log(`Clicked ${name} with id ${id} and color ${color} MODIFIED BEFORE`);
-// 				setSelected([parseInt(id)]);
-// 			},
-// 		});
-// 	}
-// 	return (
-// 		// <PivotControls
-// 		// 	onDragStart={(e) => {
-// 		// 		useGimbal[1](false);
-// 		// 	}}
-// 		// 	onDragEnd={() => {
-// 		// 		useGimbal[1](true);
-// 		// 	}}
-// 		// 	anchor={[0, 0, 0]}
-// 		// 	scale={2}
-// 		// 	rotation={[0, 0, 0]}
-// 		// 	depthTest={false}
-// 		// 	enabled={isSelected}>
-// 		<>{cube.cubeMesh}</>
-// 		// </PivotControls>
-// 	);
-// }
-
-// function unpackModel(
-// 	model: CubeProps[],
-// 	selected: Number[],
-// 	setSelected: React.Dispatch<React.SetStateAction<[number]>>,
-// 	useGimbal: [boolean, React.Dispatch<React.SetStateAction<boolean>>]
-// ) {
-// 	let unpackedModel: React.ReactNode[] = [];
-// 	model.forEach((item: CubeProps) => {
-// 		var isSelected = selected.includes(item.id);
-// 		unpackedModel.push(CubeMesh(item, isSelected, setSelected, useGimbal));
-// 	});
-// 	return unpackedModel;
-// }
-
-const useSmoothedValue = (value: number, smoothingFactor: number = 0.1) => {
-	const [smoothedValue, setSmoothedValue] = useState(value);
-
-	useEffect(() => {
-		const interval = setInterval(() => {
-			setSmoothedValue((prev) => prev + (value - prev) * smoothingFactor);
-		}, 100); // Update every 100ms
-
-		return () => clearInterval(interval);
-	}, [value, smoothingFactor]);
-
-	return smoothedValue;
-};
+import { setScene } from "../../reducers/viewportReducer";
 
 const GetSceneRef: React.FC<{
 	setRef: React.Dispatch<
@@ -130,21 +59,122 @@ const GetSceneRef: React.FC<{
 	setThree: React.Dispatch<React.SetStateAction<RootState | undefined>>;
 	invalidate: React.MutableRefObject<(arg0: number) => void>;
 }> = ({ setRef, setThree, invalidate }) => {
-	const { scene, camera } = useThree();
-
+	const dispatch = useAppDispatch();
 	const threeScene = useThree();
+	const rawscene = threeScene.scene.children;
+
+	console.log("Setting scene ref");
+	console.log("Scene: ", rawscene);
+
+	return <></>;
+};
+
+const ModelInstance: React.FC<{
+	count: number;
+	temp?: THREE.Object3D;
+	modelData: CubeProps[];
+	selectRef: React.RefObject<THREE.Mesh | null>;
+}> = ({ count = 20, temp = new THREE.Object3D(), modelData, selectRef }) => {
+	const selectedID = React.useRef<number | null>(null);
+	const instancedMeshRef = React.useRef<THREE.InstancedMesh>(null);
+
+	const textures = React.useMemo(
+		() => [
+			loadTexture("/src/assets/textures/s3.png"),
+			loadTexture("/src/assets/textures/s2.png"),
+			loadTexture("/src/assets/textures/s5.png"), //up
+			loadTexture("/src/assets/textures/s4.png"), //down
+			loadTexture("/src/assets/textures/s1.png"),
+			loadTexture("/src/assets/textures/s6.png"),
+		],
+		[]
+	);
+
+	const materials = React.useMemo(
+		() => [
+			new THREE.MeshBasicMaterial({ map: textures[0] }),
+			new THREE.MeshBasicMaterial({ map: textures[1] }),
+			new THREE.MeshBasicMaterial({ map: textures[2] }),
+			new THREE.MeshBasicMaterial({ map: textures[3] }),
+			new THREE.MeshBasicMaterial({ map: textures[4] }),
+			new THREE.MeshBasicMaterial({ map: textures[5] }),
+		],
+		[textures]
+	);
+
+	const handleClick = (event: ThreeEvent<MouseEvent>) => {
+		const instanceId = event.instanceId;
+		if (instanceId !== undefined) {
+			console.log(`Cube ${instanceId} clicked`);
+			selectedID.current = instanceId;
+		}
+	};
+
+	useFrame(() => {
+		console.log("INSTANCE FRAME");
+		for (let i = 0; i < count; i++) {
+			if (selectedID.current === i) {
+				if (selectRef.current?.matrixWorld) {
+					temp.position.setFromMatrixPosition(selectRef.current.matrixWorld);
+					temp.rotation.setFromRotationMatrix(selectRef.current.matrixWorld);
+				}
+				temp.scale.set(
+					modelData[i].size[0] * modelData[i].scale,
+					modelData[i].size[1] * modelData[i].scale,
+					modelData[i].size[2] * modelData[i].scale
+				);
+				temp.updateMatrix();
+				instancedMeshRef.current?.setMatrixAt(i, temp.matrix);
+			}
+		}
+		if (instancedMeshRef.current) {
+			instancedMeshRef.current.instanceMatrix.needsUpdate = true;
+		}
+	});
 
 	useEffect(() => {
-		const interval = setInterval(() => {
-			setRef(scene);
-			setThree(threeScene);
-			invalidate.current = threeScene.invalidate;
-		}, 1000); // Refresh every 1 second
+		// Set positions
+		for (let i = 0; i < count; i++) {
+			temp.position.set(
+				modelData[i].position[0],
+				modelData[i].position[1],
+				modelData[i].position[2]
+			);
+			temp.rotation.set(
+				modelData[i].rotation[0],
+				modelData[i].rotation[1],
+				modelData[i].rotation[2]
+			);
+			temp.scale.set(
+				modelData[i].size[0] * modelData[i].scale,
+				modelData[i].size[1] * modelData[i].scale,
+				modelData[i].size[2] * modelData[i].scale
+			);
+			temp.updateMatrix();
+			instancedMeshRef.current?.setMatrixAt(i, temp.matrix);
+		}
+		if (instancedMeshRef.current) {
+			instancedMeshRef.current.instanceMatrix.needsUpdate = true;
+		}
+	}, []);
 
-		return () => clearInterval(interval); // Cleanup on unmount
-	}, [scene, threeScene, setRef, setThree, invalidate]);
-
-	return null;
+	return (
+		<instancedMesh
+			ref={instancedMeshRef}
+			args={[undefined, undefined, count]}
+			onClick={handleClick}
+			onUpdate={(self) => {
+				console.log("InstancedMesh onUpdate");
+			}}>
+			<boxGeometry />
+			<meshBasicMaterial attach="material-0" map={textures[0]} />
+			<meshBasicMaterial attach="material-1" map={textures[1]} />
+			<meshBasicMaterial attach="material-2" map={textures[2]} />
+			<meshBasicMaterial attach="material-3" map={textures[3]} />
+			<meshBasicMaterial attach="material-4" map={textures[4]} />
+			<meshBasicMaterial attach="material-5" map={textures[5]} />
+		</instancedMesh>
+	);
 };
 
 const Viewport: React.FC = () => {
@@ -155,27 +185,41 @@ const Viewport: React.FC = () => {
 	);
 
 	var invalidate = React.useRef<(arg0: number) => void>(() => {});
-	const { model, selected, setSelected, sceneRef, setSceneRef } = useModelContext();
-	//const [modelData, setModelData] = React.useState<React.ReactNode[]>([]);
-	const modelData = useMeshSelector();
-	const viewportData = useViewportSelector();
+	const { model, sceneRef, setSceneRef } = useModelContext();
 	const [threeScene, setThreeScene] = useState<RootState>();
+
+	const viewportData = useViewportSelector();
 	const useGimbal = viewportData.useGimbal;
 	const showGrid = viewportData.showGrid;
 	const showStats = viewportData.showStats;
+	const selected = viewportData.selected;
 	const dispatch = useAppDispatch();
 
-	const handleSelection = React.useCallback(() => {
-		//TODO
-	}, [selected]);
-	useEffect(() => {
-		handleSelection();
-	}, [handleSelection]);
+	const meshStore = useMeshSelector();
+	const meshProps = meshStore.mesh;
 
-	// handle resizing of the viewport container
 	const boxRef = React.useRef<THREE.Mesh>(null);
-	const boxRef2 = React.useRef<THREE.Mesh>(null);
-	const pivotMatrix = new THREE.Matrix4();
+	const selectedRef = React.useRef<THREE.Mesh | null>(null);
+	const texture = React.useMemo(() => {
+		return loadTexture("/src/assets/textures/s1.png");
+	}, []);
+
+	const modelData = React.useMemo(() => {
+		console.log("assembling model");
+
+		return meshProps.map((item) => {
+			const copiedItem: THREEObjectProps = {
+				...item,
+				ref: boxRef,
+				texture: texture,
+				onClick: (e: ThreeEvent<MouseEvent>) =>
+					(selectedRef.current = e.eventObject as THREE.Mesh),
+			};
+			return CubeMesh(copiedItem as CubeProps);
+		});
+	}, [meshProps]);
+
+	console.log("Model data: ", modelData);
 
 	const cameraRef = React.useRef<THREE.PerspectiveCamera>(null);
 
@@ -184,13 +228,18 @@ const Viewport: React.FC = () => {
 		orbitRef.current?.target ?? new THREE.Vector3(0, 0, 0)
 	);
 	const pivotPointRef = React.useRef<THREE.Mesh>(null);
+
 	return (
 		<div style={{ position: "relative", width: "100%", height: "100%" }}>
 			<Canvas
 				id="viewport"
 				frameloop="demand"
 				className="w-full h-full pattern-1 "
-				camera={{ fov: camera.fov, position: camera.pos }}>
+				camera={{ fov: camera.fov, position: camera.pos }}
+				gl={{
+					antialias: true,
+					toneMapping: THREE.NoToneMapping,
+				}}>
 				<GetSceneRef
 					setRef={setSceneRef}
 					setThree={setThreeScene}
@@ -204,12 +253,16 @@ const Viewport: React.FC = () => {
 					}
 					fov={camera.fov}
 					position={camera.pos}
-					manual={true}
+					manual={false}
 					ref={cameraRef}></PerspectiveCamera>
-				<ambientLight intensity={0.5} />
+				<ambientLight />
+				<pointLight position={[10, 10, 10]} />
 
-				{/* the model */}
-				{/* {modelData} */}
+				<ModelInstance
+					modelData={meshProps}
+					count={meshProps.length}
+					selectRef={selectedRef}
+				/>
 
 				{showGrid ? <GridPlane size={16} /> : null}
 				<OrbitControls
@@ -228,21 +281,18 @@ const Viewport: React.FC = () => {
 
 						pivotPointRef.current?.position.copy(cameraPivot.current);
 					}}
+					onUpdate={(self) => {
+						console.log("OrbitControls onUpdate");
+						console.log(self);
+					}}
 					target={cameraPivot.current}
 				/>
 				<Sphere ref={pivotPointRef} args={[0.5, 32, 32]} position={[0, 0, 0]} />
 
 				{showStats && <Stats className=" text-lg bg-red-500" />}
 
-				<PivotControlsComponent useGimbal={useGimbal} selected={boxRef2} />
-
-				<group ref={boxRef2} matrixAutoUpdate={false}>
-					<Box
-						matrixAutoUpdate={false}
-						args={[2, 2, 2]}
-						material={new THREE.MeshBasicMaterial({ color: "red" })}
-					/>
-				</group>
+				<PivotControlsComponent useGimbal={useGimbal} selected={selectedRef} />
+				<group ref={selectedRef} matrixAutoUpdate={false} />
 			</Canvas>
 			<InfoPanel
 				scene={threeScene}

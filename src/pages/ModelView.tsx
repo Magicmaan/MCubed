@@ -115,11 +115,12 @@ function ModelView() {
 	const [model, setModel] = React.useState<CubeProps[]>([]);
 	const [selected, setSelected] = React.useState<Number[]>([]);
 	const [sceneRef, setSceneRef] = React.useState<THREE.Scene | null>(null);
+
 	// https://github.com/pmndrs/drei/blob/master/src/web/Select.tsx
 	// look at this to improve
 	const { menuVisible, menuItems, menuPosition, showMenu, hideMenu, handleContextMenu } =
 		useContextMenu();
-	const [viewportSettings, setViewportSettings] = React.useState(defaultViewportContext);
+
 	React.useEffect(() => {
 		setModel([
 			Cube({ colour: randomCubeColour(), pos: [9, 0, 0], scale: 1, size: [16, 16, 16] }),
@@ -135,27 +136,9 @@ function ModelView() {
 		<div className="w-full h-full flex flex-col flex-grow-0 overflow-hidden">
 			<div className="flex flex-row w-full h-full overflow-y-hidden flex-grow overflow-hidden bg-red-500 flex-nowrap items-center justify-stretch p-1 gap-1">
 				<SideBar id="leftSidebar" width={300} resizable={[false, false, false, true]}>
-					<ModelContextProvider
-						data={{
-							model: model,
-							set: setModel,
-							selected: selected,
-							setSelected: setSelected,
-							sceneRef: sceneRef,
-						}}>
-						<ModelPartView />
-					</ModelContextProvider>
+					<ModelPartView />
 
-					<ModelContextProvider
-						data={{
-							model: model,
-							set: setModel,
-							selected: selected,
-							setSelected: setSelected,
-							sceneRef: sceneRef,
-						}}>
-						<CubePartView />
-					</ModelContextProvider>
+					<CubePartView />
 
 					{"remove StrictMode from main.tsx to stop incorrect ID ( for testing only)"}
 				</SideBar>
@@ -163,21 +146,9 @@ function ModelView() {
 				<div
 					id="viewportContainer"
 					className="w-auto h-auto flex flex-grow self-stretch items-stretch bg-slate-900 justify-stretch overflow-hidden rounded-md p-1">
-					<ViewportContextProvider data={viewportSettings}>
-						<ModelContextProvider
-							data={{
-								model: model,
-								set: setModel,
-								selected: selected,
-								setSelected: setSelected,
-								sceneRef: sceneRef,
-								setSceneRef: setSceneRef,
-							}}>
-							<React.Suspense fallback={<div>Loading...</div>}>
-								<Viewport />
-							</React.Suspense>
-						</ModelContextProvider>
-					</ViewportContextProvider>
+					<React.Suspense fallback={<div>Loading...</div>}>
+						<Viewport />
+					</React.Suspense>
 				</div>
 
 				<SideBar id="rightSidebar" width={200} resizable={[false, false, true, false]}>

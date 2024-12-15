@@ -3,6 +3,8 @@ import { Box } from "@react-three/drei"; // Adjust the import path as necessary
 import { createTexture } from "../util/textureUtil";
 import * as THREE from "three";
 import { CubeMesh } from "../primitives/Cube";
+import { RootState } from "@react-three/fiber";
+import { MutableRefObject } from "react";
 
 type viewportState = {
 	cameraSettings: {
@@ -24,7 +26,8 @@ type viewportState = {
 	cameraLock?: [boolean, any]; // lock camera to object
 	showGrid?: boolean;
 	showStats?: boolean;
-	mesh?: any[]; // Adjusted to any[] to avoid non-serializable issues
+	selected?: number; // selected objects
+	scene?: String; // scene object
 };
 const viewportInitialState: viewportState = {
 	cameraSettings: {
@@ -45,7 +48,7 @@ const viewportInitialState: viewportState = {
 	cameraLock: [false, null], // Changed function to null
 	showGrid: true,
 	showStats: false,
-	mesh: [], // Ensure mesh elements are serializable
+	selected: 0, // initialize selected as an empty array
 };
 
 const viewportSlice = createSlice({
@@ -79,10 +82,24 @@ const viewportSlice = createSlice({
 		meshAdd(state, action: PayloadAction<any>) {
 			state.mesh?.push(action.payload); // Ensure payload is serializable
 		},
+		setSelected(state, action: PayloadAction<number>) {
+			state.selected = action.payload;
+		},
+		setScene(state, action: PayloadAction<String>) {
+			state.scene = action.payload;
+		},
 		// Define your reducers here
 	},
 });
 
 export default viewportSlice;
-export const { test, disableGimbal, enableGimbal, toggleGrid, meshAdd, toggleStats } =
-	viewportSlice.actions;
+export const {
+	test,
+	disableGimbal,
+	enableGimbal,
+	toggleGrid,
+	meshAdd,
+	toggleStats,
+	setSelected,
+	setScene,
+} = viewportSlice.actions;

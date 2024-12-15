@@ -5,7 +5,7 @@ import { DoubleSide } from "three";
 
 interface GridPlaneProps {
 	size: number;
-	lineWidth: number;
+	lineWidth?: number;
 	density?: number;
 	color?: string;
 }
