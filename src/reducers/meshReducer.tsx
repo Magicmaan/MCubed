@@ -9,13 +9,29 @@ import Cube, {
 	THREEObjectProps,
 } from "../primitives/Cube";
 
+type THREETextureProps = {
+	name: string;
+	data: string;
+	path: string;
+	local_path: string;
+
+	width: number;
+	height: number;
+
+	active: boolean;
+	id: number;
+};
+
 type MeshState = {
 	mesh: THREEObjectProps[];
+	texture: THREETextureProps[];
 	cubeCount: number;
+	textureCount: number;
 };
 const cubeCount = 1;
 const meshInitialState: MeshState = {
 	cubeCount: cubeCount,
+	textureCount: 0,
 	mesh: [
 		{
 			type: "Cube",
@@ -27,19 +43,47 @@ const meshInitialState: MeshState = {
 			pivot: [0, 0, 0],
 			scale: 1,
 			props: [],
-			id: cubeCount,
+			id: cubeCount - 1,
+			uv: {
+				top: [0, 0, 1 / 16, 1 / 8],
+				bottom: [0, 0, 1 / 16, 1 / 8],
+				left: [0, 0, 1 / 16, 1 / 8],
+				right: [0, 0, 1 / 16, 1 / 8],
+				front: [0, 0, 1 / 8, 1 / 8],
+				back: [0, 0, 1 / 8, 1 / 8],
+			},
 		},
 		{
 			type: "Cube",
 			name: "Cube_2",
 			colour: "#ff0000",
-			size: [10, 10, 10],
+			size: [16, 16, 16],
 			position: [10, 10, 10],
 			rotation: [0, 0, 0],
 			pivot: [0, 0, 0],
 			scale: 1,
+			uv: {
+				top: [0, 0, 1, 1],
+				bottom: [0, 0, 1, 1],
+				left: [0, 0, 1, 1],
+				right: [0, 0, 1, 1],
+				front: [0, 0, 1, 1],
+				back: [0, 0, 1, 1],
+			},
 			props: [],
-			id: 2,
+			id: cubeCount,
+		},
+	],
+	texture: [
+		{
+			name: "test",
+			data: "test",
+			path: "test",
+			local_path: "test",
+			width: 16,
+			height: 16,
+			active: true,
+			id: 0,
 		},
 	],
 };

@@ -59,11 +59,11 @@ const viewportSlice = createSlice({
 			console.log("Test reducer for mesh");
 		},
 
-		disableGimbal(state) {
+		disableGimbal(state, action: PayloadAction<[boolean, boolean, boolean]>) {
 			state.useGimbal = {
-				zoom: false,
-				pan: false,
-				rotate: false,
+				zoom: action.payload[0],
+				pan: action.payload[1],
+				rotate: action.payload[2],
 			};
 		},
 		enableGimbal(state) {
@@ -82,7 +82,7 @@ const viewportSlice = createSlice({
 		meshAdd(state, action: PayloadAction<any>) {
 			state.mesh?.push(action.payload); // Ensure payload is serializable
 		},
-		setSelected(state, action: PayloadAction<number>) {
+		setSelected(state, action: PayloadAction<number | undefined>) {
 			state.selected = action.payload;
 		},
 		setScene(state, action: PayloadAction<String>) {

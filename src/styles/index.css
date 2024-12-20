@@ -23,6 +23,11 @@
 	.context-menu {
 		@apply absolute z-50 bg-red-600 border border-gray-200 shadow-lg rounded-lg;
 	}
+
+	.viewportBackground {
+		@apply pattern-rectangles pattern-main-500 pattern-bg-main-900
+		pattern-size-20;
+	}
 }
 
 :root {

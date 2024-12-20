@@ -14,9 +14,11 @@ interface ContextMenuProps {
 const ContextMenu: React.FC<ContextMenuProps> = ({ items, position, visible, id }) => {
 	var parentElement: HTMLElement | null = null;
 	const [parent, setParent] = React.useState<HTMLElement | null>(null);
+	const [menuVisible, setMenuVisible] = React.useState(visible);
 	React.useEffect(() => {
 		parentElement = document.getElementById(id)?.parentElement || null;
 		setParent(parentElement);
+		console.log("Parent", parentElement);
 	}, [id]);
 
 	return (

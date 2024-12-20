@@ -3,7 +3,6 @@ import "./styles/App.css";
 import * as React from "react";
 import ModelView from "./pages/ModelView";
 import NavBar from "./components/NavBar";
-import { KeyContextProvider } from "./context/KeyContext";
 import { Provider } from "react-redux";
 import store from "./store"; // Import the store
 

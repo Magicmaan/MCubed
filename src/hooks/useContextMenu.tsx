@@ -32,11 +32,11 @@ const useContextMenu = () => {
 
 	const handleContextMenu = (event: React.MouseEvent, menuItems: MenuItem[]) => {
 		var parentElement = document.getElementById(event.target.id)?.parentElement;
+		event.preventDefault();
 		if (menuVisible) {
-			event.preventDefault();
 			hideMenu();
 		} else {
-			showMenu(event, JSON.stringify(parentElement?.dataset.contextitems));
+			showMenu(event, menuItems);
 		}
 	};
 

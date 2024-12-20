@@ -123,7 +123,7 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 				}
 				offsetMatrix.makeTranslation(dir.x * offset, dir.y * offset, dir.z * offset);
 				setDragOffset(offset);
-				console.log("Drag offset: ", dragOffset);
+				//console.log("Drag offset: ", dragOffset);
 				onDrag(offsetMatrix);
 			}
 		},

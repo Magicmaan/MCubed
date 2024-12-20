@@ -42,6 +42,14 @@ type THREEObjectProps = {
 	material?: THREE.Material;
 	cubeMesh?: JSX.Element;
 	texture?: THREE.Texture;
+	uv?: {
+		top: [number, number, number, number];
+		bottom: [number, number, number, number];
+		left: [number, number, number, number];
+		right: [number, number, number, number];
+		front: [number, number, number, number];
+		back: [number, number, number, number];
+	};
 
 	onClick?: (event: ThreeEvent<MouseEvent>) => void;
 	onHover?: (event: THREE.Event) => void;
@@ -64,6 +72,14 @@ type CubeProps = {
 	material?: THREE.Material;
 	texture?: THREE.Texture;
 	cubeMesh?: JSX.Element;
+	uv?: {
+		top: [number, number, number, number];
+		bottom: [number, number, number, number];
+		left: [number, number, number, number];
+		right: [number, number, number, number];
+		front: [number, number, number, number];
+		back: [number, number, number, number];
+	};
 
 	// callbacks
 	onClick?: (event: THREE.Event) => void;

@@ -19,10 +19,10 @@ const SideBarWidget: React.FC<SideBarWidgetProps> = ({
 	return (
 		<div
 			id={name}
-			className="bg-main w-full h-full flex flex-nowrap flex-col space-y-0.5 p-2 rounded-xl overflow-y-scroll"
+			className="bg-main w-full h-auto max-h-full flex flex-nowrap flex-col space-y-0.5 p-2 rounded-xl overflow-y-scroll scrollbar scrollbar-always justify-stretch items-stretch"
 			style={style}>
-			<div className="flex flex-row flex-nowrap justify-between items-center w-full h-auto">
-				<p className="font-Inter font-semibold text-left p-2 pr-4 border-1">
+			<div className="flex flex-row flex-nowrap justify-between items-center w-full h-auto select-none">
+				<p className="font-Inter font-semibold text-left p-2 pr-4 border-1 static">
 					{name}
 					<div className="flex-grow h-1"></div>
 				</p>

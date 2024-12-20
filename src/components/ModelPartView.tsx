@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Cube from "../primitives/Cube"; // Make sure to import the Cube component
-import { modelContext, ModelContextProvider } from "./Viewport/ModelContext";
+
 import "../styles/App.css";
 import { randomCubeColour } from "../constants/CubeColours";
 import { EditText, EditTextarea } from "react-edit-text";
@@ -24,7 +24,6 @@ import {
 	useMeshSelector,
 	useViewportSelector,
 } from "../hooks/useRedux";
-
 import { setSelected as reduxSetSelected } from "../reducers/viewportReducer";
 
 const ModelItem: React.FC<{
@@ -104,28 +103,26 @@ const ModelPartView: React.FC = () => {
 		dispatch(reduxSetSelected(id));
 	};
 	return (
-		<React.Fragment>
-			<SideBarWidget name="Model Part View">
-				<button
-					onClick={() => {
-						console.log("added cube");
-					}}>
-					Update Model
-				</button>
+		<SideBarWidget name="Model Part View">
+			<button
+				onClick={() => {
+					console.log("added cube");
+				}}>
+				Update Model
+			</button>
 
-				<div className="flex flex-col flex-nowrap space-y-1 items-center justify-center w-full h-auto overflow-y-scroll">
-					{partList.map((item, index) => (
-						<ModelItem
-							item={item}
-							key={index}
-							itemKey={index}
-							selected={selected}
-							setSelected={setSelected}
-						/>
-					))}
-				</div>
-			</SideBarWidget>
-		</React.Fragment>
+			<div className="flex flex-col flex-nowrap space-y-1 items-center justify-center w-full h-auto overflow-y-scroll">
+				{partList.map((item, index) => (
+					<ModelItem
+						item={item}
+						key={index}
+						itemKey={index}
+						selected={selected}
+						setSelected={setSelected}
+					/>
+				))}
+			</div>
+		</SideBarWidget>
 	);
 };
 
