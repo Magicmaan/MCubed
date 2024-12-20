@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Cube from "../primitives/Cube"; // Make sure to import the Cube component
-import { modelContext, ModelContextProvider } from "./Viewport/ModelContext";
+
 import "../styles/App.css";
 import { randomCubeColour } from "../constants/CubeColours";
 import { EditText, EditTextarea } from "react-edit-text";
@@ -12,13 +12,25 @@ import { Menu, Item, Separator, Submenu, useContextMenu } from "react-contexify"
 import "react-contexify/dist/ReactContexify.css";
 import SideBarWidget from "./templates/SideBarWidget";
 import { setServers } from "dns";
+import meshSlice, {
+	meshAddRandom,
+	meshModify,
+	testReducer,
+} from "../reducers/meshReducer";
 import * as THREE from "three";
+import {
+	useAppDispatch,
+	useAppSelector,
+	useMeshSelector,
+	useViewportSelector,
+} from "../hooks/useRedux";
+import { setSelected as reduxSetSelected } from "../reducers/viewportReducer";
 
 const ModelItem: React.FC<{
 	item: any;
 	itemKey: number;
-	selected: number[];
-	setSelected: React.Dispatch<React.SetStateAction<Number[]>>;
+	selected?: number;
+	setSelected: (id: number) => void;
 }> = ({ item, itemKey, selected, setSelected }) => {
 	const MENU_ID = "context_model_part_" + item.id;
 	const { show } = useContextMenu({
@@ -34,21 +46,20 @@ const ModelItem: React.FC<{
 		});
 	}
 	const handleItemClick = ({ event }: { id: string; event: Event }) => {
-		console.log("item clicked", id);
-		setSelected([parseInt(id)]);
-		console.log(id, event, props);
+		//console.log("item clicked", id);
+		setSelected(parseInt(id));
 	};
 
 	return (
 		<button
 			id={"model_part_" + item.id}
-			aria-pressed={selected.includes(item.id)}
+			aria-pressed={selected === item.id}
 			key={itemKey}
 			data-test={"hi"}
 			onContextMenu={handleContextMenu}
 			onClick={() => {
 				console.log(item.id);
-				setSelected([parseInt(item.id)]);
+				setSelected(parseInt(item.id));
 			}}
 			className="bg-secondary rounded-md w-full h-10 flex flex-nowrap flex-row justify-stretch items-center focus:bg-button-hover aria-pressed:bg-button-hover">
 			<Icon name="cube" height={16} width={16} colour="red" />
@@ -82,54 +93,36 @@ const ModelItem: React.FC<{
 };
 
 const ModelPartView: React.FC = () => {
-	const data = React.useContext(modelContext);
-	const { model, set, selected, setSelected, sceneRef } = data;
-	console.log("from model view ", data);
+	// const [partList, setPartList] = useState<Set<THREE.Mesh>>(new Set());
+	const partList = useMeshSelector().mesh;
+	const selected = useViewportSelector().selected;
 
+	const MESH_WHITELIST = ["Mesh_Cube"];
+	const dispatch = useAppDispatch();
+	const setSelected = (id: number) => {
+		dispatch(reduxSetSelected(id));
+	};
 	return (
-		<React.Fragment>
-			<SideBarWidget name="Model Part View">
-				<button
-					onClick={() => {
-						set([
-							...model,
-							Cube({
-								colour: randomCubeColour(),
-								pos: [Math.random() * 5, Math.random() * 5, Math.random() * 5],
-								scale: 1,
-							}),
-						]);
+		<SideBarWidget name="Model Part View">
+			<button
+				onClick={() => {
+					console.log("added cube");
+				}}>
+				Update Model
+			</button>
 
-						setSelected([model.length - 1]);
-
-						console.log("from modelpartview ", data);
-
-						if (sceneRef !== null) {
-							sceneRef.traverse((child) => {
-								if (child instanceof THREE.Mesh && child["type"] === "mesh_cube") {
-									console.log("Mesh in Scene (will be 1 behind): ", child);
-								}
-							});
-						}
-					}}>
-					Update Model
-				</button>
-
-				<div className="flex flex-col flex-nowrap space-y-1 items-center justify-center w-full h-auto overflow-y-scroll">
-					{model
-						? model.map((item) => (
-								<ModelItem
-									item={item}
-									key={item.id}
-									itemKey={item.id}
-									selected={selected}
-									setSelected={setSelected}
-								/>
-						  ))
-						: null}
-				</div>
-			</SideBarWidget>
-		</React.Fragment>
+			<div className="flex flex-col flex-nowrap space-y-1 items-center justify-center w-full h-auto overflow-y-scroll">
+				{partList.map((item, index) => (
+					<ModelItem
+						item={item}
+						key={index}
+						itemKey={index}
+						selected={selected}
+						setSelected={setSelected}
+					/>
+				))}
+			</div>
+		</SideBarWidget>
 	);
 };
 

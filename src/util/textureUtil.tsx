@@ -49,7 +49,7 @@ const splitColorToRGB = (color: string) => {
 
 const darkenColor = (color: string, factor: number) => {
 	const ccolor = new THREE.Color(color);
-	ccolor.multiplyScalar(factor);
+	ccolor.offsetHSL(0, -factor / 1.5, -factor * 1.5);
 	return ccolor.getHexString();
 };
 const lightenColor = (color: string, factor: number) => {
@@ -130,4 +130,21 @@ const createTextureData = (width: number, height: number, color: string) => {
 	return data;
 };
 
-export { createTexture };
+const loadTexture = (url: string) => {
+	const loader = new THREE.TextureLoader();
+	const texture = loader.load(
+		url, // Ensure this path is correct
+		() => {
+			console.log("Texture loaded successfully");
+			texture.minFilter = THREE.NearestFilter;
+			texture.magFilter = THREE.NearestFilter;
+		},
+		undefined,
+		(err) => {
+			console.error("An error occurred loading the texture", err);
+		}
+	);
+	return texture;
+};
+
+export { createTexture, darkenColor, lightenColor, loadTexture };

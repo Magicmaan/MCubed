@@ -10,7 +10,6 @@ const GetSceneRef = () => {
 		useEffect(() => {
 			if (sceneRef) {
 				sceneRef.current = scene;
-				console.log("scene from hook: ", sceneRef.current);
 			}
 		}, [scene]);
 		return null;

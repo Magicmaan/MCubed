@@ -199,6 +199,9 @@ export const PivotControls: ForwardRefComponent<PivotControlsProps, THREE.Group>
 						invalidate();
 					},
 					onDragEnd: () => {
+						if (autoTransform) {
+							ref.current.updateMatrixWorld();
+						}
 						if (onDragEnd) onDragEnd();
 						invalidate();
 					},
@@ -272,8 +275,9 @@ export const PivotControls: ForwardRefComponent<PivotControlsProps, THREE.Group>
 					gizmoRef.current.scale.copy(vScale);
 					state.invalidate();
 				}
+
 				const distance = state.camera.position.distanceTo(gizmoRef.current.position);
-				const scaleFactor = distance / 10; // Adjust the divisor to control the size
+				const scaleFactor = (distance / (state.size.height / 2)) * 100; // Adjust the divisor to control the size
 				gizmoRef.current.scale.set(scaleFactor, scaleFactor, scaleFactor);
 			});
 
@@ -336,3 +340,61 @@ export const PivotControls: ForwardRefComponent<PivotControlsProps, THREE.Group>
 			);
 		}
 	);
+
+export const onDragStart = (
+	props: OnDragStartProps,
+	boxRef2: React.RefObject<THREE.Mesh>,
+	useGimbal: [boolean, React.Dispatch<React.SetStateAction<boolean>>],
+	invalidate: React.MutableRefObject<(arg0: number) => void>,
+	preMatrix: THREE.Matrix4
+) => {
+	useGimbal[1](false);
+	invalidate.current(1);
+	preMatrix.copy(boxRef2.current.matrix);
+};
+
+export const onDrag = (
+	l: THREE.Matrix4,
+	deltaL: THREE.Matrix4,
+	w: THREE.Matrix4,
+	deltaW: THREE.Matrix4,
+	boxRef2: React.RefObject<THREE.Mesh>,
+	invalidate: React.MutableRefObject<(arg0: number) => void>,
+	preMatrix: THREE.Matrix4
+) => {
+	const translationScale = 0.1; // Adjust this value to control the movement scale
+	var pivotMatrix = new THREE.Matrix4();
+	pivotMatrix
+		.copy(preMatrix)
+		.multiply(
+			new THREE.Matrix4().makeTranslation(
+				deltaL.elements[12] * translationScale,
+				deltaL.elements[13] * translationScale,
+				deltaL.elements[14] * translationScale
+			)
+		);
+	if (boxRef2.current) {
+		boxRef2.current.matrix.copy(pivotMatrix);
+		boxRef2.current.matrix.decompose(
+			boxRef2.current.position,
+			boxRef2.current.quaternion,
+			boxRef2.current.scale
+		);
+	}
+	invalidate.current();
+};
+
+export const onDragEnd = (
+	boxRef2: React.RefObject<THREE.Mesh>,
+	useGimbal: [boolean, React.Dispatch<React.SetStateAction<boolean>>],
+	invalidate: React.MutableRefObject<(arg0: number) => void>
+) => {
+	useGimbal[1](true);
+	if (boxRef2.current) {
+		boxRef2.current.updateMatrixWorld();
+	}
+	invalidate.current(10);
+};
+
+export const preMatrix = new THREE.Matrix4();
+export const preMatrixInv = new THREE.Matrix4();

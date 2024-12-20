@@ -2,15 +2,20 @@ import React, { useEffect, useContext, useRef, useState } from "react";
 import SideBarWidget from "./templates/SideBarWidget";
 import Icon from "../assets/icons/solid/.all";
 import { modifiers, modifierIncrement } from "../constants/KeyModifiers";
-import { modelContext } from "./Viewport/ModelContext";
+
 import { useScroll } from "@react-three/drei";
-import type { CubeProps } from "../primitives/Cube";
+import type { CubeProps, THREEObjectProps } from "../primitives/Cube";
 import Cube from "../primitives/Cube";
 import { it } from "node:test";
 import { Canvas, useThree } from "@react-three/fiber";
-import GetSceneRef, { getTheRef } from "../util/GetSceneRef";
+import ContextMenu from "../components/ContextMenu.tsx";
+import useContextMenu from "../hooks/useContextMenu.tsx";
+import { NumberDisplaySingle, NumberDisplayVec3 } from "./templates/NumberDisplay.tsx";
+
 import * as THREE from "three";
 import { match } from "assert";
+import { useMeshSelector, useViewportSelector } from "../hooks/useRedux";
+import { text } from "stream/consumers";
 
 //TODO Seperate the input components into their own files
 const InputSingle = ({
@@ -40,7 +45,7 @@ const InputSingle = ({
 		// Get the most recent key presses
 		// if valid modifier / modifier combination, get the modifier
 		// increment value
-		console.log("Tryna increment");
+		//console.log("Tryna increment");
 		const modifierKey = key_press.current.join("") as keyof typeof modifierIncrement;
 		const modifier = modifierIncrement[modifierKey] || 1;
 		const newValue = ((parseFloat(value) + modifier) * 100) / 100;
@@ -86,9 +91,9 @@ const InputSingle = ({
 				</div>
 				<div
 					className=" w-fit min-w-4 max-w-12 flex-shrink flex justify-center items-center text-center z-0"
-					title={value}>
+					title={parseFloat(value).toFixed(2)}>
 					<p className="m-0 p-0 inset-0 text-center justify-center font-Inter hover:">
-						{value}
+						{parseFloat(value).toFixed(2)}
 					</p>
 				</div>
 
@@ -127,24 +132,24 @@ const InputTriple = ({
 	let data = [0, 0, 0];
 	switch (name) {
 		case "Position":
-			data = cube[0].pos;
+			data = cube[0].position;
 			break;
 		case "Size":
 			data = cube[0].size;
 			break;
 		case "Pivot":
-			data = cube[0].piv;
+			data = cube[0].pivot;
 			break;
 		case "Rotate":
-			data = cube[0].rot;
+			data = cube[0].rotation;
 			append = "°";
 			break;
 	}
 
 	return (
-		<React.Fragment>
+		<div className="select-none">
 			<div
-				className="group flex flex-col flex-nowrap space-y-0.5 items-center justify-center"
+				className="group flex flex-col flex-nowrap space-y-0.5 items-center justify-center select-none"
 				title={name}>
 				<div className="flex flex-row flex-nowrap space-x-1 items-center justify-center">
 					{children}
@@ -177,131 +182,164 @@ const InputTriple = ({
 					/>
 				</div>
 			</div>
-		</React.Fragment>
+		</div>
 	);
 };
 
 const CubePartView: React.FC = () => {
-	const data = React.useContext(modelContext);
-	const currentCube = useState<CubeProps | null>(Cube({ pos: [0, 0, 0] }));
-	// Update the current cube when the selected cube changes
-	const handleSelection = React.useCallback(() => {
-		var item;
-		var index = data.selected ? data.selected[0] : null;
-		data.model.forEach((i) => {
-			if (i.id == index) {
-				item = i;
-			}
-		});
-		if (item) {
-			currentCube[1](item);
-		}
-	}, [data]);
+	//const data = React.useContext(modelContext);
+	const meshStore = useMeshSelector();
+	const viewportStore = useViewportSelector();
+	const selected = useRef(viewportStore.selected);
+	const [cube, setCube] = useState<CubeProps>();
 	useEffect(() => {
-		handleSelection();
-	}, [handleSelection]);
+		console.log("Selected: ", selected);
+		selected.current = viewportStore.selected;
+		if (selected) {
+			setCube(meshStore.mesh[selected.current]);
+		}
+	}, [viewportStore.selected, meshStore.mesh]);
 
 	return (
-		<React.Fragment>
-			<SideBarWidget name={currentCube[0]?.name ?? ""} style={{ maxHeight: "14rem" }}>
-				{currentCube[0] ? (
-					<React.Fragment>
-						{/* position */}
-						<InputTriple
-							name="Position"
-							cube={currentCube}
-							set={(cube: CubeProps) => {
-								data.set(
-									data.model.map((item) => {
-										if (item.id == cube.id) {
-											return cube;
-										} else {
-											return item;
-										}
-									})
-								);
-							}}>
-							<Icon
-								name="arrow-up-right"
-								height={16}
-								width={16}
-								colour="red"
-								alt_text="Position"
+		<SideBarWidget name={cube?.name ?? ""}>
+			{cube ? (
+				<>
+					<div className="bg-red-400 justify-center items-center flex flex-col p-1 w-auto">
+						<div className="space-y-1 flex-col flex">
+							<p>Position</p>
+							<NumberDisplayVec3 vec={cube.position} />
+
+							<div className="w-52 h-auto flex flex-row justify-between p-1 bg-red-500 rounded-md"></div>
+						</div>
+					</div>
+
+					<div className="bg-red-400 justify-center items-center flex flex-col p-1 w-auto">
+						<div className="space-y-1 flex-col flex">
+							<p>Rotation</p>
+							<NumberDisplayVec3
+								vec={[
+									(cube.rotation[0] * 180) / Math.PI,
+									(cube.rotation[1] * 180) / Math.PI,
+									(cube.rotation[2] * 180) / Math.PI,
+								]}
 							/>
-						</InputTriple>
-						{/* size */}
-						<InputTriple
-							name="Size"
-							cube={currentCube}
-							set={(cube: CubeProps) => {
-								data.set(
-									data.model.map((item) => {
-										if (item.id == cube.id) {
-											return cube;
-										} else {
-											return item;
-										}
-									})
-								);
-							}}>
-							<Icon
-								name="arrows-up-down-left-right"
-								height={16}
-								width={16}
-								colour="red"
-								alt_text="Size"
+
+							<div className="w-52 h-auto flex flex-row justify-between p-1 bg-red-500 rounded-md"></div>
+						</div>
+					</div>
+					<div className="bg-red-400 justify-center items-center flex flex-col p-1 w-auto">
+						<div className="space-y-1 flex-col flex">
+							<p>Pivot</p>
+							<NumberDisplayVec3
+								vec={[
+									(cube.rotation[0] * 180) / Math.PI,
+									(cube.rotation[1] * 180) / Math.PI,
+									(cube.rotation[2] * 180) / Math.PI,
+								]}
 							/>
-						</InputTriple>
-						{/* pivot */}
-						<InputTriple
-							name="Pivot"
-							cube={currentCube}
-							set={(cube: CubeProps) => {
-								data.set(
-									data.model.map((item) => {
-										if (item.id == cube.id) {
-											return cube;
-										} else {
-											return item;
-										}
-									})
-								);
-							}}>
-							<Icon
-								name="arrows-to-dot"
-								height={16}
-								width={16}
-								colour="red"
-								alt_text="Pivot"
-							/>
-						</InputTriple>
-						{/* rotate */}
-						<InputTriple
-							name="Rotate"
-							cube={currentCube}
-							set={(cube: CubeProps) => {
-								data.set(
-									data.model.map((item) => {
-										if (item.id == cube.id) {
-											return cube;
-										} else {
-											return item;
-										}
-									})
-								);
-							}}>
-							<Icon
-								name="arrows-rotate"
-								height={16}
-								width={16}
-								colour="red"
-								alt_text="rotate"
-							/>
-						</InputTriple>{" "}
-					</React.Fragment>
-				) : null}
-			</SideBarWidget>
-		</React.Fragment>
+
+							<div className="w-52 h-auto flex flex-row justify-between p-1 bg-red-500 rounded-md"></div>
+						</div>
+					</div>
+				</>
+			) : (
+				// <React.Fragment>
+				// 	{/* position */}
+				// 	<InputTriple
+				// 		name="Position"
+				// 		cube={cube.current}
+				// 		set={(cube: CubeProps) => {
+				// 			data.set(
+				// 				data.model.map((item) => {
+				// 					if (item.id == cube.id) {
+				// 						return cube;
+				// 					} else {
+				// 						return item;
+				// 					}
+				// 				})
+				// 			);
+				// 		}}>
+				// 		<Icon
+				// 			name="arrow-up-right"
+				// 			height={16}
+				// 			width={16}
+				// 			colour="red"
+				// 			alt_text="Position"
+				// 		/>
+				// 	</InputTriple>
+				// 	{/* size */}
+				// 	<InputTriple
+				// 		name="Size"
+				// 		cube={cube}
+				// 		set={(cube: CubeProps) => {
+				// 			data.set(
+				// 				data.model.map((item) => {
+				// 					if (item.id == cube.id) {
+				// 						return cube;
+				// 					} else {
+				// 						return item;
+				// 					}
+				// 				})
+				// 			);
+				// 		}}>
+				// 		<Icon
+				// 			name="arrows-up-down-left-right"
+				// 			height={16}
+				// 			width={16}
+				// 			colour="red"
+				// 			alt_text="Size"
+				// 		/>
+				// 	</InputTriple>
+				// 	{/* pivot */}
+				// 	<InputTriple
+				// 		name="Pivot"
+				// 		cube={cube}
+				// 		set={(cube: CubeProps) => {
+				// 			data.set(
+				// 				data.model.map((item) => {
+				// 					if (item.id == cube.id) {
+				// 						return cube;
+				// 					} else {
+				// 						return item;
+				// 					}
+				// 				})
+				// 			);
+				// 		}}>
+				// 		<Icon
+				// 			name="arrows-to-dot"
+				// 			height={16}
+				// 			width={16}
+				// 			colour="red"
+				// 			alt_text="Pivot"
+				// 		/>
+				// 	</InputTriple>
+				// 	{/* rotate */}
+				// 	<InputTriple
+				// 		name="Rotate"
+				// 		cube={cube}
+				// 		set={(cube: CubeProps) => {
+				// 			data.set(
+				// 				data.model.map((item) => {
+				// 					if (item.id == cube.id) {
+				// 						return cube;
+				// 					} else {
+				// 						return item;
+				// 					}
+				// 				})
+				// 			);
+				// 		}}>
+				// 		<Icon
+				// 			name="arrows-rotate"
+				// 			height={16}
+				// 			width={16}
+				// 			colour="red"
+				// 			alt_text="rotate"
+				// 		/>
+				// 	</InputTriple>{" "}
+				// </React.Fragment>
+				<div>nuh uh</div>
+			)}
+		</SideBarWidget>
 	);
 };
 
