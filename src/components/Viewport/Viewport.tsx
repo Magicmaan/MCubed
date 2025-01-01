@@ -3,7 +3,7 @@ import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import * as THREE from "three";
 
-import { BoxGeometry } from "three";
+import { BoxGeometry, Raycaster } from "three";
 import * as React from "react";
 import {
 	Canvas,
@@ -67,7 +67,7 @@ const GetSceneRef: React.FC<{
 	const dispatch = useAppDispatch();
 	const threeScene = useThree();
 	const rawscene = threeScene.scene.children;
-
+	setThree(threeScene);
 	console.log("Setting scene ref");
 	console.log("Scene: ", rawscene);
 
@@ -119,6 +119,8 @@ const Viewport: React.FC = () => {
 	useEffect(() => {
 		console.log("pivot pos", pivotPointRef.current?.position);
 	}, [pivotPointRef.current?.position.x]);
+
+	const raycaster = new THREE.Raycaster();
 
 	// useFrame(() => {
 	// 	console.log("Hi");
@@ -183,15 +185,47 @@ const Viewport: React.FC = () => {
 				ref={orbitRef}
 				onStart={() => {
 					//cameraPivot.current = orbitRef.current?.target;
+
 					pivotPointRef.current?.position.copy(orbitRef.current?.target);
 				}}
 				onChange={(e) => {
+					const val = orbitRef;
+					e?.target.object.pos;
 					//cameraPivot.current = orbitRef.current?.target;
+					//console.log("OrbitControls onChange", orbitRef.current);
+					//console.log("OrbitControls onChange", val);
+
 					pivotPointRef.current?.position.copy(orbitRef.current?.target);
+
+					if (e?.target.object && threeScene) {
+						if (e?.target.object) {
+							const cameraPosition = e?.target.object.position;
+							const cameraDirection = new THREE.Vector3();
+							e?.target.object.getWorldDirection(cameraDirection);
+							raycaster.setFromCamera(new THREE.Vector2(0.5, 0.5), e?.target.object);
+							//raycaster.set(cameraPosition, cameraDirection);
+
+							const intersects = raycaster.intersectObjects(
+								threeScene.scene.children,
+								true
+							);
+							if (intersects.length > 0) {
+								//console.log("Closest object", intersects[0].distance);
+								//console.log("Closest object", intersects[0].faceIndex);
+								const mesh = intersects[0].object;
+								if (mesh) {
+									// console.log(
+									// 	"Camera is intersecting with a mesh:",
+									// 	intersects[0].object
+									// );
+									//console.log("child", mesh.children);
+								}
+							}
+						}
+					}
 				}}
 				onEnd={() => {
 					//cameraPivot.current = orbitRef.current?.target;
-
 					pivotPointRef.current?.position.copy(orbitRef.current?.target);
 					//orbitRef.current?.target.copy(new THREE.Vector3(0, 0, 0));
 				}}

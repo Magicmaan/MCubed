@@ -34,6 +34,7 @@ const ModelInstance: React.FC<{
 	const instancedMeshRef = React.useRef(null);
 	const boxRef = React.useRef<THREE.BoxGeometry>(null);
 	const dispatch = useAppDispatch();
+	//TODO, switch to dataURL
 	const textures = React.useMemo(
 		() => [
 			loadTexture("/src/assets/textures/s3.png"),
@@ -42,7 +43,6 @@ const ModelInstance: React.FC<{
 			loadTexture("/src/assets/textures/s4.png"), //down
 			loadTexture("/src/assets/textures/s1.png"),
 			loadTexture("/src/assets/textures/s6.png"),
-
 			loadTexture("/src/assets/textures/UV.png"),
 		],
 		[]
@@ -184,31 +184,15 @@ const Cube: React.FC<{
 	const dispatch = useAppDispatch();
 	const currentSelected = useViewportSelector();
 
+	const isMouseDown = React.useRef(false);
+	const isMouseSelected = React.useRef(false);
+
 	const originalUV = new Float32Array([
 		0, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0,
 		0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0,
 	]);
 
 	console.log("texture json", texture);
-
-	// React.useLayoutEffect(() => {
-	// 	const uvAttr = ref.current.geometry.getAttribute("uv");
-	// 	console.log(uvAttr);
-
-	// 	const stride = uvAttr.itemSize; // per UV double
-	// 	const faces = uvToFaces(uvAttr);
-	// 	const reconstructedUV = facesToUV(faces);
-
-	// 	uvAttr.array.set(unpackCubePropsUV(cube));
-
-	// 	// for (let i = 0; i < uvAttr.count - 20; i++) {
-	// 	// 	uvAttr.setXY(
-	// 	// 		i,
-	// 	// 		reconstructedUV.at(i * 2) / 8 + 0.125 * ref.current?.userData.id,
-	// 	// 		reconstructedUV.at(i * 2 + 1) / 8
-	// 	// 	);
-	// 	// }
-	// });
 
 	useFrame(() => {
 		if (ref.current?.userData.id == currentSelected.selected) {
@@ -232,6 +216,11 @@ const Cube: React.FC<{
 			// }
 			invalidate();
 		}
+		ref.current?.geometry.setAttribute(
+			"uv",
+			new THREE.Float32BufferAttribute(unpackCubePropsUV(cube), 2)
+		);
+
 		ref.current?.updateMatrixWorld();
 		ref.current?.updateMatrix();
 	});
@@ -243,8 +232,7 @@ const Cube: React.FC<{
 			new THREE.Float32BufferAttribute(unpackCubePropsUV(cube), 2)
 		);
 	}, []);
-	const onClick = React.useCallback((event: ThreeEvent<MouseEvent>) => {
-		console.log("Click");
+	const setSelected = React.useCallback((event: ThreeEvent<MouseEvent>) => {
 		const instanceId = event.eventObject.userData.id;
 		if (selected.current) {
 			selected.current = false;
@@ -274,12 +262,22 @@ const Cube: React.FC<{
 			position={cube.position}
 			rotation={cube.rotation}
 			scale={cube.scale}
-			onClick={onClick}
+			onPointerDown={(e) => {
+				isMouseDown.current = true;
+			}}
+			onPointerLeave={(e) => {
+				isMouseDown.current = false;
+			}}
+			onClick={(e) => {
+				if (isMouseDown.current) {
+					setSelected(e);
+				}
+			}}
 			userData={{ id: cube.id }}>
 			<boxGeometry args={[cube.size[0], cube.size[1], cube.size[2]]} attach="geometry" />
 			<meshBasicMaterial map={texture} attach="material" transparent={true} />
 
-			<boxGeometry args={[cube.size[0], cube.size[1], cube.size[2]]} attach="geometry" />
+			{/* <boxGeometry args={[cube.size[0], cube.size[1], cube.size[2]]} attach="geometry" /> */}
 
 			<Outlines
 				name="outline"
@@ -290,6 +288,7 @@ const Cube: React.FC<{
 				scale={1.05}
 				visible={selected.current}
 				renderOrder={1}
+				userData={{ type: "outline" }}
 			/>
 		</mesh>
 	);
@@ -319,13 +318,12 @@ const unpackCubePropsUV = (cube: CubeProps) => {
 			1 - y2, // Adjusted vertices
 		];
 	};
-
-	uv.set(convertToTrianglePositions(cube.uv.front), 0);
-	uv.set(convertToTrianglePositions(cube.uv.back), 8);
+	uv.set(convertToTrianglePositions(cube.uv.left), 0);
+	uv.set(convertToTrianglePositions(cube.uv.right), 8);
 	uv.set(convertToTrianglePositions(cube.uv.top), 16);
 	uv.set(convertToTrianglePositions(cube.uv.bottom), 24);
-	uv.set(convertToTrianglePositions(cube.uv.left), 32);
-	uv.set(convertToTrianglePositions(cube.uv.right), 40);
+	uv.set(convertToTrianglePositions(cube.uv.front), 32);
+	uv.set(convertToTrianglePositions(cube.uv?.back), 40);
 	return uv;
 };
 

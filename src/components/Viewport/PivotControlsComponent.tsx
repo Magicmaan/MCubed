@@ -34,14 +34,11 @@ const PivotControlsComponent: React.FC<{
 	console.log(three);
 
 	const pivotRef = React.useRef(null);
+	const selected = React.useRef(viewportStore.selected);
 
 	React.useEffect(() => {
-		console.log("pivot", pivotRef.current);
-	}, [pivotRef.current]);
-	useFrame(() => {
-		console.log("Pivot control frame");
-		console.log(pivotRef.current);
-	});
+		console.log("selection Change", selectionAnchorRef.current);
+	}, [selectionAnchorRef.current?.id]);
 
 	return (
 		<>
@@ -53,11 +50,12 @@ const PivotControlsComponent: React.FC<{
 
 					preMatrix.copy(selectionAnchorRef.current?.matrix);
 					preMatrixInv.copy(preMatrix).invert();
+
 					invalidate();
 				}}
 				onDrag={(ml, mdl, mw, mdw) => {
 					if (!selectionAnchorRef.current) return;
-
+					console.log("Drag");
 					const matrixToApply = selectionAnchorRef?.current.matrix
 						.copy(preMatrixInv)
 						.multiply(ml)

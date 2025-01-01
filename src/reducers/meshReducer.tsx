@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Box } from "@react-three/drei"; // Adjust the import path as necessary
-import { createTexture } from "../util/textureUtil";
+import { BoxUVMap, createTexture, loadTexture } from "../util/textureUtil";
 import * as THREE from "three";
 import Cube, {
 	CubeMesh,
@@ -8,6 +8,7 @@ import Cube, {
 	GroupProps,
 	THREEObjectProps,
 } from "../primitives/Cube";
+import { getBase64 } from "../util/baseSFUtil";
 
 type THREETextureProps = {
 	name: string;
@@ -29,6 +30,19 @@ type MeshState = {
 	textureCount: number;
 };
 const cubeCount = 1;
+
+const o1 = 1 / 8;
+
+const UVo = {
+	top: [o1, 0, o1 * 2, o1],
+	bottom: [o1 * 2, 0, o1 * 3, o1],
+
+	right: [o1, o1, o1 * 2, o1 * 2],
+	front: [o1 * 3, o1, o1 * 4, o1 * 2],
+	back: [o1 * 2, o1, o1 * 3, o1 * 2],
+	left: [0, o1, o1, o1 * 2],
+};
+console.log("Sample UV", UVo);
 const meshInitialState: MeshState = {
 	cubeCount: cubeCount,
 	textureCount: 0,
@@ -37,51 +51,49 @@ const meshInitialState: MeshState = {
 			type: "Cube",
 			name: "Cube_" + cubeCount,
 			colour: "#2f00ff",
-			size: [8, 16, 16],
+			size: [16, 32, 16],
 			position: [16, 0, 0],
 			rotation: [0, 0, 0],
 			pivot: [0, 0, 0],
 			scale: 1,
 			props: [],
 			id: cubeCount - 1,
-			uv: {
-				top: [0, 0, 1 / 16, 1 / 8],
-				bottom: [0, 0, 1 / 16, 1 / 8],
-				left: [0, 0, 1 / 16, 1 / 8],
-				right: [0, 0, 1 / 16, 1 / 8],
-				front: [0, 0, 1 / 8, 1 / 8],
-				back: [0, 0, 1 / 8, 1 / 8],
-			},
+			// uv: UVo as any,
+			uv: new BoxUVMap({
+				width: 1,
+				height: 1,
+				depth: 1,
+			}).toUVMap(128, 128) as any,
 		},
-		{
-			type: "Cube",
-			name: "Cube_2",
-			colour: "#ff0000",
-			size: [16, 16, 16],
-			position: [10, 10, 10],
-			rotation: [0, 0, 0],
-			pivot: [0, 0, 0],
-			scale: 1,
-			uv: {
-				top: [0, 0, 1, 1],
-				bottom: [0, 0, 1, 1],
-				left: [0, 0, 1, 1],
-				right: [0, 0, 1, 1],
-				front: [0, 0, 1, 1],
-				back: [0, 0, 1, 1],
-			},
-			props: [],
-			id: cubeCount,
-		},
+		// {
+		// 	type: "Cube",
+		// 	name: "Cube_2",
+		// 	colour: "#ff0000",
+		// 	size: [16, 16, 16],
+		// 	position: [10, 10, 10],
+		// 	rotation: [0, 0, 0],
+		// 	pivot: [0, 0, 0],
+		// 	scale: 1,
+		// 	uv: {
+		// 		top: [0, 0, 1, 1],
+		// 		bottom: [0, 0, 1, 1],
+		// 		left: [0, 0, 1, 1],
+		// 		right: [0, 0, 1, 1],
+		// 		front: [0, 0, 1, 1],
+		// 		back: [0, 0, 1, 1],
+		// 	},
+		// 	props: [],
+		// 	id: cubeCount,
+		// },
 	],
 	texture: [
 		{
 			name: "test",
-			data: "test",
+			data: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACABAMAAAAxEHz4AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAASUExURZOfjLfGr8K8r/Lr2v8AAAAAADE4SVwAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAHsSURBVGje7ZnhboMgFIUhqf8vSX0C6wtQ+b91fQDnwvu/yrCc6ypKO7XJFnP5d0LC/UQOHkFptAptqVbH6/GNiIzzzltrz6UvPbRN9Ki/uTbXXqvDQb/3I9Z1VfcjFoUuoq6hb1JDDv2n0EBAOYKMpjIS2EtCMK6QJ0oJjoGhr+BQoURFZ91Ycz8IGszB5rdAsRkb23mpFoJ9EBi0M9pSrdZWZq1c57rbGm+x5jus+bakRPs5rYLHvvoRpy4s2IUVtJ7rDwS2e1RhquHSltqEIK2QI5oQ5CpG3+cJMAeb38LaFchaCPZBsHYfYL19Rwpf35urluYD1ipY6rMfMVgsukzDhRW+xhourbAvJP0qWC4SWFQgVMhquNTGfeSOIK2QI0oJss8I32cSyjAHeutbWLsCWQuB5IPd5AOHfDBJ5TnNKV7yAWshkHywm3zgqaUV5wdBST6AFgLJBy/KBx75YOoJ+o1LVbBU/DpPXFiw6ypoPdf/gvODgSCtkCNKCZ7+maT9ICDJB0Ig+YBemw+Q+5//J4xP9/k/QwVXR4KF9wusJR8IwT8h+Pt80DTNJeNCeuRKvqNTp1P10Y+49PzgEFokwL3h8/+EsUv5nvKOYNn5wQ8B7g3zO8/8CcYwB5vfwtoVyFoIJB8YY8w3RwF7uApA/k0AAAAASUVORK5CYII=",
 			path: "test",
 			local_path: "test",
-			width: 16,
-			height: 16,
+			width: 128,
+			height: 128,
 			active: true,
 			id: 0,
 		},
@@ -124,6 +136,7 @@ const meshSlice = createSlice({
 				scale?: number;
 				pivot?: [number, number, number];
 				colour?: string;
+				uv?: BoxUVMap;
 			}>
 		) {
 			console.log("Mesh modify index");
@@ -134,6 +147,15 @@ const meshSlice = createSlice({
 			}
 			if (action.payload.rotation) {
 				state.mesh[action.payload.index].rotation = action.payload.rotation;
+			}
+			if (action.payload.scale) {
+				state.mesh[action.payload.index].scale = action.payload.scale;
+			}
+			if (action.payload.uv) {
+				state.mesh[action.payload.index].uv = action.payload.uv.toUVMap(
+					state.texture[0].width,
+					state.texture[0].height
+				) as any;
 			}
 
 			//state.mesh[action.payload.index].colour = "red";

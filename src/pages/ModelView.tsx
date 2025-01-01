@@ -53,7 +53,7 @@ function ModelView() {
 
 	return (
 		<div className="w-screen h-full flex flex-col flex-grow-0 overflow-hidden">
-			<div className="flex flex-row w-screen h-full overflow-y-hidden flex-grow overflow-hidden  flex-nowrap items-center justify-stretch p-1 gap-1">
+			<div className="flex flex-row w-screen h-full overflow-y-hidden flex-grow overflow-hidden  flex-nowrap items-center justify-stretch p-1 gap-1 pointer-events-none">
 				<ResizeableBar
 					id="leftSidebar"
 					width={300}

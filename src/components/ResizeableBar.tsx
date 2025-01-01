@@ -82,15 +82,15 @@ const ResizeableBar: React.FC<
 		console.log("MOUSE UP");
 		setIsResizing(false);
 	};
-	React.useEffect(() => {
-		document.addEventListener("mousemove", handleMouseMove);
-		document.addEventListener("mouseup", handleMouseUp);
+	// React.useEffect(() => {
+	// 	document.addEventListener("mousemove", handleMouseMove);
+	// 	document.addEventListener("mouseup", handleMouseUp);
 
-		return () => {
-			document.removeEventListener("mousemove", handleMouseMove);
-			document.removeEventListener("mouseup", handleMouseUp);
-		};
-	}, [isResizing]);
+	// 	return () => {
+	// 		document.removeEventListener("mousemove", handleMouseMove);
+	// 		document.removeEventListener("mouseup", handleMouseUp);
+	// 	};
+	// }, [isResizing]);
 	const isBorderCheck = (x: number, y: number, width: number, height: number) => {
 		// is already resizing, return the current border
 		if (isResizing) return isBorder.current;
