@@ -15,7 +15,7 @@ import {
 	Texture,
 } from "@react-three/drei";
 import { BufferGeometry } from "@react-three/fiber";
-import { modelContext } from "../components/Viewport/ModelContext";
+import { modelContext } from "../components/ThreeComponents/ModelContext";
 import { createTexture } from "../util/textureUtil";
 import { useMeshSelector, useViewportSelector } from "../hooks/useRedux";
 
@@ -101,80 +101,6 @@ type GroupProps = {
 	children: CubeProps[] | GroupProps[];
 };
 
-const CubeMesh: React.FC<CubeProps> = ({
-	name,
-	colour,
-	size,
-	position,
-	rotation,
-	pivot,
-	scale,
-	id,
-	type = "Cube",
-	texture,
-
-	onClick,
-	onHover,
-	onPointerOver,
-	onPointerOut,
-	...props
-}) => {
-	return (
-		<mesh
-			{...props}
-			position={position}
-			rotation={rotation}
-			scale={scale}
-			key={id}
-			type={type}
-			onUpdate={(self) => {
-				console.log("CubeMesh onUpdate");
-				self.updateMatrixWorld(true);
-			}}
-			onClick={onClick}>
-			<boxGeometry args={size} />
-			<meshStandardMaterial
-				map={texture} // Use the cube texture as environment map
-				envMapIntensity={1} // Ensure the environment map intensity is set
-				color={colour || "#ffffff"} // Fallback color
-				transparent={true}
-				alphaTest={0.5} // Use alpha of the texture
-				side={THREE.FrontSide} // Render texture on both sides
-				shadowSide={THREE.FrontSide}
-				toneMapped={false} // Render texture at full brightness
-			/>
-		</mesh>
-	);
-};
-
-const GroupMesh: React.FC<GroupProps> = ({
-	name,
-	size,
-	position,
-	rotation,
-	scale,
-	pivot,
-	id,
-	children,
-	type = "Group",
-	...props
-}) => {
-	const testCube = CubeMesh({
-		type: "Cube",
-		name: "testCube",
-		colour: "#ff0000",
-		size: [8, 8, 8],
-		position: [0, 0, 0],
-		rotation: [0, 0, 0],
-		scale: 1,
-		pivot: [0, 0, 0],
-		id: 0,
-	});
-	return <group {...props}></group>;
-};
-
 // returns an array representing cube data
 
-export default CubeMesh;
-export { CubeMesh, setCubeCount };
 export type { CubeProps, GroupProps, THREEObjectProps };

@@ -96,7 +96,7 @@ const NavChildCheck: React.FC<{
 			<div
 				onClick={() => {
 					set();
-					console.log("Nav check click");
+					//console.log("Nav check click");
 				}}
 				className="bg-red-500 h-6 w-6 flex aspect-square rounded-md border-blue-500 border-2 justify-center items-center">
 				{value ? (

@@ -1,6 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import SideBarWidget from "./templates/SideBarWidget";
-import { useAppDispatch, useMeshSelector, useViewportSelector } from "../hooks/useRedux";
+import {
+	useAppDispatch,
+	useMeshDataSelector,
+	useMeshStoreSelector,
+	useMeshTextureSelector,
+	useViewportSelector,
+} from "../hooks/useRedux";
 import { meshModifyIndex } from "../reducers/meshReducer";
 import ToggleButtonIcon from "./templates/ToggleButtonIcon";
 import { BoxUVMap, loadTexture } from "../util/textureUtil";
@@ -225,8 +231,9 @@ class UVMap {
 
 const TextureCanvasView: React.FC = () => {
 	const viewportStore = useViewportSelector();
-	const meshStore = useMeshSelector();
-	const textureData = useRef(meshStore.texture[0].data);
+	const meshStore = useMeshStoreSelector();
+	const meshData = useMeshDataSelector();
+	const textureData = useRef(useMeshTextureSelector()[0].data);
 
 	const image = new Image();
 	image.src = textureData.current;
@@ -236,7 +243,7 @@ const TextureCanvasView: React.FC = () => {
 
 	const uvs = useRef(
 		new UVMap({
-			...meshStore.mesh[0].uv,
+			...meshData[0].uv,
 			sourceWidth: image.width,
 			sourceHeight: image.height,
 		})
@@ -244,9 +251,9 @@ const TextureCanvasView: React.FC = () => {
 
 	const boxUVs = useRef(
 		new BoxUVMap({
-			width: meshStore.mesh[0].size[0],
-			height: meshStore.mesh[0].size[1],
-			depth: meshStore.mesh[0].size[2],
+			width: meshData[0].size[0],
+			height: meshData[0].size[1],
+			depth: meshData[0].size[2],
 		})
 	);
 
@@ -260,7 +267,7 @@ const TextureCanvasView: React.FC = () => {
 	const dispatch = useAppDispatch();
 
 	useEffect(() => {
-		console.log("UVs", uvs.current);
+		//console.log("UVs", uvs.current);
 		// uvs.current = new UVMap({
 		// 	...meshStore.mesh[0].uv,
 		// 	sourceWidth: image.width,
@@ -268,7 +275,7 @@ const TextureCanvasView: React.FC = () => {
 		// });
 		// uvs.current.addPosition(1, 1);
 
-		dispatch(meshModifyIndex({ index: 0, uv: boxUVs.current }));
+		dispatch(meshModifyIndex({ index: 0, uv: boxUVs.current.toUVMap(128, 128) }));
 	}, []);
 
 	const drawSrcImage = (ctx: CanvasRenderingContext2D) => {
@@ -304,8 +311,8 @@ const TextureCanvasView: React.FC = () => {
 		if (uvs.current) {
 			var map = boxUVs.current.toPixels();
 			const UV = boxUVs.current.toUVMap(width, height);
-			console.log("Map UV", UV);
-			console.log("Map", map);
+			//console.log("Map UV", UV);
+			//console.log("Map", map);
 			//top
 			drawHighlightRect(
 				ctx,
@@ -397,7 +404,7 @@ const TextureCanvasView: React.FC = () => {
 	};
 
 	const onWheel = React.useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
-		console.log("Wheel", e);
+		//Wheel", e);
 		const delta = e.deltaY;
 		if (delta > 0) {
 			scale[1]((prev) => prev - 0.1);
@@ -405,7 +412,7 @@ const TextureCanvasView: React.FC = () => {
 			scale[1]((prev) => prev + 0.1);
 		}
 		//scale[1](newScale);
-		console.log("Scale", scale);
+		//console.log("Scale", scale);
 	}, []);
 
 	const canvasDrag = (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -436,7 +443,7 @@ const TextureCanvasView: React.FC = () => {
 						mousePosition.current = { x: e.clientX, y: e.clientY };
 						if (isDragging.current) {
 							if (dragState.current === "board") {
-								console.log("deltas", e);
+								//console.log("deltas", e);
 
 								canvasDrag(e);
 							} else if (dragState.current === "uv") {
@@ -446,9 +453,6 @@ const TextureCanvasView: React.FC = () => {
 								);
 							}
 						}
-					}}
-					onMouseMove={(e) => {
-						console.log("Dragging", e);
 					}}
 					onPointerUp={(e) => {
 						isDragging.current = false;

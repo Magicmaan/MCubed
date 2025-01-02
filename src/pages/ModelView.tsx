@@ -8,16 +8,9 @@ import { useThree } from "@react-three/fiber";
 import * as React from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Hud, PerspectiveCamera } from "@react-three/drei";
-import Cube from "../primitives/Cube.tsx";
+
 import { CubeProps } from "../primitives/Cube.tsx";
-import {
-	modelContext,
-	ModelContextProvider,
-} from "../components/Viewport/ModelContext.tsx";
-import {
-	defaultViewportContext,
-	ViewportContextProvider,
-} from "../components/Viewport/ViewportContext";
+
 import ModelPartView from "../components/ModelPartView";
 import { randomCubeColour } from "../constants/CubeColours.tsx";
 import ContextMenu from "../components/ContextMenu.tsx";
@@ -29,23 +22,12 @@ import ResizeableBar from "../components/ResizeableBar.tsx";
 import SideBarWidget from "../components/templates/SideBarWidget.tsx";
 import TextureCanvasView from "../components/TextureCanvasView.tsx";
 
-const Viewport = lazy(() => import("../components/Viewport/Viewport.tsx"));
+const Viewport = lazy(() => import("../components/ThreeComponents/Viewport.tsx"));
 function ModelView() {
-	const [model, setModel] = React.useState<CubeProps[]>([]);
-	const [selected, setSelected] = React.useState<Number[]>([]);
-	const [sceneRef, setSceneRef] = React.useState<THREE.Scene | null>(null);
-
 	// https://github.com/pmndrs/drei/blob/master/src/web/Select.tsx
 	// look at this to improve
 	const { menuVisible, menuItems, menuPosition, showMenu, hideMenu, handleContextMenu } =
 		useContextMenu();
-
-	React.useEffect(() => {
-		setModel([
-			Cube({ colour: randomCubeColour(), pos: [9, 0, 0], scale: 1, size: [16, 16, 16] }),
-		]);
-		setSelected([1]);
-	}, []);
 
 	//REDUX STUFF
 	const mesh = useAppSelector((state) => state.mesh);

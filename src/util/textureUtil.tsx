@@ -1,6 +1,7 @@
 import { color } from "three/webgpu";
 import * as THREE from "three";
 import { randomCubeColour } from "../constants/CubeColours";
+import { CubeProps } from "../primitives/Cube";
 
 const createTexture = (width: number, height: number, color?: string) => {
 	if (color === null) {
@@ -239,8 +240,43 @@ class BoxUVMap {
 			right: [this.right[0] / width, this.right[1] / height, this.right[2] / width + this.right[0] / width, this.right[3] / height + this.right[1] / height],
 			front: [this.front[0] / width, this.front[1] / height, this.front[2] / width + this.front[0] / width, this.front[3] / height + this.front[1] / height],
 			back: [this.back[0] / width, this.back[1] / height, this.back[2] / width + this.back[0] / width, this.back[3] / height + this.back[1] / height]
-		};
+		} as { top: [number, number, number, number], bottom: [number, number, number, number], left: [number, number, number, number], right: [number, number, number, number], front: [number, number, number, number], back: [number, number, number, number] };
 	}
 }
 
-export { createTexture, darkenColor, lightenColor, loadTexture, BoxUVMap };
+const boxUVToVertexArray = (uv: {
+	top: [number, number, number, number];
+	bottom: [number, number, number, number];
+	left: [number, number, number, number];
+	right: [number, number, number, number];
+	front: [number, number, number, number];
+	back: [number, number, number, number];
+}) => {
+	const uvArray = new Float32Array(48);
+	const convertToTrianglePositions = ([x1, y1, x2, y2]: number[]) => [
+		x1,
+		1 - y1,
+		x2,
+		1 - y1,
+		x1,
+		1 - y2,
+		x2,
+		1 - y2,
+	];
+	uvArray.set(convertToTrianglePositions(uv.left), 0);
+	uvArray.set(convertToTrianglePositions(uv.right), 8);
+	uvArray.set(convertToTrianglePositions(uv.top), 16);
+	uvArray.set(convertToTrianglePositions(uv.bottom), 24);
+	uvArray.set(convertToTrianglePositions(uv.front), 32);
+	uvArray.set(convertToTrianglePositions(uv.back), 40);
+	return uvArray;
+};
+
+export {
+	createTexture,
+	darkenColor,
+	lightenColor,
+	loadTexture,
+	boxUVToVertexArray,
+	BoxUVMap,
+};

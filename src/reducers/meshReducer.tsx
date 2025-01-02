@@ -2,12 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Box } from "@react-three/drei"; // Adjust the import path as necessary
 import { BoxUVMap, createTexture, loadTexture } from "../util/textureUtil";
 import * as THREE from "three";
-import Cube, {
-	CubeMesh,
-	CubeProps,
-	GroupProps,
-	THREEObjectProps,
-} from "../primitives/Cube";
+import Cube, { CubeProps, GroupProps, THREEObjectProps } from "../primitives/Cube";
 import { getBase64 } from "../util/baseSFUtil";
 
 type THREETextureProps = {
@@ -45,14 +40,14 @@ const UVo = {
 console.log("Sample UV", UVo);
 const meshInitialState: MeshState = {
 	cubeCount: cubeCount,
-	textureCount: 0,
+	textureCount: 1,
 	mesh: [
 		{
 			type: "Cube",
 			name: "Cube_" + cubeCount,
 			colour: "#2f00ff",
 			size: [16, 32, 16],
-			position: [16, 0, 0],
+			position: [0, 0, 0],
 			rotation: [0, 0, 0],
 			pivot: [0, 0, 0],
 			scale: 1,
@@ -100,6 +95,7 @@ const meshInitialState: MeshState = {
 	],
 };
 
+// functions to modify mesh
 const meshSlice = createSlice({
 	name: "mesh",
 	initialState: meshInitialState,
@@ -118,9 +114,7 @@ const meshSlice = createSlice({
 			state.cubeCount++;
 			console.log("Added cube from reducer");
 		},
-		testReducer(state) {
-			console.log("Test reducer");
-		},
+
 		meshModify(state, action: PayloadAction<number>) {
 			const index = state.mesh.findIndex((item) => item.id === action.payload);
 			if (index !== -1) {
@@ -136,10 +130,17 @@ const meshSlice = createSlice({
 				scale?: number;
 				pivot?: [number, number, number];
 				colour?: string;
-				uv?: BoxUVMap;
+				uv?: {
+					top: [number, number, number, number];
+					bottom: [number, number, number, number];
+					left: [number, number, number, number];
+					right: [number, number, number, number];
+					front: [number, number, number, number];
+					back: [number, number, number, number];
+				};
 			}>
 		) {
-			console.log("Mesh modify index");
+			console.log("Mesh modify index", action.payload);
 			console.log(action.payload);
 			state.mesh[action.payload.index].colour = action.payload.colour;
 			if (action.payload.position) {
@@ -152,24 +153,15 @@ const meshSlice = createSlice({
 				state.mesh[action.payload.index].scale = action.payload.scale;
 			}
 			if (action.payload.uv) {
-				state.mesh[action.payload.index].uv = action.payload.uv.toUVMap(
-					state.texture[0].width,
-					state.texture[0].height
-				) as any;
+				state.mesh[action.payload.index].uv = action.payload.uv;
 			}
 
 			//state.mesh[action.payload.index].colour = "red";
 		},
-		// meshAdd(state, action: PayloadAction<typeof Box>) {
-		// 	// Action = CubeMesh
-		// 	state.mesh.push(action.payload);
-		// },
-		// Define your reducers here
 	},
 });
 
 //export const { actions, reducer } = someSlice;
 //export default someSlice.reducer;
 export default meshSlice;
-export const { meshAddRandom, testReducer, meshModify, meshModifyIndex } =
-	meshSlice.actions;
+export const { meshAddRandom, meshModify, meshModifyIndex } = meshSlice.actions;

@@ -6,7 +6,7 @@ import { Html } from "@react-three/drei";
 import { context } from "./context";
 import { calculateScaleFactor } from "@react-three/drei/core/calculateScaleFactor";
 import { Canvas, useLoader } from "@react-three/fiber";
-import icon from "../../assets/dot.png";
+import icon from "../../../assets/dot.png";
 
 const vec1 = /* @__PURE__ */ new THREE.Vector3();
 const vec2 = /* @__PURE__ */ new THREE.Vector3();

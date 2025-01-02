@@ -15,6 +15,7 @@ import lock from "./lock";
 import lock_open from "./lock-open";
 import border_all from "./border-all";
 import border_none from "./border-none";
+import arrows_down_to_line from "./arrows-down-to-line";
 // prettier-ignore
 const icons: { [key: string]: string | {d:string,viewBox:string} } = {
 	"cube": cube,
@@ -23,6 +24,7 @@ const icons: { [key: string]: string | {d:string,viewBox:string} } = {
 	"arrow-up-right": arrows_up_right,
 	"arrows-to-dot": arrows_to_dot,
 	"arrows-to-circle": arrows_to_circle,
+	"arrows-down-to-line": arrows_down_to_line,
 	"caret-down": caret_down,
 	"caret-left": caret_left,
 	"caret-right": caret_right,

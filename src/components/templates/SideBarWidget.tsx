@@ -24,7 +24,6 @@ const SideBarWidget: React.FC<SideBarWidgetProps> = ({
 			<div className="flex flex-row flex-nowrap justify-between items-center w-full h-auto select-none">
 				<p className="font-Inter font-semibold text-left p-2 pr-4 border-1 static">
 					{name}
-					<div className="flex-grow h-1"></div>
 				</p>
 				{showExitButton && (
 					<button

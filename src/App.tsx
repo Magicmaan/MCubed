@@ -12,14 +12,14 @@ function App() {
 
 	//file stuff to be added
 	const [File, setFile] = useState(false);
-	var showStartup = useState(true);
+	var showStartup = useState(false);
 	var blurApp = useState(false);
 	var showSAnim = useState(false);
 
 	const [currentView, setCurrentView] = useState(<ModelView />);
 	return (
 		<Provider store={store}>
-			<div className="w-full h-full flex flex-col flex-nowrap transition-all duration-300">
+			<div className="w-screen h-screen flex flex-col flex-nowrap transition-all duration-300">
 				<NavBar />
 				{currentView}
 			</div>

@@ -1,16 +1,17 @@
 import * as React from "react";
 import * as THREE from "three";
 import { Box } from "@react-three/drei";
-import { PivotControls } from "../custom_PivotControl";
+import { PivotControls } from "./custom_PivotControl";
 import {
 	useAppDispatch,
-	useMeshSelector,
+	useViewportSelectedSelector,
 	useViewportSelector,
 } from "../../hooks/useRedux";
-import { meshModifyIndex, testReducer } from "../../reducers/meshReducer";
-import { disableGimbal, enableGimbal } from "../../reducers/viewportReducer";
+import { meshModifyIndex } from "../../reducers/meshReducer";
+import { setControls } from "../../reducers/viewportReducer";
 import { invalidate, useFrame, useThree } from "@react-three/fiber";
 import { ForwardRefComponent } from "@react-three/drei/helpers/ts-utils";
+import { useStateList } from "react-use";
 
 // PLEASE DO NOT TOUCH
 // I HAVE NO IDEA HOW THIS WORKS BUT IT DOES
@@ -26,27 +27,43 @@ const PivotControlsComponent: React.FC<{
 	var preMatrix = new THREE.Matrix4();
 	var preMatrixInv = new THREE.Matrix4();
 	const viewportStore = useViewportSelector();
-	const useGimbal = viewportStore.useGimbal;
 	const dispatch = useAppDispatch();
-	const meshStore = useMeshSelector();
-	const meshProps = meshStore.mesh;
 	const three = useThree();
-	console.log(three);
 
-	const pivotRef = React.useRef(null);
-	const selected = React.useRef(viewportStore.selected);
-
+	const selectedID = React.useState(useViewportSelectedSelector());
 	React.useEffect(() => {
-		console.log("selection Change", selectionAnchorRef.current);
-	}, [selectionAnchorRef.current?.id]);
+		console.log("selected changed pivot", selectedID);
+		if (selectedID[0] === -1 || selectedID[0] === undefined) {
+			visible.current = false;
+		} else {
+			visible.current = true;
+		}
+		invalidate();
+	}, [selectedID]);
 
+	const visible = React.useRef(false);
+	//console.log(three);
+	const pivotRef = React.useRef(null);
+	useFrame(() => {
+		if (pivotRef.current) {
+			if (selectedID[0] === -1 || selectedID[0] === undefined) {
+				visible.current = false;
+			} else {
+				visible.current = true;
+			}
+		}
+	});
 	return (
-		<>
+		<group
+			ref={pivotRef}
+			visible={visible.current}
+			userData={{ id: "pivot", selectedID: selectedID[0] }}>
 			<PivotControls
-				ref={pivotRef}
 				onDragStart={() => {
-					dispatch(disableGimbal([false, false, false]));
+					dispatch(setControls({ zoom: false, pan: false, rotate: false }));
 					if (!selectionAnchorRef.current) return;
+					if (viewportStore.selected === undefined) return;
+					if (viewportStore.selected === -1) return;
 
 					preMatrix.copy(selectionAnchorRef.current?.matrix);
 					preMatrixInv.copy(preMatrix).invert();
@@ -55,7 +72,10 @@ const PivotControlsComponent: React.FC<{
 				}}
 				onDrag={(ml, mdl, mw, mdw) => {
 					if (!selectionAnchorRef.current) return;
-					console.log("Drag");
+					if (viewportStore.selected === undefined) return;
+					if (viewportStore.selected === -1) return;
+
+					//console.log("Drag");
 					const matrixToApply = selectionAnchorRef?.current.matrix
 						.copy(preMatrixInv)
 						.multiply(ml)
@@ -63,16 +83,16 @@ const PivotControlsComponent: React.FC<{
 					selectionAnchorRef?.current.matrix.copy(
 						matrixToApply ? matrixToApply : selectionAnchorRef.current.matrix
 					);
-					const position = new THREE.Vector3();
-					const quaternion = new THREE.Quaternion();
-					const scale = new THREE.Vector3();
-					matrixToApply?.decompose(position, quaternion, scale);
 
 					// selectionAnchorRef?.current.position.copy(pos);
 					// selectionAnchorRef?.current.quaternion.copy(quat);
 					// selectionAnchorRef?.current.scale.copy(scale);
 
 					selectionAnchorRef?.current?.updateMatrixWorld(true);
+					const position = new THREE.Vector3();
+					const quaternion = new THREE.Quaternion();
+					const scale = new THREE.Vector3();
+					matrixToApply?.decompose(position, quaternion, scale);
 
 					dispatch(
 						meshModifyIndex({
@@ -85,12 +105,13 @@ const PivotControlsComponent: React.FC<{
 							],
 						})
 					);
-
 					invalidate();
 				}}
 				onDragEnd={() => {
-					dispatch(enableGimbal());
 					if (!selectionAnchorRef.current) return;
+					if (viewportStore.selected === undefined) return;
+					if (viewportStore.selected === -1) return;
+
 					if (selectionAnchorRef.current instanceof THREE.Object3D) {
 						selectionAnchorRef.current.updateMatrixWorld(true);
 					}
@@ -99,21 +120,22 @@ const PivotControlsComponent: React.FC<{
 					const distanceMoved = prePosition.distanceTo(
 						selectionAnchorRef.current.position
 					);
-					console.log(`Distance moved: ${distanceMoved}`);
+					//console.log(`Distance moved: ${distanceMoved}`);
 
-					dispatch(testReducer());
+					//re enable camera controls
+					dispatch(setControls({ zoom: true, pan: true, rotate: true }));
 				}}
 				autoTransform={true}
 				anchor={[0, 0, 0]}
 				scale={2}
 				rotation={[0, 0, 0]}
 				depthTest={false}
-				enabled={true}
-				visible={viewportStore.selected !== undefined}>
+				visible={visible.current}
+				enabled={visible.current}>
 				{/* Box is placeholder, needed to attach pivot controls */}
 				<Box matrix={pivotMatrix} matrixAutoUpdate={false} args={[0, 0, 0]} />
 			</PivotControls>
-		</>
+		</group>
 	);
 };
 

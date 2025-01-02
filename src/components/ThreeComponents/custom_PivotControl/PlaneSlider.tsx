@@ -5,7 +5,7 @@ import { Line } from "@react-three/drei";
 import { Html } from "@react-three/drei";
 import { context } from "./context";
 import Geometries from "three/src/renderers/common/Geometries.js";
-import icon from "../../assets/curve.png";
+import icon from "../../../assets/curve.png";
 const decomposeIntoBasis = (
 	e1: THREE.Vector3,
 	e2: THREE.Vector3,

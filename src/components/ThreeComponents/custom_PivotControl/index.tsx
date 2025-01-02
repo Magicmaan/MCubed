@@ -9,6 +9,7 @@ import { PlaneSlider } from "./PlaneSlider";
 import { ScalingSphere } from "./ScalingSphere";
 import { OnDragStartProps, context } from "./context";
 import { calculateScaleFactor } from "@react-three/drei/core/calculateScaleFactor";
+import { useViewportSelector } from "../../../hooks/useRedux";
 
 const mL0 = /* @__PURE__ */ new THREE.Matrix4();
 const mW0 = /* @__PURE__ */ new THREE.Matrix4();
@@ -150,6 +151,8 @@ export const PivotControls: ForwardRefComponent<PivotControlsProps, THREE.Group>
 			const translation = React.useRef<[number, number, number]>([0, 0, 0]);
 			const cameraScale = React.useRef<THREE.Vector3>(new THREE.Vector3(1, 1, 1));
 			const gizmoScale = React.useRef<THREE.Vector3>(new THREE.Vector3(1, 1, 1));
+			const selectedRef = React.useRef<number>(useViewportSelector().selected ?? -1);
+			const selected = selectedRef.current;
 
 			React.useLayoutEffect(() => {
 				if (!anchor) return;
@@ -279,6 +282,14 @@ export const PivotControls: ForwardRefComponent<PivotControlsProps, THREE.Group>
 				const distance = state.camera.position.distanceTo(gizmoRef.current.position);
 				const scaleFactor = (distance / (state.size.height / 2)) * 100; // Adjust the divisor to control the size
 				gizmoRef.current.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+				if (selectedRef.current === -1) {
+					gizmoRef.current.visible = false;
+					enabled = false;
+				} else {
+					gizmoRef.current.visible = true;
+					enabled = true;
+				}
 			});
 
 			React.useImperativeHandle(fRef, () => ref.current, []);

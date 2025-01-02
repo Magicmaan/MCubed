@@ -33,8 +33,6 @@ import {
 	ScreenSpace,
 } from "@react-three/drei";
 
-import CubeMesh, { CubeProps, GroupProps, THREEObjectProps } from "../../primitives/Cube";
-
 import { Stats } from "@react-three/drei";
 import { useLoader } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
@@ -45,31 +43,28 @@ import {
 	useAppDispatch,
 	useAppSelector,
 	useMeshArraySelector,
-	useMeshSelector,
+	useMeshDataSelector,
+	useMeshStoreSelector,
+	useViewportCameraSelector,
+	useViewportCameraSettingsSelector,
+	useViewportSelectedSelector,
 	useViewportSelector,
 } from "../../hooks/useRedux";
 import PivotControlsComponent from "./PivotControlsComponent";
 import InputSingle from "../ValueDisplay";
 import { toTrun, toTrunPercentage } from "../../util";
 import InfoPanel from "./Gui/InfoPanel";
-import {
-	disableGimbal,
-	enableGimbal,
-	setScene,
-	setSelected,
-} from "../../reducers/viewportReducer";
+import { setControls, setScene, setSelected } from "../../reducers/viewportReducer";
 import ModelInstance from "./ModelInstance";
 
 const GetSceneRef: React.FC<{
 	setThree: React.Dispatch<React.SetStateAction<RootState | undefined>>;
-	invalidate: React.MutableRefObject<(arg0: number) => void>;
-}> = ({ setThree, invalidate }) => {
+}> = ({ setThree }) => {
 	const dispatch = useAppDispatch();
 	const threeScene = useThree();
-	const rawscene = threeScene.scene.children;
 	setThree(threeScene);
-	console.log("Setting scene ref");
-	console.log("Scene: ", rawscene);
+	//console.log("Setting scene ref");
+	//console.log("Scene: ", rawscene);
 
 	return <></>;
 };
@@ -78,22 +73,21 @@ const Viewport: React.FC = () => {
 	const viewportContainer = useState<HTMLDivElement | null>(
 		document.getElementById("viewportContainer") as HTMLDivElement
 	);
-	var invalidate = React.useRef<(arg0: number) => void>(() => {});
 
-	const isUsingGimbal = React.useRef(false);
+	const isUsingCamera = React.useRef(false);
 	const [threeScene, setThreeScene] = useState<RootState>();
 
 	const viewportData = useViewportSelector();
-	const useGimbal = viewportData.useGimbal;
+	const cameraControls = useViewportCameraSelector();
 	const showGrid = viewportData.showGrid;
 	const showStats = viewportData.showStats;
-	const selected = viewportData.selected;
+	const selected = useViewportSelectedSelector();
 	const dispatch = useAppDispatch();
 
-	const camera = viewportData.cameraSettings;
+	const camera = useViewportCameraSettingsSelector();
 
-	const meshStore = useMeshSelector();
-	const meshProps = meshStore.mesh;
+	const meshStore = useMeshStoreSelector();
+	const meshData = useMeshDataSelector();
 
 	const boxRef = React.useRef<THREE.Mesh>(null);
 	const selectionAnchorRef = React.useRef<THREE.Group | null>(null);
@@ -116,10 +110,6 @@ const Viewport: React.FC = () => {
 		}
 	};
 
-	useEffect(() => {
-		console.log("pivot pos", pivotPointRef.current?.position);
-	}, [pivotPointRef.current?.position.x]);
-
 	const raycaster = new THREE.Raycaster();
 
 	// useFrame(() => {
@@ -129,7 +119,7 @@ const Viewport: React.FC = () => {
 	return (
 		<Canvas
 			id="viewport"
-			frameloop="demand"
+			frameloop="always"
 			className="w-full h-full bg-transparent "
 			camera={{ fov: camera.fov, position: camera.pos }}
 			gl={{
@@ -138,25 +128,30 @@ const Viewport: React.FC = () => {
 			}}
 			onMouseDown={(e) => {
 				//console.log("Canvas onMouseDown");
-				isUsingGimbal.current = true;
+				isUsingCamera.current = true;
 			}}
 			onMouseEnter={(e) => {
-				dispatch(enableGimbal());
+				dispatch(setControls({ zoom: true, pan: true, rotate: true }));
 			}}
 			onMouseLeave={(e) => {
 				// if dragging
-				if (isUsingGimbal.current) {
+				if (isUsingCamera.current) {
 					console.log("Canvas onMouseLeave but dragging");
 				} else {
 					console.log("Canvas onMouseLeave");
-					dispatch(disableGimbal([false, false, false]));
+					dispatch(setControls({ zoom: false, pan: false, rotate: false }));
 				}
+			}}
+			onPointerMove={(e) => {
+				invalidate();
 			}}
 			onPointerMissed={(e) => {
 				console.log("Canvas onPointerMissed");
-				dispatch(setSelected(undefined));
+				dispatch(setSelected(-1));
+				console.log("Selected: ", selected);
+				invalidate();
 			}}>
-			<GetSceneRef setThree={setThreeScene} invalidate={invalidate} />
+			<GetSceneRef setThree={setThreeScene} />
 			<PerspectiveCamera
 				makeDefault
 				aspect={
@@ -170,18 +165,13 @@ const Viewport: React.FC = () => {
 			<ambientLight />
 			<pointLight position={[10, 10, 10]} />
 
-			<ModelInstance
-				modelData={meshProps}
-				count={meshProps.length}
-				selectRef={selectionAnchorRef}
-				setPivotPosition={setPivotPosition}
-			/>
+			<ModelInstance selectionAnchorRef={selectionAnchorRef} />
 
-			{showGrid ? <GridPlane size={16} /> : null}
+			<GridPlane size={16} />
 			<OrbitControls
-				enableZoom={useGimbal?.zoom}
-				enablePan={useGimbal?.pan}
-				enableRotate={useGimbal?.rotate}
+				enableZoom={cameraControls?.zoom}
+				enablePan={cameraControls?.pan}
+				enableRotate={cameraControls?.rotate}
 				ref={orbitRef}
 				onStart={() => {
 					//cameraPivot.current = orbitRef.current?.target;
@@ -246,14 +236,14 @@ const Viewport: React.FC = () => {
 					camera={cameraRef}
 					pivot={pivotPointRef}
 					orbit={orbitRef}
-					useGimbal={useGimbal}
+					useGimbal={cameraControls}
 				/>
 			</group>
 
 			{showStats && <Stats className=" text-lg bg-red-500" />}
 
 			<PivotControlsComponent
-				useGimbal={useGimbal}
+				useGimbal={cameraControls}
 				selectionAnchorRef={selectionAnchorRef}
 			/>
 			<group ref={selectionAnchorRef} matrixAutoUpdate={false} />

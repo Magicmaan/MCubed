@@ -5,8 +5,12 @@ import { Line, Plane, Text, Billboard } from "@react-three/drei";
 import { Html } from "@react-three/drei";
 import { context } from "./context";
 import { Canvas, useLoader } from "@react-three/fiber";
-import icon from "../../assets/arrow.png";
-import { darkenColor, lightenColor } from "../../util/textureUtil";
+import icon from "../../../assets/arrow.png";
+import { darkenColor, lightenColor } from "../../../util/textureUtil";
+import { round } from "../../../util";
+import { useKey, useKeyPress } from "react-use";
+import { useModifiers } from "../../../hooks/useControls";
+import { moveModifierIncrement } from "../../../constants/KeyModifiers";
 
 const vec1 = /* @__PURE__ */ new THREE.Vector3();
 const vec2 = /* @__PURE__ */ new THREE.Vector3();
@@ -65,6 +69,8 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 		userData,
 	} = React.useContext(context);
 
+	const keyModifiers = useModifiers();
+
 	// @ts-expect-error new in @react-three/fiber@7.0.5
 	const camControls = useThree((state) => state.controls) as { enabled: boolean };
 	const divRef = React.useRef<HTMLDivElement>(null!);
@@ -110,10 +116,19 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 				const [min, max] = translationLimits?.[axis] || [undefined, undefined];
 
 				let offset = calculateOffset(clickPoint, dir, e.ray.origin, e.ray.direction);
-				offset = Math.round(offset);
-				if (min !== undefined) {
-					offset = Math.max(offset, min - offset0.current);
+
+				//modifier steps
+				if (keyModifiers.xx_small_shift[0][0] && keyModifiers.xx_small_shift[0][1]) {
+					offset = round(offset, moveModifierIncrement.xx_small_shift, 0);
+				} else if (keyModifiers.x_small_shift[0]) {
+					offset = round(offset, moveModifierIncrement.x_small_shift, 0);
+				} else if (keyModifiers.small_shift[0]) {
+					offset = round(offset, moveModifierIncrement.small_shift, 0);
+				} else {
+					offset = round(offset, 1, 0);
 				}
+
+				//
 				if (max !== undefined) {
 					offset = Math.min(offset, max - offset0.current);
 				}

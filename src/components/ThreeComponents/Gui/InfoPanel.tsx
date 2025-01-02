@@ -8,7 +8,7 @@ import { toTrun, toTrunPercentage } from "../../../util";
 import ToggleButtonIcon from "../../templates/ToggleButtonIcon";
 import { Html, OrbitControls } from "@react-three/drei";
 import { useAppDispatch } from "../../../hooks/useRedux";
-import { disableGimbal, enableGimbal } from "../../../reducers/viewportReducer";
+import { setControls, enableGimbal } from "../../../reducers/viewportReducer";
 import ResizeableBar from "../../ResizeableBar";
 import { Resizable } from "re-resizable";
 import ToolBar from "./ToolBar";
@@ -214,7 +214,7 @@ const InfoPanel: React.FC<{
 	const lockDistance = useRef(false);
 	useEffect(() => {
 		if (lockDistance.current) {
-			dispatch(disableGimbal([false, false, false]));
+			dispatch(setControls([false, false, false]));
 		}
 	}, [lockDistance.current]);
 
@@ -287,7 +287,7 @@ const InfoPanel: React.FC<{
 													isActive={false}
 													onClick={() => {
 														lockDistance.current = !lockDistance.current;
-														dispatch(disableGimbal([false, true, false]));
+														dispatch(setControls([false, true, false]));
 														console.log("toggle distance", lockDistance.current);
 													}}
 													Icon_on={
