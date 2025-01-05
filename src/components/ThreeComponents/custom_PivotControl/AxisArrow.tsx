@@ -1,16 +1,16 @@
-import * as React from "react";
-import * as THREE from "three";
-import { ThreeEvent, useFrame, useThree } from "@react-three/fiber";
-import { Line, Plane, Text, Billboard } from "@react-three/drei";
-import { Html } from "@react-three/drei";
-import { context } from "./context";
-import { Canvas, useLoader } from "@react-three/fiber";
-import icon from "../../../assets/arrow.png";
-import { darkenColor, lightenColor } from "../../../util/textureUtil";
-import { round } from "../../../util";
-import { useKey, useKeyPress } from "react-use";
-import { useModifiers } from "../../../hooks/useControls";
-import { moveModifierIncrement } from "../../../constants/KeyModifiers";
+import * as React from 'react';
+import * as THREE from 'three';
+import { ThreeEvent, useFrame, useThree } from '@react-three/fiber';
+import { Line, Plane, Text, Billboard } from '@react-three/drei';
+import { Html } from '@react-three/drei';
+import { context } from './context';
+import { Canvas, useLoader } from '@react-three/fiber';
+import icon from '../../../assets/arrow.png';
+import { darkenColor, lightenColor } from '../../../util/textureUtil';
+import { round } from '../../../util';
+import { useKey, useKeyPress } from 'react-use';
+import { useModifiers } from '../../../hooks/useControls';
+import { moveModifierIncrement } from '../../../constants/KeyModifiers';
 
 const vec1 = /* @__PURE__ */ new THREE.Vector3();
 const vec2 = /* @__PURE__ */ new THREE.Vector3();
@@ -29,12 +29,10 @@ export const calculateOffset = (
 		return -e2 / e1;
 	}
 
-	vec1
-		.copy(rayDir)
+	vec1.copy(rayDir)
 		.multiplyScalar(e1 / e3)
 		.sub(normal);
-	vec2
-		.copy(rayDir)
+	vec2.copy(rayDir)
 		.multiplyScalar(e2 / e3)
 		.add(rayStart)
 		.sub(clickPoint);
@@ -46,10 +44,10 @@ export const calculateOffset = (
 const upV = /* @__PURE__ */ new THREE.Vector3(0, 1, 0);
 const offsetMatrix = /* @__PURE__ */ new THREE.Matrix4();
 
-export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> = ({
-	direction,
-	axis,
-}) => {
+export const AxisArrow: React.FC<{
+	direction: THREE.Vector3;
+	axis: 0 | 1 | 2;
+}> = ({ direction, axis }) => {
 	const {
 		translation,
 		translationLimits,
@@ -69,10 +67,12 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 		userData,
 	} = React.useContext(context);
 
-	const keyModifiers = useModifiers();
+	const { keyModifiers, getMultiplier, getRounded } = useModifiers();
 
 	// @ts-expect-error new in @react-three/fiber@7.0.5
-	const camControls = useThree((state) => state.controls) as { enabled: boolean };
+	const camControls = useThree((state) => state.controls) as {
+		enabled: boolean;
+	};
 	const divRef = React.useRef<HTMLDivElement>(null!);
 	const objRef = React.useRef<THREE.Group>(null!);
 	const clickInfo = React.useRef<{
@@ -84,14 +84,17 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 	const [dragOffset, setDragOffset] = React.useState(0);
 	const meshRef = React.useRef<THREE.Mesh>(null!);
 
+	var previousDistance = 0;
 	const onPointerDown = React.useCallback(
 		(e: ThreeEvent<PointerEvent>) => {
 			if (annotations) {
 				divRef.current.innerText = `${translation.current[axis].toFixed(2)}`;
-				divRef.current.style.display = "block";
+				divRef.current.style.display = 'block';
 			}
 			e.stopPropagation();
-			const rotation = new THREE.Matrix4().extractRotation(objRef.current.matrixWorld);
+			const rotation = new THREE.Matrix4().extractRotation(
+				objRef.current.matrixWorld
+			);
 			const clickPoint = e.point.clone();
 			const origin = new THREE.Vector3().setFromMatrixPosition(
 				objRef.current.matrixWorld
@@ -99,7 +102,12 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 			const dir = direction.clone().applyMatrix4(rotation).normalize();
 			clickInfo.current = { clickPoint, dir };
 			offset0.current = translation.current[axis];
-			onDragStart({ component: "Arrow", axis, origin, directions: [dir] });
+			onDragStart({
+				component: 'Arrow',
+				axis,
+				origin,
+				directions: [dir],
+			});
 			camControls && (camControls.enabled = false);
 			// @ts-ignore - setPointerCapture is not in the type definition
 			e.target.setPointerCapture(e.pointerId);
@@ -109,26 +117,36 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 	const onPointerMove = React.useCallback(
 		(e: ThreeEvent<PointerEvent>) => {
 			e.stopPropagation();
-			if (!isHovered) setIsHovered(true);
 
+			if (!isHovered) setIsHovered(true);
 			if (clickInfo.current) {
 				const { clickPoint, dir } = clickInfo.current;
-				const [min, max] = translationLimits?.[axis] || [undefined, undefined];
 
-				let offset = calculateOffset(clickPoint, dir, e.ray.origin, e.ray.direction);
+				const [min, max] = translationLimits?.[axis] || [
+					undefined,
+					undefined,
+				];
+				let offset = calculateOffset(
+					clickPoint,
+					dir,
+					e.ray.origin,
+					e.ray.direction
+				);
 
-				//modifier steps
-				if (keyModifiers.xx_small_shift[0][0] && keyModifiers.xx_small_shift[0][1]) {
-					offset = round(offset, moveModifierIncrement.xx_small_shift, 0);
-				} else if (keyModifiers.x_small_shift[0]) {
-					offset = round(offset, moveModifierIncrement.x_small_shift, 0);
-				} else if (keyModifiers.small_shift[0]) {
-					offset = round(offset, moveModifierIncrement.small_shift, 0);
-				} else {
-					offset = round(offset, 1, 0);
+				// if (Math.abs(offset - previousDistance) > 0.01) {
+				// 	previousDistance = offset;
+				// 	return;
+				// }
+
+				// used to get movement based on key modifiers
+				offset = getRounded(offset);
+
+				//stops carrying on if the offset is 0.01 or less (so 0)
+				if (Math.abs(offset - previousDistance) < 0.01) {
+					previousDistance = offset;
+					return;
 				}
-
-				//
+				previousDistance = offset;
 				if (max !== undefined) {
 					offset = Math.min(offset, max - offset0.current);
 				}
@@ -136,9 +154,12 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 				if (annotations) {
 					divRef.current.innerText = `${translation.current[axis].toFixed(2)}`;
 				}
-				offsetMatrix.makeTranslation(dir.x * offset, dir.y * offset, dir.z * offset);
+				offsetMatrix.makeTranslation(
+					dir.x * offset,
+					dir.y * offset,
+					dir.z * offset
+				);
 				setDragOffset(offset);
-				//console.log("Drag offset: ", dragOffset);
 				onDrag(offsetMatrix);
 			}
 		},
@@ -148,7 +169,7 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 	const onPointerUp = React.useCallback(
 		(e: ThreeEvent<PointerEvent>) => {
 			if (annotations) {
-				divRef.current.style.display = "none";
+				divRef.current.style.display = 'none';
 			}
 			e.stopPropagation();
 			clickInfo.current = null;
@@ -166,17 +187,20 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 		setIsHovered(false);
 	}, []);
 
-	const { cylinderLength, coneWidth, coneLength, matrixL } = React.useMemo(() => {
-		const coneWidth = fixed ? (lineWidth / scale) * 1.6 : scale / 20;
-		const coneLength = fixed ? 0.2 : scale / 4;
-		const cylinderLength = fixed ? 1 - coneLength : scale - coneLength;
-		const quaternion = new THREE.Quaternion().setFromUnitVectors(
-			upV,
-			direction.clone().normalize()
-		);
-		const matrixL = new THREE.Matrix4().makeRotationFromQuaternion(quaternion);
-		return { cylinderLength, coneWidth, coneLength, matrixL };
-	}, [direction, scale, lineWidth, fixed]);
+	const { cylinderLength, coneWidth, coneLength, matrixL } =
+		React.useMemo(() => {
+			const coneWidth = fixed ? (lineWidth / scale) * 1.6 : scale / 20;
+			const coneLength = fixed ? 0.2 : scale / 4;
+			const cylinderLength = fixed ? 1 - coneLength : scale - coneLength;
+			const quaternion = new THREE.Quaternion().setFromUnitVectors(
+				upV,
+				direction.clone().normalize()
+			);
+			const matrixL = new THREE.Matrix4().makeRotationFromQuaternion(
+				quaternion
+			);
+			return { cylinderLength, coneWidth, coneLength, matrixL };
+		}, [direction, scale, lineWidth, fixed]);
 
 	const color_ = isHovered ? hoveredColor : axisColors[axis];
 	const texture = useLoader(THREE.TextureLoader, icon);
@@ -186,11 +210,11 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 	const axisValToString = (axis: 0 | 1 | 2) => {
 		switch (axis) {
 			case 0:
-				return "X";
+				return 'X';
 			case 1:
-				return "Y";
+				return 'Y';
 			case 2:
-				return "Z";
+				return 'Z';
 		}
 	};
 
@@ -207,18 +231,19 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 					onPointerDown={onPointerDown}
 					onPointerMove={onPointerMove}
 					onPointerUp={onPointerUp}
-					onPointerOut={onPointerOut}>
+					onPointerOut={onPointerOut}
+				>
 					//
 					{annotations && (
 						<Html position={[0, -coneLength, 0]}>
 							<div
 								style={{
-									display: "none",
-									background: "#151520",
-									color: "white",
-									padding: "6px 8px",
+									display: 'none',
+									background: '#151520',
+									color: 'white',
+									padding: '6px 8px',
 									borderRadius: 7,
-									whiteSpace: "nowrap",
+									whiteSpace: 'nowrap',
 								}}
 								className={annotationsClass}
 								ref={divRef}
@@ -229,12 +254,13 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 					<group>
 						<mesh
 							visible={false}
-							position={[0, cylinderLength + coneLength - 0.5, 0]}
-							userData={userData}>
+							position={[0, cylinderLength + coneLength - 0.6, 0]}
+							userData={userData}
+						>
 							<cylinderGeometry
 								args={[
-									coneWidth * 1.4,
-									coneWidth * 1.4,
+									coneWidth * 1.5,
+									coneWidth * 1.5,
 									cylinderLength + coneLength,
 									8,
 									1,
@@ -246,8 +272,12 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 							raycast={() => null}
 							position={[0, scale / 2, 0]}
 							renderOrder={1000}
-							rotation={[0, Math.PI / 2, 0]}>
-							<planeGeometry attach="geometry" args={[scale, scale, scale]} />
+							rotation={[0, Math.PI / 2, 0]}
+						>
+							<planeGeometry
+								attach="geometry"
+								args={[scale, scale, scale]}
+							/>
 							<meshStandardMaterial
 								attach="material"
 								map={texture}
@@ -264,8 +294,12 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 							raycast={() => null}
 							position={[0, scale / 2, 0]}
 							renderOrder={1000}
-							rotation={[0, 0, 0]}>
-							<planeGeometry attach="geometry" args={[scale, scale, scale]} />
+							rotation={[0, 0, 0]}
+						>
+							<planeGeometry
+								attach="geometry"
+								args={[scale, scale, scale]}
+							/>
 							<meshStandardMaterial
 								attach="material"
 								map={texture}
@@ -283,18 +317,28 @@ export const AxisArrow: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> 
 						<Html position={[0, scale * 1.07, 0]} center>
 							<div
 								id="test-123"
-								aria-busy={(dragOffset != 0).toString()}
+								aria-busy={dragOffset != 0}
 								className={
-									"aria-busy:w-16 w-8 transition-all ease-in-out duration-75 h-8 p-1 px-2 rounded-md justify-center items-center text-center pointer-events-none select-none"
+									'pointer-events-none h-8 w-8 select-none items-center justify-center rounded-md p-1 px-2 text-center transition-all duration-75 ease-in-out aria-busy:w-16'
 								}
 								style={{
-									backgroundColor: axisColors[axis].toString(),
-									borderColor: "#" + darkenColor(axisColors[axis].toString(), 0.2),
-									borderWidth: "5px",
-									display: isHovered && visible ? "block" : "none",
-								}}>
-								<div className="text-white text-sm w-auto h-full flex justify-center items-center">
-									{dragOffset != 0 ? dragOffset.toFixed(2) : axisValToString(axis)}
+									backgroundColor:
+										axisColors[axis].toString(),
+									borderColor:
+										'#' +
+										darkenColor(
+											axisColors[axis].toString(),
+											0.2
+										),
+									borderWidth: '5px',
+									display:
+										isHovered && visible ? 'block' : 'none',
+								}}
+							>
+								<div className="flex h-full w-auto items-center justify-center text-sm text-white">
+									{dragOffset != 0
+										? dragOffset.toFixed(2)
+										: axisValToString(axis)}
 								</div>
 							</div>
 						</Html>

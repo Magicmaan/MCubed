@@ -1,10 +1,10 @@
-import { useState } from "react";
-import "./styles/App.css";
-import * as React from "react";
-import ModelView from "./pages/ModelView";
-import NavBar from "./components/NavBar";
-import { Provider } from "react-redux";
-import store from "./store"; // Import the store
+import { useState } from 'react';
+import './styles/App.css';
+import * as React from 'react';
+import ModelView from './pages/ModelView';
+import NavBar from './components/NavBar';
+import { Provider } from 'react-redux';
+import store from './store'; // Import the store
 
 function App() {
 	const [count, setCount] = useState(0);
@@ -19,7 +19,7 @@ function App() {
 	const [currentView, setCurrentView] = useState(<ModelView />);
 	return (
 		<Provider store={store}>
-			<div className="w-screen h-screen flex flex-col flex-nowrap transition-all duration-300">
+			<div className="dark flex h-screen w-screen flex-col flex-nowrap transition-all duration-300">
 				<NavBar />
 				{currentView}
 			</div>
@@ -27,13 +27,15 @@ function App() {
 			{showStartup[0] && (
 				<div
 					aria-expanded={showStartup[0]}
-					className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-50 aria-expanded:opacity-100 opacity-0 flex items-center justify-center transition-opacity duration-500 ">
-					<div className="bg-black p-4 rounded-lg drop-shadow-lg">
+					className="absolute left-0 top-0 flex h-full w-full items-center justify-center bg-black bg-opacity-50 opacity-0 transition-opacity duration-500 aria-expanded:opacity-100"
+				>
+					<div className="rounded-lg bg-black p-4 drop-shadow-lg">
 						<h1>File</h1>
 						<button
 							onClick={() => {
 								showStartup[1](false);
-							}}>
+							}}
+						>
 							Close
 						</button>
 					</div>

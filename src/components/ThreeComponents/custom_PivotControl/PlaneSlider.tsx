@@ -1,11 +1,11 @@
-import * as React from "react";
-import * as THREE from "three";
-import { ThreeEvent, useLoader, useThree } from "@react-three/fiber";
-import { Line } from "@react-three/drei";
-import { Html } from "@react-three/drei";
-import { context } from "./context";
-import Geometries from "three/src/renderers/common/Geometries.js";
-import icon from "../../../assets/curve.png";
+import * as React from 'react';
+import * as THREE from 'three';
+import { ThreeEvent, useLoader, useThree } from '@react-three/fiber';
+import { Line } from '@react-three/drei';
+import { Html } from '@react-three/drei';
+import { context } from './context';
+import Geometries from 'three/src/renderers/common/Geometries.js';
+import icon from '../../../assets/curve.png';
 const decomposeIntoBasis = (
 	e1: THREE.Vector3,
 	e2: THREE.Vector3,
@@ -14,13 +14,15 @@ const decomposeIntoBasis = (
 	const i1 =
 		Math.abs(e1.x) >= Math.abs(e1.y) && Math.abs(e1.x) >= Math.abs(e1.z)
 			? 0
-			: Math.abs(e1.y) >= Math.abs(e1.x) && Math.abs(e1.y) >= Math.abs(e1.z)
-			? 1
-			: 2;
+			: Math.abs(e1.y) >= Math.abs(e1.x) &&
+				  Math.abs(e1.y) >= Math.abs(e1.z)
+				? 1
+				: 2;
 	const e2DegrowthOrder = [0, 1, 2].sort(
 		(a, b) => Math.abs(e2.getComponent(b)) - Math.abs(e2.getComponent(a))
 	);
-	const i2 = i1 === e2DegrowthOrder[0] ? e2DegrowthOrder[1] : e2DegrowthOrder[0];
+	const i2 =
+		i1 === e2DegrowthOrder[0] ? e2DegrowthOrder[1] : e2DegrowthOrder[0];
 	const a1 = e1.getComponent(i1);
 	const a2 = e1.getComponent(i2);
 	const b1 = e2.getComponent(i1);
@@ -62,7 +64,9 @@ export const PlaneSlider: React.FC<{
 	} = React.useContext(context);
 
 	// @ts-expect-error new in @react-three/fiber@7.0.5
-	const camControls = useThree((state) => state.controls) as { enabled: boolean };
+	const camControls = useThree((state) => state.controls) as {
+		enabled: boolean;
+	};
 	const divRef = React.useRef<HTMLDivElement>(null!);
 	const objRef = React.useRef<THREE.Group>(null!);
 	const clickInfo = React.useRef<{
@@ -78,10 +82,12 @@ export const PlaneSlider: React.FC<{
 	const onPointerDown = React.useCallback(
 		(e: ThreeEvent<PointerEvent>) => {
 			if (annotations) {
-				divRef.current.innerText = `${translation.current[(axis + 1) % 3].toFixed(
+				divRef.current.innerText = `${translation.current[
+					(axis + 1) % 3
+				].toFixed(
 					2
 				)}, ${translation.current[(axis + 2) % 3].toFixed(2)}`;
-				divRef.current.style.display = "block";
+				divRef.current.style.display = 'block';
 			}
 			e.stopPropagation();
 			const clickPoint = e.point.clone();
@@ -97,11 +103,19 @@ export const PlaneSlider: React.FC<{
 			const normal = new THREE.Vector3()
 				.setFromMatrixColumn(objRef.current.matrixWorld, 2)
 				.normalize();
-			const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(normal, origin);
+			const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(
+				normal,
+				origin
+			);
 			clickInfo.current = { clickPoint, e1, e2, plane };
 			offsetX0.current = translation.current[(axis + 1) % 3];
 			offsetY0.current = translation.current[(axis + 2) % 3];
-			onDragStart({ component: "Slider", axis, origin, directions: [e1, e2, normal] });
+			onDragStart({
+				component: 'Slider',
+				axis,
+				origin,
+				directions: [e1, e2, normal],
+			});
 			camControls && (camControls.enabled = false);
 			// @ts-ignore
 			e.target.setPointerCapture(e.pointerId);
@@ -130,7 +144,11 @@ export const PlaneSlider: React.FC<{
 				ray.direction.negate();
 				ray.intersectPlane(plane, intersection);
 				intersection.sub(clickPoint);
-				let [offsetX, offsetY] = decomposeIntoBasis(e1, e2, intersection);
+				let [offsetX, offsetY] = decomposeIntoBasis(
+					e1,
+					e2,
+					intersection
+				);
 				/* let offsetY = (intersection.y - (intersection.x * e1.y) / e1.x) / (e2.y - (e2.x * e1.y) / e1.x)
         let offsetX = (intersection.x - offsetY * e2.x) / e1.x */
 				if (minX !== undefined) {
@@ -145,10 +163,14 @@ export const PlaneSlider: React.FC<{
 				if (maxY !== undefined) {
 					offsetY = Math.min(offsetY, maxY - offsetY0.current);
 				}
-				translation.current[(axis + 1) % 3] = offsetX0.current + offsetX;
-				translation.current[(axis + 2) % 3] = offsetY0.current + offsetY;
+				translation.current[(axis + 1) % 3] =
+					offsetX0.current + offsetX;
+				translation.current[(axis + 2) % 3] =
+					offsetY0.current + offsetY;
 				if (annotations) {
-					divRef.current.innerText = `${translation.current[(axis + 1) % 3].toFixed(
+					divRef.current.innerText = `${translation.current[
+						(axis + 1) % 3
+					].toFixed(
 						2
 					)}, ${translation.current[(axis + 2) % 3].toFixed(2)}`;
 				}
@@ -166,7 +188,7 @@ export const PlaneSlider: React.FC<{
 	const onPointerUp = React.useCallback(
 		(e: ThreeEvent<PointerEvent>) => {
 			if (annotations) {
-				divRef.current.style.display = "none";
+				divRef.current.style.display = 'none';
 			}
 			e.stopPropagation();
 			clickInfo.current = null;
@@ -186,7 +208,11 @@ export const PlaneSlider: React.FC<{
 	const matrixL = React.useMemo(() => {
 		const dir1N = dir1.clone().normalize();
 		const dir2N = dir2.clone().normalize();
-		return new THREE.Matrix4().makeBasis(dir1N, dir2N, dir1N.clone().cross(dir2N));
+		return new THREE.Matrix4().makeBasis(
+			dir1N,
+			dir2N,
+			dir1N.clone().cross(dir2N)
+		);
 	}, [dir1, dir2]);
 
 	const pos1 = fixed ? 1 / 7 : scale / 7;
@@ -213,24 +239,25 @@ export const PlaneSlider: React.FC<{
 				<Html position={[0, 0, 0]}>
 					<div
 						style={{
-							display: "none",
-							background: "#151520",
-							color: "white",
-							padding: "6px 8px",
+							display: 'none',
+							background: '#151520',
+							color: 'white',
+							padding: '6px 8px',
 							borderRadius: 7,
-							whiteSpace: "nowrap",
+							whiteSpace: 'nowrap',
 						}}
 						className={annotationsClass}
 						ref={divRef}
 					/>
 				</Html>
 			)}
-			<group position={[pos1 * 1.55, pos1 * 1.55, 0]} scale={0.75}>
+			<group position={[pos1 * 1.75, pos1 * 1.75, 0]} scale={scale / 2}>
 				<mesh
 					raycast={() => null}
 					position={[0, 0, 0]}
 					renderOrder={1000}
-					rotation={[0, 0, 0]}>
+					rotation={[0, 0, 0]}
+				>
 					<planeGeometry attach="geometry" args={[1, 1, 1]} />
 					<meshStandardMaterial
 						attach="material"
@@ -242,6 +269,29 @@ export const PlaneSlider: React.FC<{
 						color={color}
 						shadowSide={THREE.DoubleSide}
 						toneMapped={false} // Render texture at full brightness
+					/>
+				</mesh>
+
+				<mesh
+					visible={true}
+					onPointerDown={onPointerDown}
+					onPointerMove={onPointerMove}
+					onPointerUp={onPointerUp}
+					onPointerOut={onPointerOut}
+					scale={scale / 2}
+					userData={userData}
+					position={[-scale / 10, -scale / 10, 0]}
+				>
+					<planeGeometry />
+					<meshBasicMaterial
+						transparent
+						visible={false}
+						depthTest={depthTest}
+						color={color}
+						polygonOffset
+						polygonOffsetFactor={-5}
+						side={THREE.DoubleSide}
+						fog={false}
 					/>
 				</mesh>
 			</group>

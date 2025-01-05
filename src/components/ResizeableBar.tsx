@@ -103,12 +103,6 @@ const ResizeableBar: React.FC<
 					div.style.cursor = "default";
 				}
 			}}
-			onPointerOverCapture={(e) => {
-				console.log("POINTER OVER CAPTURE");
-			}}
-			onPointerOver={(e) => {
-				console.log("POINTER OVER");
-			}}
 			{...props}
 			onMouseUp={() => {
 				setIsResizing(false);

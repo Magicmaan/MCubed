@@ -1,12 +1,12 @@
-import * as React from "react";
-import * as THREE from "three";
-import { ThreeEvent, useThree } from "@react-three/fiber";
+import * as React from 'react';
+import * as THREE from 'three';
+import { ThreeEvent, useThree } from '@react-three/fiber';
 
-import { Html } from "@react-three/drei";
-import { context } from "./context";
-import { calculateScaleFactor } from "@react-three/drei/core/calculateScaleFactor";
-import { Canvas, useLoader } from "@react-three/fiber";
-import icon from "../../../assets/dot.png";
+import { Html } from '@react-three/drei';
+import { context } from './context';
+import { calculateScaleFactor } from '@react-three/drei/core/calculateScaleFactor';
+import { Canvas, useLoader } from '@react-three/fiber';
+import icon from '../../../assets/dot.png';
 
 const vec1 = /* @__PURE__ */ new THREE.Vector3();
 const vec2 = /* @__PURE__ */ new THREE.Vector3();
@@ -25,12 +25,10 @@ export const calculateOffset = (
 		return -e2 / e1;
 	}
 
-	vec1
-		.copy(rayDir)
+	vec1.copy(rayDir)
 		.multiplyScalar(e1 / e3)
 		.sub(normal);
-	vec2
-		.copy(rayDir)
+	vec2.copy(rayDir)
 		.multiplyScalar(e2 / e3)
 		.add(rayStart)
 		.sub(clickPoint);
@@ -43,10 +41,10 @@ const upV = /* @__PURE__ */ new THREE.Vector3(0, 1, 0);
 const scaleV = /* @__PURE__ */ new THREE.Vector3();
 const scaleMatrix = /* @__PURE__ */ new THREE.Matrix4();
 
-export const ScalingSphere: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2 }> = ({
-	direction,
-	axis,
-}) => {
+export const ScalingSphere: React.FC<{
+	direction: THREE.Vector3;
+	axis: 0 | 1 | 2;
+}> = ({ direction, axis }) => {
 	const {
 		scaleLimits,
 		annotations,
@@ -66,7 +64,9 @@ export const ScalingSphere: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2
 
 	const size = useThree((state) => state.size);
 	// @ts-expect-error new in @react-three/fiber@7.0.5
-	const camControls = useThree((state) => state.controls) as { enabled: boolean };
+	const camControls = useThree((state) => state.controls) as {
+		enabled: boolean;
+	};
 	const divRef = React.useRef<HTMLDivElement>(null!);
 	const objRef = React.useRef<THREE.Group>(null!);
 	const meshRef = React.useRef<THREE.Mesh>(null!);
@@ -82,6 +82,7 @@ export const ScalingSphere: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2
 	const [isHovered, setIsHovered] = React.useState(false);
 
 	const position = fixed ? 1.2 : 1.2 * scale;
+	const color_ = isHovered ? hoveredColor : axisColors[axis];
 	const texture = useLoader(THREE.TextureLoader, icon);
 	texture.minFilter = THREE.NearestFilter;
 	texture.magFilter = THREE.NearestFilter;
@@ -90,10 +91,12 @@ export const ScalingSphere: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2
 		(e: ThreeEvent<PointerEvent>) => {
 			if (annotations) {
 				divRef.current.innerText = `${scaleCur.current.toFixed(2)}`;
-				divRef.current.style.display = "block";
+				divRef.current.style.display = 'block';
 			}
 			e.stopPropagation();
-			const rotation = new THREE.Matrix4().extractRotation(objRef.current.matrixWorld);
+			const rotation = new THREE.Matrix4().extractRotation(
+				objRef.current.matrixWorld
+			);
 			const clickPoint = e.point.clone();
 			const origin = new THREE.Vector3().setFromMatrixPosition(
 				objRef.current.matrixWorld
@@ -103,20 +106,40 @@ export const ScalingSphere: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2
 			const mPLGInv = mPLG.clone().invert();
 			const offsetMultiplier = fixed
 				? 1 /
-				  calculateScaleFactor(
+					calculateScaleFactor(
 						objRef.current.getWorldPosition(vec1),
 						scale,
 						e.camera,
 						size
-				  )
+					)
 				: 1;
-			clickInfo.current = { clickPoint, dir, mPLG, mPLGInv, offsetMultiplier };
-			onDragStart({ component: "Sphere", axis, origin, directions: [dir] });
+			clickInfo.current = {
+				clickPoint,
+				dir,
+				mPLG,
+				mPLGInv,
+				offsetMultiplier,
+			};
+			onDragStart({
+				component: 'Sphere',
+				axis,
+				origin,
+				directions: [dir],
+			});
 			camControls && (camControls.enabled = false);
 			// @ts-ignore - setPointerCapture is not in the type definition
 			e.target.setPointerCapture(e.pointerId);
 		},
-		[annotations, camControls, direction, onDragStart, axis, fixed, scale, size]
+		[
+			annotations,
+			camControls,
+			direction,
+			onDragStart,
+			axis,
+			fixed,
+			scale,
+			size,
+		]
 	);
 
 	const onPointerMove = React.useCallback(
@@ -125,10 +148,16 @@ export const ScalingSphere: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2
 			if (!isHovered) setIsHovered(true);
 
 			if (clickInfo.current) {
-				const { clickPoint, dir, mPLG, mPLGInv, offsetMultiplier } = clickInfo.current;
+				const { clickPoint, dir, mPLG, mPLGInv, offsetMultiplier } =
+					clickInfo.current;
 				const [min, max] = scaleLimits?.[axis] || [1e-5, undefined]; // always limit the minimal value, since setting it very low might break the transform
 
-				const offsetW = calculateOffset(clickPoint, dir, e.ray.origin, e.ray.direction);
+				const offsetW = calculateOffset(
+					clickPoint,
+					dir,
+					e.ray.origin,
+					e.ray.direction
+				);
 				const offsetL = offsetW * offsetMultiplier;
 				const offsetH = fixed ? offsetL : offsetL / scale;
 				let upscale = Math.pow(2, offsetH * 0.2);
@@ -162,7 +191,7 @@ export const ScalingSphere: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2
 	const onPointerUp = React.useCallback(
 		(e: ThreeEvent<PointerEvent>) => {
 			if (annotations) {
-				divRef.current.style.display = "none";
+				divRef.current.style.display = 'none';
 			}
 			e.stopPropagation();
 			scale0.current = scaleCur.current;
@@ -181,61 +210,51 @@ export const ScalingSphere: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2
 		setIsHovered(false);
 	}, []);
 
-	const { radius, matrixL } = React.useMemo(() => {
-		const radius = fixed ? (lineWidth / scale) * 1.8 : scale / 22.5;
+	const { objScale, matrixL } = React.useMemo(() => {
+		const objScale = scale;
 		const quaternion = new THREE.Quaternion().setFromUnitVectors(
 			upV,
 			direction.clone().normalize()
 		);
-		const matrixL = new THREE.Matrix4().makeRotationFromQuaternion(quaternion);
-		return { radius, matrixL };
+		const matrixL = new THREE.Matrix4().makeRotationFromQuaternion(
+			quaternion
+		);
+		console.log('radius from scaling sphere', objScale);
+		return { objScale, matrixL };
 	}, [direction, scale, lineWidth, fixed]);
-
-	const color = isHovered ? hoveredColor : axisColors[axis];
 
 	const axisValToString = (axis: 0 | 1 | 2) => {
 		switch (axis) {
 			case 0:
-				return "X";
+				return 'X';
 			case 1:
-				return "Y";
+				return 'Y';
 			case 2:
-				return "Z";
+				return 'Z';
 		}
 	};
 
 	return (
 		<group ref={objRef}>
 			<group
+				scale={objScale}
 				matrix={matrixL}
 				matrixAutoUpdate={false}
 				onPointerDown={onPointerDown}
 				onPointerMove={onPointerMove}
 				onPointerUp={onPointerUp}
-				onPointerOut={onPointerOut}>
-				{annotations && (
-					<Html position={[0, position / 2, 0]}>
-						<div
-							style={{
-								display: "none",
-								background: "#151520",
-								color: "white",
-								padding: "6px 8px",
-								borderRadius: 7,
-								whiteSpace: "nowrap",
-							}}
-							className={annotationsClass}
-							ref={divRef}
-						/>
-					</Html>
-				)}
-
+				onPointerOut={onPointerOut}
+			>
 				<mesh
 					raycast={() => null}
 					position={[0, position, 0]}
 					renderOrder={1000}
-					rotation={[0, Math.PI / 2, 0]}>
-					<planeGeometry attach="geometry" args={[2, 2, 2]} />
+					rotation={[0, Math.PI / 2, 0]}
+				>
+					<planeGeometry
+						attach="geometry"
+						args={[scale, scale, scale]}
+					/>
 					<meshStandardMaterial
 						attach="material"
 						map={texture}
@@ -243,7 +262,7 @@ export const ScalingSphere: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2
 						transparent={true}
 						alphaTest={0.5} // Use alpha of the texture
 						side={THREE.DoubleSide} // Render texture on both sides
-						color={color.toString()}
+						color={color_.toString()}
 						shadowSide={THREE.DoubleSide}
 						toneMapped={false} // Render texture at full brightness
 					/>
@@ -252,8 +271,12 @@ export const ScalingSphere: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2
 					raycast={() => null}
 					position={[0, position, 0]}
 					renderOrder={1000}
-					rotation={[0, 0, 0]}>
-					<planeGeometry attach="geometry" args={[2, 2, 2]} />
+					rotation={[0, 0, 0]}
+				>
+					<planeGeometry
+						attach="geometry"
+						args={[scale, scale, scale]}
+					/>
 					<meshStandardMaterial
 						attach="material"
 						map={texture}
@@ -261,9 +284,26 @@ export const ScalingSphere: React.FC<{ direction: THREE.Vector3; axis: 0 | 1 | 2
 						transparent={true}
 						alphaTest={0.5} // Use alpha of the texture
 						side={THREE.DoubleSide} // Render texture on both sides
-						color={color.toString()}
+						color={color_.toString()}
 						shadowSide={THREE.DoubleSide}
 						toneMapped={false} // Render texture at full brightness
+					/>
+				</mesh>
+
+				<mesh
+					ref={meshRef}
+					position={[0, position, 0]}
+					renderOrder={500}
+					userData={userData}
+				>
+					<sphereGeometry args={[scale / 15, 12, 12]} />
+					<meshBasicMaterial
+						transparent
+						visible={false}
+						depthTest={depthTest}
+						opacity={opacity}
+						polygonOffset
+						polygonOffsetFactor={-10}
 					/>
 				</mesh>
 			</group>

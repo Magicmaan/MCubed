@@ -89,7 +89,7 @@ export const AxisRotator: React.FC<{
 	const objRef = React.useRef<THREE.Group>(null!);
 	const angle0 = React.useRef<number>(0);
 	const angle = React.useRef<number>(0);
-	const keyModifiers = useModifiers();
+	const { keyModifiers, getMultiplier, getRounded } = useModifiers();
 	const clickInfo = React.useRef<{
 		clickPoint: THREE.Vector3;
 		origin: THREE.Vector3;
@@ -145,20 +145,10 @@ export const AxisRotator: React.FC<{
 				let deltaAngle = calculateAngle(clickPoint, intersection, origin, e1, e2);
 				let degrees = toDegrees(deltaAngle);
 
-				// // @ts-ignore
-				// if (e.shiftKey) {
-				// 	degrees = Math.round(degrees / 10) * 10;
-				// 	deltaAngle = toRadians(degrees);
-				// }
-				if (keyModifiers.xx_small_shift[0][0] && keyModifiers.xx_small_shift[0][1]) {
-					degrees = round(degrees, rotateModifierIncrement.xx_small_shift, 0);
-				} else if (keyModifiers.x_small_shift[0]) {
-					degrees = round(degrees, rotateModifierIncrement.x_small_shift, 0);
-				} else if (keyModifiers.small_shift[0]) {
-					degrees = round(degrees, rotateModifierIncrement.small_shift, 0);
-				} else {
-					degrees = round(degrees, rotateModifierIncrement.normal_shift, 0);
-				}
+				// used to throttle small changes, since movement is so granular.
+				// This is to prevent jitter and unnecessary dispatches
+				if (Math.abs(degrees) < 0.001) return;
+				degrees = getRounded(degrees);
 				console.log("Degrees: ", degrees);
 				deltaAngle = toRadians(degrees);
 

@@ -171,15 +171,6 @@ const InfoPanel: React.FC<{
 	const [refresh, setRefresh] = useState(0);
 	const dispatch = useAppDispatch();
 
-	// used to refresh the data on demand
-	// useEffect(() => {
-	// 	const interval = setInterval(() => {
-	// 		setRefresh((prev) => prev + 1);
-	// 	}, 200); // Toggle refresh every 1 second
-	// 	return () => clearInterval(interval); // Cleanup on unmount
-	// }, []);
-
-	//const cam: THREE.PerspectiveCamera | null = camRef.current;
 	const [cam, setCam] = useState<THREE.PerspectiveCamera | null>(camRef.current);
 
 	const snapPivotToggle = React.useRef(false);

@@ -1,103 +1,116 @@
-import { useState } from "react";
-import * as React from "react";
-import { NavButton, NavChildButton, NavChildCheck, NavChildItem } from "./NavButton";
-import "../styles/App.css";
-import { useAppDispatch, useViewportSelector } from "../hooks/useRedux";
-import { toggleGrid, toggleStats } from "../reducers/viewportReducer";
-import { RootState } from "../store";
-import { connect, useDispatch } from "react-redux";
+import { useState } from 'react';
+import * as React from 'react';
+import {
+	NavButton,
+	NavChildButton,
+	NavChildCheck,
+	NavChildItem,
+} from './NavButton';
+import '../styles/App.css';
+import { useAppDispatch, useViewportSelector } from '../hooks/useRedux';
+import { toggleGrid, toggleStats } from '../reducers/viewportReducer';
+import { RootState } from '../store';
+import { connect, useDispatch } from 'react-redux';
+import {
+	Menubar,
+	MenubarCheckboxItem,
+	MenubarContent,
+	MenubarItem,
+	MenubarMenu,
+	MenubarSeparator,
+	MenubarShortcut,
+	MenubarTrigger,
+} from './ui/menubar';
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from './ui/alert-dialog';
+import { Button } from './ui/button';
+import ErrorAlert from './templates/ErrorAlert';
 
-interface Props extends RootState {
-	// Define your props here
-}
-
-function mapStateToProps(state: RootState) {
-	return {
-		test: "true",
-		state: state,
-	};
-}
-
-const _NavBar: React.FC<Props> = () => {
+const NavBar: React.FC<Props> = () => {
 	const hasOpened = useState(false);
-	const currentButton = useState("");
+	const currentButton = useState('');
 	const viewportData = useViewportSelector();
 	const dispatch = useAppDispatch();
 
 	return (
-		<nav
-			id="navContainer"
-			className="flex flex-row w-auto h-auto min-h-8 bg-main border-secondary border-b-4 flex-nowrap items-center justify-between overflow-y-hidden pb-0.5">
-			<div
-				id="buttonContainer"
-				className="group flex flex-row w-1/3 h-auto min-h-1  flex-nowrap items-center justify-start  space-x-0.5">
-				<NavButton text="File" hasOpened={hasOpened} currentButton={currentButton}>
-					<NavChildButton text="New">
-						<NavChildButton text="Project">
-							<NavChildItem text="File" />
-							<NavChildItem text="File" />
-						</NavChildButton>
-						<NavChildItem text="File" />
-						<NavChildItem text="File" />
-						<NavChildItem text="File" />
-						<NavChildItem text="File" />
-					</NavChildButton>
-					<NavChildItem text="Open" />
-				</NavButton>
-				<NavButton text="Edit" hasOpened={hasOpened} currentButton={currentButton}>
-					<NavChildButton text="New">
-						<NavChildButton text="Project">
-							<NavChildItem text="File" />
-							<NavChildItem text="File" />
-						</NavChildButton>
-						<NavChildItem text="File" />
-						<NavChildItem text="File" />
-						<NavChildItem text="File" />
-						<NavChildItem text="File" />
-					</NavChildButton>
-					<NavChildItem text="Open" />
-				</NavButton>
-				<NavButton text="View" hasOpened={hasOpened} currentButton={currentButton}>
-					<NavChildButton text="Camera">
-						<NavChildButton text="Project">
-							<NavChildItem text="File" />
-							<NavChildItem text="File" />
-						</NavChildButton>
-						<NavChildItem text="Grid" />
-						<NavChildItem text="File" />
-						<NavChildItem text="File" />
-						<NavChildItem text="File" />
-					</NavChildButton>
-					<NavChildCheck
-						text="Grid"
-						value={viewportData.showGrid}
-						set={() => {
+		<Menubar className="rounded-none border-none bg-main-600 outline-none">
+			<MenubarMenu>
+				<MenubarTrigger className="text-md rounded-md hover:bg-button-hover">
+					File
+				</MenubarTrigger>
+				<MenubarContent className="rounded-sm">
+					<MenubarItem>
+						New Tab <MenubarShortcut>⌘T</MenubarShortcut>
+					</MenubarItem>
+					<MenubarItem>New Window</MenubarItem>
+					<MenubarSeparator />
+					<MenubarItem>Share</MenubarItem>
+					<MenubarSeparator />
+					<MenubarItem>Print</MenubarItem>
+				</MenubarContent>
+			</MenubarMenu>
+
+			<MenubarSeparator className="m-0 h-6 w-0.5 bg-secondary-500 p-0"></MenubarSeparator>
+
+			<MenubarMenu>
+				<MenubarTrigger className="text-md rounded-md hover:bg-button-hover">
+					Edit
+				</MenubarTrigger>
+				<MenubarContent>
+					<MenubarItem>
+						New Tab <MenubarShortcut>⌘T</MenubarShortcut>
+					</MenubarItem>
+					<MenubarItem>New Window</MenubarItem>
+					<MenubarSeparator />
+					<MenubarItem>Share</MenubarItem>
+					<MenubarSeparator />
+					<MenubarItem>Print</MenubarItem>
+				</MenubarContent>
+			</MenubarMenu>
+
+			<MenubarSeparator className="m-0 h-6 w-0.5 bg-secondary-500 p-0"></MenubarSeparator>
+
+			<MenubarMenu>
+				<MenubarTrigger className="text-md rounded-md hover:bg-button-hover">
+					View
+				</MenubarTrigger>
+				<MenubarContent>
+					<MenubarCheckboxItem
+						checked={viewportData.showGrid}
+						onClick={(e) => {
 							dispatch(toggleGrid());
+							e.preventDefault();
 						}}
-					/>
-					<NavChildCheck
-						text="FPS"
-						value={viewportData.showStats}
-						set={() => {
+					>
+						Show Grid
+					</MenubarCheckboxItem>
+					<MenubarCheckboxItem
+						checked={viewportData.showStats}
+						onClick={(e) => {
 							dispatch(toggleStats());
+							e.preventDefault();
 						}}
-					/>
-				</NavButton>
-				<NavButton text="Help" hasOpened={hasOpened} currentButton={currentButton} />
-			</div>
-			<div
-				id="viewButtonContainer"
-				className="flex flex-row w-1/3 h-auto min-h-1 flex-nowrap  justify-center">
-				<NavButton text="Model" hasOpened={hasOpened} currentButton={currentButton} />
-				<NavButton text="Texture" hasOpened={hasOpened} currentButton={currentButton} />
-				<NavButton text="Render" hasOpened={hasOpened} currentButton={currentButton} />
-			</div>
-			<div
-				id="settingButtonContainer"
-				className="flex flex-row w-1/3 h-auto min-h-1 flex-nowrap  justify-center"></div>
-		</nav>
+					>
+						Show Stats
+					</MenubarCheckboxItem>
+				</MenubarContent>
+			</MenubarMenu>
+
+			<ErrorAlert
+				error="This is an error message"
+				info="An Error occured "
+			/>
+		</Menubar>
 	);
 };
-const NavBar = connect(mapStateToProps)(_NavBar);
 
 export default NavBar;

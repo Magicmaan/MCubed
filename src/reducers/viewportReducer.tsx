@@ -1,9 +1,9 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Box } from "@react-three/drei"; // Adjust the import path as necessary
-import { createTexture } from "../util/textureUtil";
-import * as THREE from "three";
-import { RootState } from "@react-three/fiber";
-import { MutableRefObject } from "react";
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { Box } from '@react-three/drei'; // Adjust the import path as necessary
+import { createTexture } from '../util/textureUtil';
+import * as THREE from 'three';
+import { RootState } from '@react-three/fiber';
+import { MutableRefObject } from 'react';
 
 type viewportState = {
 	cameraSettings: {
@@ -11,7 +11,7 @@ type viewportState = {
 		rotation?: [number, number]; // 2 axis of rotation on camera
 		zoom?: number; // zoom level of camera
 		pivot?: [number, number, number]; // pivot point of camera
-		projection?: "perspective" | "orthographic" | "Cube"; // camera projection
+		projection?: 'perspective' | 'orthographic' | 'Cube'; // camera projection
 		fov?: number; // field of view
 		props?: any; // additional camera properties
 	};
@@ -25,14 +25,15 @@ type viewportState = {
 	showGrid?: boolean;
 	showStats?: boolean;
 	selected?: number; // selected objects
+	mesh?: any[]; // mesh array
 };
 const viewportInitialState: viewportState = {
 	cameraSettings: {
-		pos: [10, 10, 10],
-		rot: [0, 0],
+		position: [10, 10, 10],
+		rotation: [0, 0],
 		zoom: 0.5,
 		pivot: [0, 0, 0],
-		projection: "perspective",
+		projection: 'perspective',
 		fov: 75,
 	},
 	cameraControls: {
@@ -40,24 +41,29 @@ const viewportInitialState: viewportState = {
 		pan: true,
 		rotate: true,
 	},
-	background: "#000000",
+	background: '#000000',
 	cameraLock: [false, null], // Changed function to null
 	showGrid: true,
 	showStats: false,
 	selected: 0, // initialize selected as an empty array
+	mesh: [], // initialize mesh as an empty array
 };
 
 const viewportSlice = createSlice({
-	name: "viewport",
+	name: 'viewport',
 	initialState: viewportInitialState,
 	reducers: {
 		test(state) {
-			console.log("Test reducer for mesh");
+			console.log('Test reducer for mesh');
 		},
 
 		setControls(
 			state,
-			action: PayloadAction<{ zoom?: boolean; pan?: boolean; rotate?: boolean }>
+			action: PayloadAction<{
+				zoom?: boolean;
+				pan?: boolean;
+				rotate?: boolean;
+			}>
 		) {
 			const zoom = action.payload.zoom ?? state.cameraControls.zoom;
 			const pan = action.payload.pan ?? state.cameraControls.pan;
@@ -76,7 +82,10 @@ const viewportSlice = createSlice({
 			state.showStats = !state.showStats;
 		},
 		meshAdd(state, action: PayloadAction<any>) {
-			state.mesh?.push(action.payload); // Ensure payload is serializable
+			if (!state.mesh) {
+				state.mesh = [];
+			}
+			state.mesh.push(action.payload); // Ensure payload is serializable
 		},
 		setSelected(state, action: PayloadAction<number | undefined>) {
 			state.selected = action.payload;
@@ -87,5 +96,11 @@ const viewportSlice = createSlice({
 });
 
 export default viewportSlice;
-export const { test, setControls, toggleGrid, meshAdd, toggleStats, setSelected } =
-	viewportSlice.actions;
+export const {
+	test,
+	setControls,
+	toggleGrid,
+	meshAdd,
+	toggleStats,
+	setSelected,
+} = viewportSlice.actions;

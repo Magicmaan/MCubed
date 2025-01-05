@@ -1,9 +1,10 @@
-import { useDispatch, useSelector } from "react-redux";
-import { createSelector } from "@reduxjs/toolkit";
-import type { AppDispatch, RootState } from "../store.ts";
+import { useDispatch, useSelector } from 'react-redux';
+import { createSelector } from '@reduxjs/toolkit';
+import type { AppDispatch, RootState } from '../store.ts';
 
 const meshStore = (state: RootState) => state.mesh;
 const viewportStore = (state: RootState) => state.viewport;
+const appStore = (state: RootState) => state.app;
 
 // Use throughout your app instead of plain `useDispatch` and `useSelector`
 export const useAppDispatch = useDispatch.withTypes<AppDispatch>();
@@ -18,4 +19,9 @@ export const useViewportCameraSettingsSelector = () =>
 	useAppSelector(viewportStore).cameraSettings;
 export const useViewportCameraSelector = () =>
 	useAppSelector(viewportStore).cameraControls;
-export const useViewportSelectedSelector = () => useAppSelector(viewportStore).selected;
+export const useViewportSelectedSelector = () =>
+	useAppSelector(viewportStore).selected;
+
+export const useAppStoreSelector = () => useAppSelector(appStore);
+export const useAppActionsSelector = () => useAppSelector(appStore).actions;
+export const useAppErrorsSelector = () => useAppSelector(appStore).errors;

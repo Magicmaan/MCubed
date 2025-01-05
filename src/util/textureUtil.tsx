@@ -1,15 +1,15 @@
-import { color } from "three/webgpu";
-import * as THREE from "three";
-import { randomCubeColour } from "../constants/CubeColours";
-import { CubeProps } from "../primitives/Cube";
+import { color } from 'three/webgpu';
+import * as THREE from 'three';
+import { randomCubeColour } from '../constants/CubeColours';
+import { CubeProps } from '../components/ThreeComponents/Cube';
 
 const createTexture = (width: number, height: number, color?: string) => {
 	if (color === null) {
 		color = randomCubeColour();
 	}
-	let textureData = createTextureData(width, height, "purple");
+	let textureData = createTextureData(width, height, 'purple');
 	//addDither(textureData, width, height, "#000000");
-	addOutline(textureData, width, height, lightenColor("purple", 1));
+	addOutline(textureData, width, height, lightenColor('purple', 1));
 
 	// used the buffer to create a DataTexture
 	const texture = new THREE.DataTexture(textureData, width, height);
@@ -28,7 +28,8 @@ const addOutline = (
 	// Add black outline around textureData
 	for (let y = 0; y < height; y++) {
 		for (let x = 0; x < width; x++) {
-			const isBorder = x === 0 || y === 0 || x === width - 1 || y === height - 1;
+			const isBorder =
+				x === 0 || y === 0 || x === width - 1 || y === height - 1;
 			if (isBorder) {
 				const stride = (y * width + x) * 4;
 				textureData[stride] = r; // R
@@ -56,7 +57,7 @@ const darkenColor = (color: string, factor: number) => {
 const lightenColor = (color: string, factor: number) => {
 	const colorObj = new THREE.Color(color);
 	colorObj.multiplyScalar(1 + factor);
-	return "#" + colorObj.getHexString();
+	return '#' + colorObj.getHexString();
 };
 
 const addGrid = (
@@ -66,7 +67,7 @@ const addGrid = (
 	color?: string
 ) => {
 	const size = width * height;
-	const { r, g, b } = splitColorToRGB(color || "#000000");
+	const { r, g, b } = splitColorToRGB(color || '#000000');
 	for (let i = 0; i < size; i++) {
 		if (i % 2 === 0) {
 			continue;
@@ -88,7 +89,7 @@ const addGrid = (
 			}
 		}
 	}
-	console.log("Dither added");
+	console.log('Dither added');
 };
 
 const addDither = (
@@ -97,7 +98,7 @@ const addDither = (
 	height: number,
 	color?: string
 ) => {
-	const { r, g, b } = splitColorToRGB(color || "#000000");
+	const { r, g, b } = splitColorToRGB(color || '#000000');
 	for (let y = 0; y < height; y++) {
 		for (let x = 0; x < width; x++) {
 			if ((x + y) % 2 === 1) {
@@ -136,13 +137,13 @@ const loadTexture = (url: string) => {
 	const texture = loader.load(
 		url, // Ensure this path is correct
 		() => {
-			console.log("Texture loaded successfully");
+			console.log('Texture loaded successfully');
 			texture.minFilter = THREE.NearestFilter;
 			texture.magFilter = THREE.NearestFilter;
 		},
 		undefined,
 		(err) => {
-			console.error("An error occurred loading the texture", err);
+			console.error('An error occurred loading the texture', err);
 		}
 	);
 	return texture;
@@ -166,6 +167,8 @@ class BoxUVMap {
 	right: number[];
 	front: number[];
 	back: number[];
+
+	position: { x: number; y: number } = { x: 0, y: 0 };
 
 	ONE_UNIT = 1 / 8;
 	constructor({
@@ -193,7 +196,12 @@ class BoxUVMap {
 
 	unwrapBox() {
 		var leftS = { x: 0, y: this.depth, w: this.depth, h: this.height };
-		var frontS = { x: this.depth, y: this.depth, w: this.width, h: this.height };
+		var frontS = {
+			x: this.depth,
+			y: this.depth,
+			w: this.width,
+			h: this.height,
+		};
 		var rightS = {
 			x: this.depth + this.width,
 			y: this.depth,
@@ -207,7 +215,12 @@ class BoxUVMap {
 			h: this.height,
 		};
 		var topS = { x: this.depth, y: 0, w: this.width, h: this.depth };
-		var bottomS = { x: this.depth + this.width, y: 0, w: this.width, h: this.depth };
+		var bottomS = {
+			x: this.depth + this.width,
+			y: 0,
+			w: this.width,
+			h: this.depth,
+		};
 
 		this.top = [topS.x, topS.y, topS.w, topS.h];
 		this.bottom = [bottomS.x, bottomS.y, bottomS.w, bottomS.h];
@@ -218,29 +231,71 @@ class BoxUVMap {
 	}
 
 	toPixels() {
-		return {
-			top: [this.top[0], this.top[1], this.top[2], this.top[3]],
-			bottom: [this.bottom[0], this.bottom[1], this.bottom[2], this.bottom[3]],
-			left: [this.left[0], this.left[1], this.left[2], this.left[3]],
-			right: [this.right[0], this.right[1], this.right[2], this.right[3]],
-			front: [this.front[0], this.front[1], this.front[2], this.front[3]],
-			back: [this.back[0], this.back[1], this.back[2], this.back[3]],
-		};
+		const tUV = this.applyPosition();
+
+		return tUV;
 	}
 	// prettier-ignore
 	toUVMap(width: number, height: number) {
 		//format is stored in x,y,w,h
 		//uv format is stored in x,y,w+x,h+y (absolute positions)
 		//input width, height is needed to convert to uv format (ranges 0-1)
+		const tUV = this.applyPosition();
 
 		return {
-			top: 	[this.top[0] / width, this.top[1] / height, this.top[2] / width + this.top[0] / width, this.top[3] / height + this.top[1] / height],
-			bottom: [this.bottom[0] / width, this.bottom[1] / height, this.bottom[2] / width + this.bottom[0] / width, this.bottom[3] / height + this.bottom[1] / height],
-			left: [this.left[0] / width, this.left[1] / height, this.left[2] / width + this.left[0] / width, this.left[3] / height + this.left[1] / height],
-			right: [this.right[0] / width, this.right[1] / height, this.right[2] / width + this.right[0] / width, this.right[3] / height + this.right[1] / height],
-			front: [this.front[0] / width, this.front[1] / height, this.front[2] / width + this.front[0] / width, this.front[3] / height + this.front[1] / height],
-			back: [this.back[0] / width, this.back[1] / height, this.back[2] / width + this.back[0] / width, this.back[3] / height + this.back[1] / height]
+			top: 	[tUV.top[0] / width, tUV.top[1] / height, tUV.top[2] / width + tUV.top[0] / width, tUV.top[3] / height + tUV.top[1] / height],
+			bottom: [tUV.bottom[0] / width, tUV.bottom[1] / height, tUV.bottom[2] / width + tUV.bottom[0] / width, tUV.bottom[3] / height + tUV.bottom[1] / height],
+			left: [tUV.left[0] / width, tUV.left[1] / height, tUV.left[2] / width + tUV.left[0] / width, tUV.left[3] / height + tUV.left[1] / height],
+			right: [tUV.right[0] / width, tUV.right[1] / height, tUV.right[2] / width + tUV.right[0] / width, tUV.right[3] / height + tUV.right[1] / height],
+			front: [tUV.front[0] / width, tUV.front[1] / height, tUV.front[2] / width + tUV.front[0] / width, tUV.front[3] / height + tUV.front[1] / height],
+			back: [tUV.back[0] / width, tUV.back[1] / height, tUV.back[2] / width + tUV.back[0] / width, tUV.back[3] / height + tUV.back[1] / height]
 		} as { top: [number, number, number, number], bottom: [number, number, number, number], left: [number, number, number, number], right: [number, number, number, number], front: [number, number, number, number], back: [number, number, number, number] };
+	}
+
+	applyPosition() {
+		const translatedUV = {
+			top: [
+				this.top[0] + this.position.x,
+				this.top[1] + this.position.y,
+				this.top[2],
+				this.top[3],
+			],
+			bottom: [
+				this.bottom[0] + this.position.x,
+				this.bottom[1] + this.position.y,
+				this.bottom[2],
+				this.bottom[3],
+			],
+			left: [
+				this.left[0] + this.position.x,
+				this.left[1] + this.position.y,
+				this.left[2],
+				this.left[3],
+			],
+			right: [
+				this.right[0] + this.position.x,
+				this.right[1] + this.position.y,
+				this.right[2],
+				this.right[3],
+			],
+			front: [
+				this.front[0] + this.position.x,
+				this.front[1] + this.position.y,
+				this.front[2],
+				this.front[3],
+			],
+			back: [
+				this.back[0] + this.position.x,
+				this.back[1] + this.position.y,
+				this.back[2],
+				this.back[3],
+			],
+		};
+		return translatedUV;
+	}
+
+	setPosition(x: number, y: number) {
+		this.position = { x, y };
 	}
 }
 

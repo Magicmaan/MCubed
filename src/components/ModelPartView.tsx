@@ -1,5 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import Cube from "../primitives/Cube"; // Make sure to import the Cube component
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import "../styles/App.css";
 import { randomCubeColour } from "../constants/CubeColours";
@@ -23,6 +22,8 @@ import {
 } from "../hooks/useRedux";
 import { setSelected as reduxSetSelected } from "../reducers/viewportReducer";
 import { invalidate } from "@react-three/fiber";
+import { eventNames } from "process";
+import { ContextInfoItem } from "./templates/ContextMenu";
 
 const ModelItem: React.FC<{
 	item: any;
@@ -30,31 +31,29 @@ const ModelItem: React.FC<{
 	setSelected: (id: number) => void;
 }> = ({ item, selected: old, setSelected }) => {
 	const dispatch = useAppDispatch();
-	const selected = useState(useViewportSelector().selected);
-
+	const selected = useViewportSelectedSelector();
 	const MENU_ID = "context_model_part_" + item.id;
 	const { show } = useContextMenu({
 		id: MENU_ID,
 	});
-	function handleContextMenu(event: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+	const handleContextMenu = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
 		document.getElementById("model_part_" + item.id)?.click();
 		show({
 			event,
-			props: {
-				key: "value",
-			},
 		});
-	}
+		event.preventDefault();
+	};
 	const handleItemClick = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-		if (item.id === selected[0]) {
-			console.log("Item already selected");
-			dispatch(reduxSetSelected(-1));
-			selected[1](-1);
-			invalidate();
+		//dont click if right click or middle click
+		if (event.button !== 0 || event.buttons !== 1) {
+			return;
+		}
+		if (item.id === selected) {
+			setSelected(-1);
+			console.log("selected");
 		} else {
-			dispatch(reduxSetSelected(parseInt(item.id)));
-			selected[1](parseInt(item.id));
-			invalidate();
+			console.log("not selected");
+			setSelected(item.id);
 		}
 
 		event.preventDefault();
@@ -63,22 +62,20 @@ const ModelItem: React.FC<{
 	return (
 		<button
 			id={"model_part_" + item.id}
-			aria-pressed={selected[0] === item.id}
+			aria-pressed={selected === item.id}
 			key={item.id}
 			data-test={"hi"}
-			onContextMenu={handleContextMenu}
-			onClick={(e) => {
+			onContextMenuCapture={handleContextMenu}
+			onMouseDown={(e) => {
 				handleItemClick(e);
 			}}
-			className="bg-secondary rounded-md w-full h-10 flex flex-nowrap flex-row justify-stretch items-center  aria-pressed:bg-button-hover focus:outline-none select-none">
+			className="bg-secondary rounded-md w-full h-10 flex flex-nowrap flex-row justify-stretch items-center hover:bg-button-hover  aria-pressed:bg-button-selected focus:outline-none select-none pointer-events-auto">
 			<Icon name="cube" height={16} width={16} colour="red" />
 
 			<EditText name="cubeName" defaultValue={item.name} />
 
-			<Menu id={MENU_ID} theme="contextTheme">
-				<Item id={item.id} onClick={handleItemClick}>
-					{item.id}
-				</Item>
+			<Menu id={MENU_ID} theme="contextTheme" className="bg-red-500">
+				<ContextInfoItem label={item.name} title={`ID: ${item.id}`} textSize="text-sm" />
 				<Item id="copy" onClick={handleItemClick}>
 					Copy
 				</Item>
