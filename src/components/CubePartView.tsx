@@ -121,7 +121,7 @@ const CubePartView: React.FC = () => {
 			{cube ? (
 				<>
 					<div
-						className="pointer-events-auto flex w-auto flex-col items-center justify-center rounded-sm border-main-800 bg-main-500 p-1"
+						className="pointer-events-auto flex h-auto w-full flex-col items-center justify-center rounded-sm border-main-800 bg-main-500 p-1"
 						onContextMenuCapture={(e) => {
 							handlePositionContextMenu(e);
 						}}

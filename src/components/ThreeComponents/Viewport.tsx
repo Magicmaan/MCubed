@@ -85,7 +85,7 @@ const Viewport: React.FC = () => {
 		<Canvas
 			id="viewport"
 			frameloop="demand"
-			className="h-full w-full bg-transparent"
+			className="z-10 h-full w-full bg-transparent"
 			gl={{
 				antialias: true,
 				toneMapping: THREE.NoToneMapping,

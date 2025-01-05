@@ -1,5 +1,5 @@
-import React from "react";
-import Icon from "../../assets/icons/solid/.all";
+import React from 'react';
+import Icon from '../../assets/icons/solid/.all';
 
 interface SideBarWidgetProps {
 	style?: React.CSSProperties;
@@ -7,10 +7,12 @@ interface SideBarWidgetProps {
 	children?: React.ReactNode;
 	showExitButton?: boolean;
 	onExit?: () => void;
+	className?: string;
 }
 
 const SideBarWidget: React.FC<SideBarWidgetProps> = ({
 	style,
+	className,
 	name,
 	children,
 	showExitButton,
@@ -19,16 +21,18 @@ const SideBarWidget: React.FC<SideBarWidgetProps> = ({
 	return (
 		<div
 			id={name}
-			className="bg-main w-full h-auto max-h-full flex flex-nowrap flex-col space-y-0.5 p-2 rounded-md overflow-y-scroll scrollbar scrollbar-always justify-stretch items-stretch"
-			style={style}>
-			<div className="flex flex-row flex-nowrap justify-between items-center w-full h-auto select-none">
-				<p className="font-Inter font-semibold text-left p-2 pr-4 border-1 static">
+			className={`scrollbar scrollbar-always flex h-auto max-h-full w-full flex-col flex-nowrap items-stretch justify-stretch space-y-0.5 overflow-y-scroll rounded-md bg-main p-2 ${className}`}
+			style={style}
+		>
+			<div className="flex h-auto w-full select-none flex-row flex-nowrap items-center justify-between">
+				<p className="border-1 static p-2 pr-4 text-left font-Inter font-semibold">
 					{name}
 				</p>
 				{showExitButton && (
 					<button
 						onClick={onExit}
-						className="aspect-square h-full flex p-0 m-1 pr-1 justify-center items-center rounded-lg bg-slate-600 ">
+						className="m-1 flex aspect-square h-full items-center justify-center rounded-lg bg-slate-600 p-0 pr-1"
+					>
 						<Icon
 							name="xmark"
 							height={24}

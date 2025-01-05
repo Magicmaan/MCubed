@@ -35,56 +35,69 @@ import {
 import { Button } from './ui/button';
 import ErrorAlert from './templates/ErrorAlert';
 
-const NavBar: React.FC<Props> = () => {
+const styles = {
+	menubar: `dark rounded-none outline-none dark:bg-matisse-950 p-1 pt-0 dark:border-matisse-900`,
+	menubarTrigger: `text-md rounded-none dark:bg-matisse-950 dark:hover:bg-button-hover h-full dark:focus:bg-button-selected dark:focus:active:bg-button-selected`,
+	menubarContent: `dark rounded-sm dark:bg-popup-bg `,
+	menubarSeparator: `m-0 h-6 w-0.5 bg-secondary-500 p-0`,
+	menuItem: `dark:hover:bg-button-selected dark:focus:bg-button-selected`,
+};
+
+const NavBar: React.FC = () => {
 	const hasOpened = useState(false);
 	const currentButton = useState('');
 	const viewportData = useViewportSelector();
 	const dispatch = useAppDispatch();
 
 	return (
-		<Menubar className="rounded-none border-none bg-main-600 outline-none">
+		<Menubar className={styles.menubar + ' border-0 border-b-4'}>
 			<MenubarMenu>
-				<MenubarTrigger className="text-md rounded-md hover:bg-button-hover">
+				<MenubarTrigger className={styles.menubarTrigger}>
 					File
 				</MenubarTrigger>
-				<MenubarContent className="rounded-sm">
-					<MenubarItem>
+				<MenubarContent className={styles.menubarContent}>
+					<MenubarItem className={styles.menuItem}>
 						New Tab <MenubarShortcut>⌘T</MenubarShortcut>
 					</MenubarItem>
-					<MenubarItem>New Window</MenubarItem>
+					<MenubarItem className={styles.menuItem}>
+						New Window
+					</MenubarItem>
 					<MenubarSeparator />
-					<MenubarItem>Share</MenubarItem>
+					<MenubarItem className={styles.menuItem}>Share</MenubarItem>
 					<MenubarSeparator />
-					<MenubarItem>Print</MenubarItem>
+					<MenubarItem className={styles.menuItem}>Print</MenubarItem>
 				</MenubarContent>
 			</MenubarMenu>
 
 			<MenubarSeparator className="m-0 h-6 w-0.5 bg-secondary-500 p-0"></MenubarSeparator>
 
 			<MenubarMenu>
-				<MenubarTrigger className="text-md rounded-md hover:bg-button-hover">
+				<MenubarTrigger className={styles.menubarTrigger}>
 					Edit
 				</MenubarTrigger>
-				<MenubarContent>
-					<MenubarItem>
+				<MenubarContent className={styles.menubarContent}>
+					<MenubarItem className={styles.menuItem}>
 						New Tab <MenubarShortcut>⌘T</MenubarShortcut>
 					</MenubarItem>
-					<MenubarItem>New Window</MenubarItem>
+					<MenubarItem className={styles.menuItem}>
+						New Window
+					</MenubarItem>
 					<MenubarSeparator />
-					<MenubarItem>Share</MenubarItem>
+					<MenubarItem className={styles.menuItem}>Share</MenubarItem>
 					<MenubarSeparator />
-					<MenubarItem>Print</MenubarItem>
+					<MenubarItem className={styles.menuItem}>Print</MenubarItem>
 				</MenubarContent>
 			</MenubarMenu>
 
 			<MenubarSeparator className="m-0 h-6 w-0.5 bg-secondary-500 p-0"></MenubarSeparator>
 
 			<MenubarMenu>
-				<MenubarTrigger className="text-md rounded-md hover:bg-button-hover">
+				<MenubarTrigger className={styles.menubarTrigger}>
 					View
 				</MenubarTrigger>
-				<MenubarContent>
+				<MenubarContent className={styles.menubarContent}>
 					<MenubarCheckboxItem
+						className={styles.menuItem}
 						checked={viewportData.showGrid}
 						onClick={(e) => {
 							dispatch(toggleGrid());
@@ -94,6 +107,7 @@ const NavBar: React.FC<Props> = () => {
 						Show Grid
 					</MenubarCheckboxItem>
 					<MenubarCheckboxItem
+						className={styles.menuItem}
 						checked={viewportData.showStats}
 						onClick={(e) => {
 							dispatch(toggleStats());
