@@ -9,8 +9,6 @@ import * as React from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Hud, PerspectiveCamera } from '@react-three/drei';
 
-import { CubeProps } from '../components/ThreeComponents/Cube.tsx';
-
 import ModelPartView from '../components/ModelPartView';
 import { randomCubeColour } from '../constants/CubeColours.tsx';
 import ContextMenu from '../components/ContextMenu.tsx';
@@ -43,11 +41,13 @@ function ModelView() {
 		showMenu,
 		hideMenu,
 		handleContextMenu,
-	} = useContextMenu();
+} = useContextMenu();
 
 	//REDUX STUFF
 	const mesh = useAppSelector((state) => state.mesh);
-	console.log('App mesh data ', mesh);
+	console.log('App mesh data ', mesh);hello sadasdadsdfsdfsfsfsdfdsf
+
+
 
 	return (
 		<div
@@ -61,7 +61,7 @@ function ModelView() {
 					id="leftSidebar"
 					resizable={[false, false, true, false]}
 					className={
-						`max-h-auto flex h-full w-1/6 min-w-10 flex-grow flex-col items-stretch justify-stretch space-y-2 rounded-t-lg ` +
+						`max-h-auto flex h-full w-1/6 min-w-72 flex-grow flex-col items-stretch justify-stretch space-y-2 rounded-t-lg ` +
 						styles.panelContainer +
 						styles.panelOutline
 					}

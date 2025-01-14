@@ -22,6 +22,7 @@ import mirror from './mirror';
 import ellipsis from './ellipsis';
 import ellipsis_vertical from './ellipsis-vertical';
 import exclamation from './exclamation';
+import clock from './clock';
 // prettier-ignore
 const icons: { [key: string]: string | {d:string,viewBox:string} } = {
 	"cube": cube,
@@ -48,6 +49,7 @@ const icons: { [key: string]: string | {d:string,viewBox:string} } = {
 	"ellipsis": ellipsis,
 	"ellipsis-vertical": ellipsis_vertical,
 	"exclamation": exclamation,
+	"clock": clock,
 };
 
 type IconProps = {

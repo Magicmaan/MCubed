@@ -21,7 +21,7 @@ const SideBarWidget: React.FC<SideBarWidgetProps> = ({
 	return (
 		<div
 			id={name}
-			className={`scrollbar scrollbar-always flex h-auto max-h-full w-full flex-col flex-nowrap items-stretch justify-stretch space-y-0.5 overflow-y-scroll rounded-md bg-main p-2 ${className}`}
+			className={`scrollbar scrollbar-always flex h-auto w-full flex-col flex-nowrap items-stretch justify-stretch space-y-0.5 overflow-y-scroll rounded-md bg-main p-2 ${className}`}
 			style={style}
 		>
 			<div className="flex h-auto w-full select-none flex-row flex-nowrap items-center justify-between">

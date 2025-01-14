@@ -37,7 +37,7 @@ const NumberDisplayVec3 = ({
 	return (
 		<div
 			className={
-				'flex h-min w-min items-center justify-between gap-1 rounded-md text-sm' +
+				'flex h-min w-5/6 min-w-40 flex-shrink items-center justify-between gap-1 rounded-md text-sm' +
 				(orientation == 'column' ? ' flex-col' : ' flex-row')
 			}
 		>
@@ -82,7 +82,7 @@ const NumberDisplaySingle = ({
 	const contextMenuID = `vector_single_${uuid()}`;
 	const { show } = useContextMenu({ id: contextMenuID });
 	const handleContextMenu = (
-		event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+		event: React.MouseEvent<HTMLDivElement, MouseEvent>
 	) => {
 		show({ event });
 		event.preventDefault();
@@ -95,9 +95,9 @@ const NumberDisplaySingle = ({
 	}, [value, decimalPlaces]);
 
 	const vectorColour = {
-		X: 'border-red-axis',
-		Y: 'green-axis',
-		Z: 'blue-axis',
+		X: 'border-red-500',
+		Y: 'border-green-500',
+		Z: 'border-blue-500',
 	};
 	var vectorTextSize: string;
 	var vectorTextYOffset: string = 'bottom-2';
@@ -164,138 +164,111 @@ const NumberDisplaySingle = ({
 	];
 
 	return (
-		<ErrorBoundary
-			onError={(error, componentStack) => console.log(error)}
-			FallbackComponent={Fallback}
+		<div
+			className={
+				`pointer-events-auto flex w-auto flex-row items-center justify-start overflow-hidden rounded-lg border-2 bg-secondary p-1 py-0.5 text-left ${width} ${height} ${textSize} ${borderRadius} ` +
+				`${axis ? vectorColour[axis] : 'border-tertiary'} ${borderWidth}`
+			}
+			onContextMenuCapture={(e) => handleContextMenu(e)}
 		>
-			<div
-				className={
-					`pointer-events-auto flex flex-row items-center justify-start overflow-hidden border-2 bg-secondary p-1 py-0.5 text-left ${width} ${height} ${textSize} ${borderRadius}` +
-					vectorColour['X'] +
-					'border-red-axis'
-				}
-				onContextMenuCapture={(e) => handleContextMenu(e)}
-			>
-				<input
-					type="text"
-					value={inputValue}
-					inputMode="decimal"
-					className="pointer-events-auto flex h-full w-10 min-w-10 max-w-10 items-start justify-start border-none bg-transparent text-start outline-none"
-					tabIndex={index * 10 + Math.round(Math.random() * 10)}
-					onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-						if (e.key === 'Enter') e.currentTarget.blur();
-						if (!allowedKeys.includes(e.key)) {
-							e.preventDefault();
-							return;
+			<input
+				type="text"
+				value={inputValue}
+				inputMode="decimal"
+				className="pointer-events-auto flex h-full w-auto items-start justify-start border-none bg-transparent text-start outline-none"
+				tabIndex={index * 10 + Math.round(Math.random() * 10)}
+				onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+					if (e.key === 'Enter') e.currentTarget.blur();
+					if (!allowedKeys.includes(e.key)) {
+						e.preventDefault();
+						return;
+					}
+					if (e.key === 'ArrowUp' && setValue) setValue(value + 1);
+					if (e.key === 'ArrowDown' && setValue) setValue(value - 1);
+					if (e.key === 'r' && setValue) setValue(Math.round(value));
+					if (e.key === 't' && setValue) setValue(Math.trunc(value));
+					if (e.key === 'f' && setValue) setValue(-value);
+					if (e.key === 'Escape') e.currentTarget.blur();
+				}}
+				onChange={() => {}}
+				onBlur={(e) => {
+					let text = e.target.value;
+					if (['+', '-', '*', '/'].some((op) => text.includes(op))) {
+						const firstTwoChars = text.slice(0, 2);
+						if (['++', '+-', '-+', '--'].includes(firstTwoChars)) {
+							text =
+								value.toFixed(decimalPlaces) +
+								(firstTwoChars[1] === '+' ? '+1' : '-1');
 						}
-						if (e.key === 'ArrowUp' && setValue)
-							setValue(value + 1);
-						if (e.key === 'ArrowDown' && setValue)
-							setValue(value - 1);
-						if (e.key === 'r' && setValue)
-							setValue(Math.round(value));
-						if (e.key === 't' && setValue)
-							setValue(Math.trunc(value));
-						if (e.key === 'f' && setValue) setValue(-value);
-						if (e.key === 'Escape') e.currentTarget.blur();
-					}}
-					onChange={() => {}}
-					onBlur={(e) => {
-						let text = e.target.value;
-						if (
-							['+', '-', '*', '/'].some((op) => text.includes(op))
-						) {
-							const firstTwoChars = text.slice(0, 2);
-							if (
-								['++', '+-', '-+', '--'].includes(firstTwoChars)
-							) {
-								text =
-									value.toFixed(decimalPlaces) +
-									(firstTwoChars[1] === '+' ? '+1' : '-1');
-							}
-							if (['+', '-', '*', '/'].includes(text[0])) {
-								text = value + text;
-							}
-							try {
-								text = eval(text);
-							} catch {
-								text = value.toFixed(decimalPlaces);
-							}
+						if (['+', '-', '*', '/'].includes(text[0])) {
+							text = value + text;
 						}
-						if (!text || isNaN(parseFloat(text))) {
+						try {
+							text = eval(text);
+						} catch {
 							text = value.toFixed(decimalPlaces);
 						}
-						if (setValue) setValue(parseFloat(text));
-					}}
-					onFocus={(e) => e.target.select()}
+					}
+					if (!text || isNaN(parseFloat(text))) {
+						text = value.toFixed(decimalPlaces);
+					}
+					if (setValue) setValue(parseFloat(text));
+				}}
+				onFocus={(e) => e.target.select()}
+			/>
+			<Menu
+				id={contextMenuID}
+				theme="contextTheme"
+				className="bg-red-500 shadow-2xl shadow-black"
+			>
+				<ContextInfoItem label={axis + ' ' + value} />
+				<ContextItem
+					label="Flip"
+					title="Flip the value"
+					shortcutLabel="F"
+					callback={() => setValue && setValue(-value)}
+					icon={'mirror'}
 				/>
-				{axis && (
-					<div
-						className={`text-red bg-red relative h-full w-full items-center justify-center text-end font-bold opacity-75 text-${vectorColour[axis]} ${vectorTextSize} ${vectorTextYOffset} ${vectorTextXOffset}`}
-					>
-						{axis}
-					</div>
-				)}
-				<Menu
-					id={contextMenuID}
-					theme="contextTheme"
-					className="bg-red-500"
-				>
-					<ContextInfoItem
-						label={axis + ' ' + value}
-						textSize="text-xs"
-					/>
-					<ContextItem
-						label="Flip"
-						title="Flip the value"
-						shortcutLabel="F"
-						callback={() => setValue && setValue(-value)}
-						icon={'mirror'}
-					/>
-					<ContextItem
-						label="Round"
-						title="Round to nearest whole number"
-						shortcutLabel="R"
-						canClick={true}
-						callback={() => setValue && setValue(Math.round(value))}
-						icon={'arrows-down-to-line'}
-					/>
-					<ContextItem
-						label="Truncate"
-						title="Truncate decimals"
-						shortcutLabel="T"
-						canClick={true}
-						callback={() => setValue && setValue(Math.trunc(value))}
-						icon={'border-all'}
-					/>
-					<ContextItem
-						label="To Zero"
-						title="Set value to zero"
-						shortcutLabel="0"
-						canClick={true}
-						callback={() => setValue && setValue(0)}
-						icon={'arrows-to-dot'}
-					/>
-					<Separator />
-					<ContextCopyPasteItem />
-					<Separator />
-					<ContextInfoItem label="Operators" textSize="text-sm" />
-					<ContextInfoItem label="Add Subtract" shortcutLabel="+ -" />
-					<ContextInfoItem
-						label="Multiply Divide"
-						shortcutLabel="* /"
-					/>
-					<ContextInfoItem
-						label="Increment"
-						shortcutLabel="Arrow Up | ++"
-					/>
-					<ContextInfoItem
-						label="Decrement"
-						shortcutLabel="Arrow Down | --"
-					/>
-				</Menu>
-			</div>
-		</ErrorBoundary>
+				<ContextItem
+					label="Round"
+					title="Round to nearest whole number"
+					shortcutLabel="R"
+					canClick={true}
+					callback={() => setValue && setValue(Math.round(value))}
+					icon={'arrows-down-to-line'}
+				/>
+				<ContextItem
+					label="Truncate"
+					title="Truncate decimals"
+					shortcutLabel="T"
+					canClick={true}
+					callback={() => setValue && setValue(Math.trunc(value))}
+					icon={'border-all'}
+				/>
+				<ContextItem
+					label="To Zero"
+					title="Set value to zero"
+					shortcutLabel="0"
+					canClick={true}
+					callback={() => setValue && setValue(0)}
+					icon={'arrows-to-dot'}
+				/>
+				<Separator />
+				<ContextCopyPasteItem />
+				<Separator />
+				<ContextInfoItem label="Operators" textSize="text-sm" />
+				<ContextInfoItem label="Add Subtract" shortcutLabel="+ -" />
+				<ContextInfoItem label="Multiply Divide" shortcutLabel="* /" />
+				<ContextInfoItem
+					label="Increment"
+					shortcutLabel="Arrow Up | ++"
+				/>
+				<ContextInfoItem
+					label="Decrement"
+					shortcutLabel="Arrow Down | --"
+				/>
+			</Menu>
+		</div>
 	);
 };
 

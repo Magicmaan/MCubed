@@ -1,7 +1,6 @@
 import { color } from 'three/webgpu';
 import * as THREE from 'three';
 import { randomCubeColour } from '../constants/CubeColours';
-import { CubeProps } from '../components/ThreeComponents/Cube';
 
 const createTexture = (width: number, height: number, color?: string) => {
 	if (color === null) {
@@ -230,6 +229,9 @@ class BoxUVMap {
 		this.back = [backS.x, backS.y, backS.w, backS.h];
 	}
 
+	getBounds() {
+		x = this.
+	}
 	toPixels() {
 		const tUV = this.applyPosition();
 
@@ -240,16 +242,74 @@ class BoxUVMap {
 		//format is stored in x,y,w,h
 		//uv format is stored in x,y,w+x,h+y (absolute positions)
 		//input width, height is needed to convert to uv format (ranges 0-1)
-		const tUV = this.applyPosition();
+		const positionedUV = this.applyPosition();
 
 		return {
-			top: 	[tUV.top[0] / width, tUV.top[1] / height, tUV.top[2] / width + tUV.top[0] / width, tUV.top[3] / height + tUV.top[1] / height],
-			bottom: [tUV.bottom[0] / width, tUV.bottom[1] / height, tUV.bottom[2] / width + tUV.bottom[0] / width, tUV.bottom[3] / height + tUV.bottom[1] / height],
-			left: [tUV.left[0] / width, tUV.left[1] / height, tUV.left[2] / width + tUV.left[0] / width, tUV.left[3] / height + tUV.left[1] / height],
-			right: [tUV.right[0] / width, tUV.right[1] / height, tUV.right[2] / width + tUV.right[0] / width, tUV.right[3] / height + tUV.right[1] / height],
-			front: [tUV.front[0] / width, tUV.front[1] / height, tUV.front[2] / width + tUV.front[0] / width, tUV.front[3] / height + tUV.front[1] / height],
-			back: [tUV.back[0] / width, tUV.back[1] / height, tUV.back[2] / width + tUV.back[0] / width, tUV.back[3] / height + tUV.back[1] / height]
+			top: 	[positionedUV.top[0] / width, positionedUV.top[1] / height, positionedUV.top[2] / width + positionedUV.top[0] / width, positionedUV.top[3] / height + positionedUV.top[1] / height],
+			bottom: [positionedUV.bottom[0] / width, positionedUV.bottom[1] / height, positionedUV.bottom[2] / width + positionedUV.bottom[0] / width, positionedUV.bottom[3] / height + positionedUV.bottom[1] / height],
+			left: [positionedUV.left[0] / width, positionedUV.left[1] / height, positionedUV.left[2] / width + positionedUV.left[0] / width, positionedUV.left[3] / height + positionedUV.left[1] / height],
+			right: [positionedUV.right[0] / width, positionedUV.right[1] / height, positionedUV.right[2] / width + positionedUV.right[0] / width, positionedUV.right[3] / height + positionedUV.right[1] / height],
+			front: [positionedUV.front[0] / width, positionedUV.front[1] / height, positionedUV.front[2] / width + positionedUV.front[0] / width, positionedUV.front[3] / height + positionedUV.front[1] / height],
+			back: [positionedUV.back[0] / width, positionedUV.back[1] / height, positionedUV.back[2] / width + positionedUV.back[0] / width, positionedUV.back[3] / height + positionedUV.back[1] / height]
 		} as { top: [number, number, number, number], bottom: [number, number, number, number], left: [number, number, number, number], right: [number, number, number, number], front: [number, number, number, number], back: [number, number, number, number] };
+	}
+	fromUVMap(
+		uv: {
+			top: [number, number, number, number];
+			bottom: [number, number, number, number];
+			left: [number, number, number, number];
+			right: [number, number, number, number];
+			front: [number, number, number, number];
+			back: [number, number, number, number];
+		},
+		width: number,
+		height: number
+	) {
+		const positionedUV = {
+			top: [
+				uv.top[0] * width,
+				uv.top[1] * height,
+				uv.top[2] * width - uv.top[0] * width,
+				uv.top[3] * height - uv.top[1] * height,
+			],
+			bottom: [
+				uv.bottom[0] * width,
+				uv.bottom[1] * height,
+				uv.bottom[2] * width - uv.bottom[0] * width,
+				uv.bottom[3] * height - uv.bottom[1] * height,
+			],
+			left: [
+				uv.left[0] * width,
+				uv.left[1] * height,
+				uv.left[2] * width - uv.left[0] * width,
+				uv.left[3] * height - uv.left[1] * height,
+			],
+			right: [
+				uv.right[0] * width,
+				uv.right[1] * height,
+				uv.right[2] * width - uv.right[0] * width,
+				uv.right[3] * height - uv.right[1] * height,
+			],
+			front: [
+				uv.front[0] * width,
+				uv.front[1] * height,
+				uv.front[2] * width - uv.front[0] * width,
+				uv.front[3] * height - uv.front[1] * height,
+			],
+			back: [
+				uv.back[0] * width,
+				uv.back[1] * height,
+				uv.back[2] * width - uv.back[0] * width,
+				uv.back[3] * height - uv.back[1] * height,
+			],
+		};
+		this.top = positionedUV.top;
+		this.bottom = positionedUV.bottom;
+		this.left = positionedUV.left;
+		this.right = positionedUV.right;
+		this.front = positionedUV.front;
+		this.back = positionedUV.back;
+		return this;
 	}
 
 	applyPosition() {
@@ -296,6 +356,7 @@ class BoxUVMap {
 
 	setPosition(x: number, y: number) {
 		this.position = { x, y };
+		return this;
 	}
 }
 

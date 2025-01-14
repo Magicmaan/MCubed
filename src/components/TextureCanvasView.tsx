@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react';
 import SideBarWidget from './templates/SideBarWidget';
 import {
 	useAppDispatch,
@@ -262,41 +268,38 @@ const TextureCanvasView: React.FC = () => {
 
 	const testUV = new BoxUVMap({ width: 16, height: 16, depth: 16 });
 	testUV.setPosition(16, 16);
-	const boxUVs = useRef([
-		new BoxUVMap({ width: 16, height: 16, depth: 16 }),
-		testUV,
-	]);
+	// const boxUVs = useRef([
+	// 	new BoxUVMap({ width: 16, height: 16, depth: 16 }),
+	// 	testUV,
+	// ]);
+
+	// const [boxUVs, setBoxUVs] = useState<BoxUVMap[]>(
+	// 	meshData.map(
+	// 		(cube) =>
+	// 			new BoxUVMap({
+	// 				width: cube.size[0],
+	// 				height: cube.size[1],
+	// 				depth: cube.size[2],
+	// 			})
+	// 	)
+	// );
+
+	const boxUVs = useRef<BoxUVMap[]>();
+	const [reload, setReload] = useState(false);
+	useEffect(() => {
+		boxUVs.current = meshData.map((cube) =>
+			new BoxUVMap({}).fromUVMap(cube.uv, 128, 128)
+		);
+	}, [meshData]);
 
 	const isDragging = useRef(false);
 	const mousePosition = useRef({ x: 0, y: 0 });
 
-	const dragState = useRef<'board' | 'uv'>('board');
+	const dragState = useRef<'board' | 'uv'>('uv');
 	const position = useState({ x: 0, y: 0 });
 	const scale = useState(1);
 
 	const dispatch = useAppDispatch();
-
-	useEffect(() => {
-		for (let i = 0; i < meshData.length; i++) {
-			const cube = meshData[i];
-			if (!cube.size) continue;
-			const uv = new BoxUVMap({
-				width: cube.size[0] ?? 16,
-				height: cube.size[1] ?? 16,
-				depth: cube.size[2] ?? 16,
-			});
-			//uv.setPosition(cube.position[0], cube.position[1]);
-
-			dispatch(
-				meshModifyIndex({
-					index: i,
-					uv: uv.toUVMap(128, 128),
-				})
-			);
-		}
-
-		// dispatch(meshModifyIndex({ index: 0, uv: boxUVs.current.toUVMap(128, 128) }));
-	}, [boxUVs]);
 
 	const drawSrcImage = (ctx: CanvasRenderingContext2D) => {
 		ctx.fillStyle = '#dbdbdb';
@@ -337,7 +340,6 @@ const TextureCanvasView: React.FC = () => {
 		if (boxUVs.current) {
 			boxUVs.current.forEach((uvobj) => {
 				var map = uvobj.toPixels();
-				const UV = uvobj.toUVMap(width, height);
 				//console.log("Map UV", UV);
 				//console.log("Map", map);
 				//top
@@ -476,6 +478,29 @@ const TextureCanvasView: React.FC = () => {
 				<canvas
 					onWheel={onWheel}
 					onPointerDown={(e) => {
+						mousePosition.current = { x: e.clientX, y: e.clientY };
+						boxUVs.current?.forEach((uvobj) => {
+							const bounds = uvobj.getBounds();
+
+							const mouseXY = getCanvasPosition(
+								e.currentTarget.getContext(
+									'2d'
+								) as CanvasRenderingContext2D,
+								e.clientX,
+								e.clientY
+							);
+							const x = mouseXY.x / scale[0];
+							const y = mouseXY.y / scale[0];
+							if (
+								x > pixelUV.top[0] &&
+								x < pixelUV.top[2] &&
+								y > pixelUV.top[1] &&
+								y < pixelUV.top[3]
+							) {
+								dragState.current = 'uv';
+								console.log('UV DRAG');
+							}
+						});
 						isDragging.current = true;
 					}}
 					onPointerMove={(e) => {

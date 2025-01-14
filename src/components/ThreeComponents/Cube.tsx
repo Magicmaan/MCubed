@@ -12,8 +12,11 @@ import {
 } from '../../hooks/useRedux';
 import { setSelected as reduxSetSelected } from '../../reducers/viewportReducer';
 
-import { boxUVToVertexArray } from '../../util/textureUtil';
+import { BoxUVMap, boxUVToVertexArray } from '../../util/textureUtil';
 import { useTexture } from '@react-three/drei';
+
+import { CubeProps, THREEObjectProps } from '../../types/three';
+import { meshModify } from '../../reducers/meshReducer';
 
 const Cube: React.FC<{
 	cube: CubeProps;
@@ -102,7 +105,6 @@ const Cube: React.FC<{
 			// );
 			//console.log(cube.name, 'position', ref.current.position);
 		}
-
 		// if not using gimbal, update position from store (allows for setting position from outside viewport)
 		if (
 			(cameraControls?.pan &&
@@ -118,6 +120,12 @@ const Cube: React.FC<{
 			ref.current?.position.copy(worldPos);
 			ref.current?.matrixWorld.setPosition(worldPos);
 		}
+
+		// Update UV coordinates
+		ref.current?.geometry.setAttribute(
+			'uv',
+			new THREE.Float32BufferAttribute(boxUVToVertexArray(cube.uv), 2)
+		);
 
 		ref.current?.updateMatrixWorld();
 		ref.current?.updateMatrix();
@@ -137,15 +145,18 @@ const Cube: React.FC<{
 		self.updateMatrixWorld();
 	}, []);
 
-	const updateUV = React.useCallback((self: THREE.Mesh) => {
-		if (self === null) return;
-		if (cube.uv === undefined) return;
+	const updateUV = React.useCallback(
+		(self: THREE.Mesh) => {
+			if (self === null) return;
+			if (cube.uv === undefined) return;
 
-		self.geometry.setAttribute(
-			'uv',
-			new THREE.Float32BufferAttribute(boxUVToVertexArray(cube.uv), 2)
-		);
-	}, []);
+			self.geometry.setAttribute(
+				'uv',
+				new THREE.Float32BufferAttribute(boxUVToVertexArray(cube.uv), 2)
+			);
+		},
+		[cube.uv, cube.auto_uv]
+	);
 
 	// Handle cube selection
 	const setSelected = React.useCallback((e: ThreeEvent<MouseEvent>) => {
@@ -253,70 +264,6 @@ const Cube: React.FC<{
 	);
 };
 
-type THREEObjectProps = {
-	type?: 'Cube' | 'Group';
-	size?: [number, number, number];
-	position: [number, number, number];
-	rotation: [number, number, number];
-	scale: number;
-	pivot: [number, number, number];
-
-	id: number;
-	props: any[];
-
-	ref?: React.RefObject<THREE.Mesh>;
-	name: string;
-	children?: CubeProps[] | GroupProps[];
-	colour?: string;
-	material?: THREE.Material;
-	cubeMesh?: JSX.Element;
-	texture?: THREE.Texture;
-	uv?: {
-		top: [number, number, number, number];
-		bottom: [number, number, number, number];
-		left: [number, number, number, number];
-		right: [number, number, number, number];
-		front: [number, number, number, number];
-		back: [number, number, number, number];
-	};
-
-	onClick?: (event: ThreeEvent<MouseEvent>) => void;
-	onHover?: (event: THREE.Event) => void;
-	onPointerOver?: (event: THREE.Event) => void;
-	onPointerOut?: (event: THREE.Event) => void;
-};
-
-type CubeProps = {
-	type: 'Cube';
-	name: string;
-	size: [number, number, number];
-	position: [number, number, number];
-	rotation: [number, number, number];
-	scale: number;
-	pivot: [number, number, number];
-	id: number;
-
-	// material
-	colour: string;
-	material?: THREE.Material;
-	texture?: THREE.Texture;
-	cubeMesh?: JSX.Element;
-	uv?: {
-		top: [number, number, number, number];
-		bottom: [number, number, number, number];
-		left: [number, number, number, number];
-		right: [number, number, number, number];
-		front: [number, number, number, number];
-		back: [number, number, number, number];
-	};
-
-	// callbacks
-	onClick?: (event: THREE.Event) => void;
-	onHover?: (event: THREE.Event) => void;
-	onPointerOver?: (event: THREE.Event) => void;
-	onPointerOut?: (event: THREE.Event) => void;
-};
-
 type GroupProps = {
 	type: 'Group';
 	name: string;
@@ -332,4 +279,4 @@ type GroupProps = {
 
 // returns an array representing cube data
 export default Cube;
-export type { CubeProps, GroupProps, THREEObjectProps };
+export type { GroupProps };

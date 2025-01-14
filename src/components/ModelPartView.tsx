@@ -23,7 +23,12 @@ import {
 import 'react-contexify/dist/ReactContexify.css';
 import SideBarWidget from './templates/SideBarWidget';
 import { setServers } from 'dns';
-import meshSlice, { meshAddRandom, meshModify } from '../reducers/meshReducer';
+import meshSlice, {
+	meshAddCube,
+	meshAddRandom,
+	meshModify,
+	meshRemoveCube,
+} from '../reducers/meshReducer';
 import * as THREE from 'three';
 import {
 	useAppDispatch,
@@ -36,6 +41,7 @@ import { setSelected as reduxSetSelected } from '../reducers/viewportReducer';
 import { invalidate } from '@react-three/fiber';
 import { eventNames } from 'process';
 import { ContextInfoItem } from './templates/ContextMenu';
+import { Button } from './ui/button';
 
 const ModelItem: React.FC<{
 	item: any;
@@ -103,6 +109,12 @@ const ModelItem: React.FC<{
 				<Item id="cut" onClick={handleItemClick}>
 					Cut
 				</Item>
+				<Item
+					id="delete"
+					onClick={() => dispatch(meshRemoveCube(item.id))}
+				>
+					Delete
+				</Item>
 				<Separator />
 				<Item disabled>Disabled</Item>
 				<Separator />
@@ -128,15 +140,20 @@ const ModelPartView: React.FC = () => {
 	return (
 		<SideBarWidget
 			name="Model Part View"
-			className="flex h-96 flex-shrink flex-grow bg-red-500"
+			className="flex h-96 flex-shrink flex-grow"
 		>
-			<button
-				onClick={() => {
-					console.log('added cube');
-				}}
-			>
-				Update Model
-			</button>
+			<div className="dark pointer-events-auto flex h-auto w-full flex-row items-center justify-between p-1 pb-2">
+				<Button
+					title="Add Cube"
+					className="m-1 aspect-square h-8 w-8 items-center justify-center rounded-sm p-1 text-center dark:bg-main-500 dark:hover:bg-button-hover"
+					variant={'default'}
+					onClick={(e) => {
+						dispatch(meshAddCube());
+					}}
+				>
+					<p className="text-2xl leading-none">+</p>
+				</Button>
+			</div>
 
 			<div className="h-full w-full flex-1 flex-col flex-nowrap items-center justify-center space-y-1 overflow-y-scroll">
 				{meshData.map((item, index) => (

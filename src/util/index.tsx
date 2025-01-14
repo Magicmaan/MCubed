@@ -30,17 +30,4 @@ export function roundClosest(number: number, increment: number, offset: number) 
 	return Math.round((number - offset) / increment) * increment + offset;
 }
 
-export function stringToVector(str: string): { x?: number; y?: number; z?: number } {
-	const parts = str.split(" ");
-	if (parts.length !== 3) {
-		throw new Error("Input must be a string with 3 parts");
-	}
-	const vec = parts.map((part) => {
-		if (isNaN(Number(part))) {
-			return undefined;
-		}
-		return parseFloat(part);
-	});
 
-	return { x: vec[0], y: vec[1], z: vec[2] };
-}

@@ -24,7 +24,7 @@ import {
 	useViewportSelector,
 } from '../../hooks/useRedux';
 import PivotControlsComponent from './PivotControlsComponent';
-import InfoPanel from './Gui/InfoPanel';
+import InfoPanel from './ui/InfoPanel';
 import { setControls, setSelected } from '../../reducers/viewportReducer';
 import ModelInstance from './ModelInstance';
 import { RootState } from '../../store';

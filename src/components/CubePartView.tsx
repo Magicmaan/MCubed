@@ -33,18 +33,12 @@ import {
 	useViewportSelector,
 } from '../hooks/useRedux';
 import { text } from 'stream/consumers';
-import { meshModifyIndex } from '../reducers/meshReducer.tsx';
+import { meshModify } from '../reducers/meshReducer.tsx';
 import { Menu } from 'react-contexify';
 import { getClipboardDataAsVector } from '../util/copyPasteUtil.tsx';
 import { getClipboardData } from '../util/copyPasteUtil.tsx';
 import { ErrorBoundary } from 'react-error-boundary';
 import { addError } from '../reducers/appReducer.tsx';
-
-const oldLog = console.log;
-const newLog = function (value) {
-	oldLog(value);
-	return value;
-};
 
 const CubePartView: React.FC = () => {
 	//const data = React.useContext(modelContext);
@@ -56,10 +50,30 @@ const CubePartView: React.FC = () => {
 
 	var cube = meshData[selected] as CubeProps;
 
+	const sizeSetVec = (x: number, y: number, z: number) => {
+		if (selected !== -1) {
+			console.log('Setting size for', selected, 'to', [x, y, z]);
+			dispatch(meshModify({ id: cube.id, size: [x, y, z] }));
+		}
+	};
+	const sizeContextMenuID = 'cubePartView_size';
+	const { show: showSizeContextMenu } = useContextMenu({
+		id: sizeContextMenuID,
+	});
+	const handleSizeContextMenu = (
+		event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+	) => {
+		//document.getElementById("model_part_" + item.id)?.click();
+		showSizeContextMenu({
+			event,
+		});
+		event.preventDefault();
+	};
+
 	const positionSetVec = (x: number, y: number, z: number) => {
 		if (selected !== -1) {
 			console.log('Setting position for', selected, 'to', [x, y, z]);
-			dispatch(meshModifyIndex({ index: cube.id, position: [x, y, z] }));
+			dispatch(meshModify({ id: cube.id, position: [x, y, z] }));
 		}
 	};
 	const positionContextMenuID = 'cubePartView_position';
@@ -79,7 +93,7 @@ const CubePartView: React.FC = () => {
 	const rotationSetVec = (x: number, y: number, z: number) => {
 		if (selected !== -1) {
 			console.log('Setting rotation for', selected, 'to', [x, y, z]);
-			dispatch(meshModifyIndex({ index: cube.id, rotation: [x, y, z] }));
+			dispatch(meshModify({ id: cube.id, rotation: [x, y, z] }));
 		}
 	};
 	const rotationContextMenuID = 'cubePartView_rotation';
@@ -87,7 +101,7 @@ const CubePartView: React.FC = () => {
 		id: rotationContextMenuID,
 	});
 	const handleRotationContextMenu = (
-		event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+		event: React.MouseEvent<HTMLDivElement, MouseEvent>
 	) => {
 		//document.getElementById("model_part_" + item.id)?.click();
 		showRotationContextMenu({
@@ -99,7 +113,7 @@ const CubePartView: React.FC = () => {
 	const pivotSetVec = (x: number, y: number, z: number) => {
 		if (selected !== -1) {
 			console.log('Setting pivot for', selected, 'to', [x, y, z]);
-			dispatch(meshModifyIndex({ index: cube.id, pivot: [x, y, z] }));
+			dispatch(meshModify({ id: cube.id, pivot: [x, y, z] }));
 		}
 	};
 	const pivotContextMenuID = 'cubePartView_pivot';
@@ -117,16 +131,119 @@ const CubePartView: React.FC = () => {
 	};
 
 	return (
-		<SideBarWidget name={cube?.name ?? ''}>
+		<SideBarWidget name={cube?.name ?? 'Cube Selector'}>
 			{cube ? (
-				<>
+				<div className="flex h-5/6 min-h-64 w-full flex-col items-center justify-center space-y-2 overflow-scroll">
+					<div
+						className="pointer-events-auto flex h-auto w-full flex-col items-center justify-center rounded-sm border-main-800 bg-main-500 p-1"
+						onContextMenuCapture={(e) => {
+							handleSizeContextMenu(e);
+						}}
+						onClick={(e) => {
+							e.currentTarget.focus();
+							e.preventDefault();
+						}}
+						onMouseOver={(e) => {
+							e.currentTarget.focus();
+						}}
+						onPaste={(e) => {
+							const data = e.clipboardData.getData('text');
+							const datasplit = stringToVector(data);
+							sizeSetVec(datasplit.x, datasplit.y, datasplit.z);
+						}}
+						onCopy={(e) => {
+							console.log('copy');
+							e.clipboardData.setData(
+								'text/plain',
+								cube.size.join(' ')
+							);
+							console.log('Copied', cube.size.join(' '));
+							e.preventDefault();
+						}}
+						onFocus={() => {
+							console.log('focus');
+						}}
+					>
+						<div className="flex h-full w-full flex-col space-y-1 p-1 text-sm">
+							<p className="ml-2">Size</p>
+
+							<div className="flex h-auto w-full flex-row items-center justify-between overflow-hidden px-2">
+								<NumberDisplayVec3
+									vec={cube.size}
+									setVec={sizeSetVec}
+								/>
+								<button
+									className="m-0 ml-1 flex h-full w-auto items-center justify-center rounded-md bg-transparent p-1 px-0 hover:bg-button-hover"
+									onClick={(e) => {
+										handleSizeContextMenu(e);
+									}}
+								>
+									<Icon
+										name="ellipsis-vertical"
+										height={18}
+										width={18}
+										colour="white"
+									/>
+								</button>
+							</div>
+						</div>
+						<Menu
+							id={sizeContextMenuID}
+							theme="contextTheme"
+							className="text-sm"
+						>
+							<ContextInfoItem
+								label={'Size ' + cube.size.join(' ')}
+								title="Size of cube"
+							/>
+							<ContextCopyPasteItem
+								shiftKey={true}
+								copyTitle="Copy Vector"
+								pasteTitle="Paste Vector"
+								copyFunc={() => {
+									console.log('Copy');
+									navigator.clipboard.writeText(
+										cube.size.join(' ')
+									);
+								}}
+								pasteFunc={() => {
+									console.log('Paste');
+									getClipboardDataAsVector(cube.size)
+										.then((vec) => {
+											sizeSetVec(vec[0], vec[1], vec[2]);
+										})
+										.catch((err) => {
+											console.error(err);
+											dispatch(
+												addError({
+													type: 'Clipboard',
+													error: 'Pasting Vector',
+													info: err.toString(),
+													advice: 'advice here',
+												})
+											);
+										});
+								}}
+							/>
+							<Separator />
+
+							<ContextItem label="Round Size" />
+							<ContextItem label="Truncate Size" />
+							<ContextItem
+								label="Set Size to Zero"
+								callback={() => {
+									sizeSetVec(0, 0, 0);
+								}}
+							/>
+						</Menu>
+					</div>
+
 					<div
 						className="pointer-events-auto flex h-auto w-full flex-col items-center justify-center rounded-sm border-main-800 bg-main-500 p-1"
 						onContextMenuCapture={(e) => {
 							handlePositionContextMenu(e);
 						}}
 						onClick={(e) => {
-							console.log('click');
 							e.currentTarget.focus();
 							e.preventDefault();
 						}}
@@ -155,16 +272,16 @@ const CubePartView: React.FC = () => {
 							console.log('focus');
 						}}
 					>
-						<div className="flex flex-col space-y-1 text-sm">
-							<p>Position</p>
+						<div className="flex h-full w-full flex-col space-y-1 p-1 text-sm">
+							<p className="ml-2">Position</p>
 
-							<div className="flex h-full w-full flex-row items-center justify-between">
+							<div className="flex h-auto w-full flex-row items-center justify-between overflow-hidden px-2">
 								<NumberDisplayVec3
 									vec={cube.position}
 									setVec={positionSetVec}
 								/>
 								<button
-									className="m-0 ml-1 flex h-full w-min items-center justify-center rounded-md bg-transparent p-1 px-0 hover:bg-button-hover"
+									className="m-0 ml-1 flex h-full w-auto items-center justify-center rounded-md bg-transparent p-1 px-0 hover:bg-button-hover"
 									onClick={(e) => {
 										handlePositionContextMenu(e);
 									}}
@@ -177,8 +294,6 @@ const CubePartView: React.FC = () => {
 									/>
 								</button>
 							</div>
-
-							<div className="mx-auto flex w-11/12 flex-row items-center justify-center rounded-md bg-secondary-500 p-0.5"></div>
 						</div>
 						<Menu
 							id={positionContextMenuID}
@@ -236,7 +351,7 @@ const CubePartView: React.FC = () => {
 					</div>
 
 					<div
-						className="pointer-events-auto flex w-auto flex-col items-center justify-center rounded-sm border-b-2 border-main-800 bg-main-500 p-1"
+						className="pointer-events-auto flex h-auto w-full flex-col items-center justify-center rounded-sm border-main-800 bg-main-500 p-1"
 						onContextMenuCapture={(e) => {
 							handleRotationContextMenu(e);
 						}}
@@ -255,13 +370,6 @@ const CubePartView: React.FC = () => {
 									positionSetVec(vec[0], vec[1], vec[2]);
 								}
 							);
-							// const data = e.clipboardData.getData('text');
-							// const datasplit = stringToVector(data);
-							// rotationSetVec(
-							// 	datasplit.x,
-							// 	datasplit.y,
-							// 	datasplit.z
-							// );
 						}}
 						onCopy={(e) => {
 							console.log('copy');
@@ -276,9 +384,9 @@ const CubePartView: React.FC = () => {
 							console.log('focus');
 						}}
 					>
-						<div className="flex flex-col items-center justify-center space-y-1 text-sm">
-							<p className="w-full justify-start">Rotation</p>
-							<div className="flex h-full w-full flex-row items-center justify-between">
+						<div className="flex h-full w-full flex-col space-y-1 p-1 text-sm">
+							<p className="ml-2">Rotation</p>
+							<div className="flex h-auto w-full flex-row items-center justify-between overflow-hidden px-2">
 								<NumberDisplayVec3
 									vec={[
 										(cube.rotation[0] * 180) / Math.PI,
@@ -301,7 +409,6 @@ const CubePartView: React.FC = () => {
 									/>
 								</button>
 							</div>
-							<div className="mx-auto flex w-11/12 flex-row items-center justify-center rounded-md bg-secondary-500 p-0.5"></div>
 						</div>
 						<Menu
 							id={rotationContextMenuID}
@@ -347,7 +454,7 @@ const CubePartView: React.FC = () => {
 					</div>
 
 					<div
-						className="pointer-events-auto flex w-auto flex-col items-center justify-center rounded-sm border-main-800 bg-main-500 p-1"
+						className="pointer-events-auto flex h-auto w-full flex-col items-center justify-center rounded-sm border-main-800 bg-main-500 p-1"
 						onContextMenuCapture={(e) => {
 							handlePositionContextMenu(e);
 						}}
@@ -381,10 +488,9 @@ const CubePartView: React.FC = () => {
 							console.log('focus');
 						}}
 					>
-						<div className="flex flex-col space-y-1 text-sm">
-							<p>Pivot</p>
-
-							<div className="flex h-full w-full flex-row items-center justify-between">
+						<div className="flex h-full w-full flex-col space-y-1 p-1 text-sm">
+							<p className="ml-2">Pivot</p>
+							<div className="flex h-auto w-full flex-row items-center justify-between overflow-hidden px-2">
 								<NumberDisplayVec3
 									vec={cube.pivot}
 									setVec={pivotSetVec}
@@ -403,8 +509,6 @@ const CubePartView: React.FC = () => {
 									/>
 								</button>
 							</div>
-
-							<div className="mx-auto flex w-11/12 flex-row items-center justify-center rounded-md bg-secondary-500 p-0.5"></div>
 						</div>
 						<Menu
 							id={pivotContextMenuID}
@@ -448,9 +552,13 @@ const CubePartView: React.FC = () => {
 							<ContextItem label="Set Pivot to Zero" />
 						</Menu>
 					</div>
-				</>
+				</div>
 			) : (
-				<div>nuh uh</div>
+				<div className="flex h-5/6 min-h-64 w-full flex-col items-center justify-center space-y-2 overflow-scroll">
+					<p className="text-sm dark:text-gray-600">
+						No Cube Selected
+					</p>
+				</div>
 			)}
 		</SideBarWidget>
 	);

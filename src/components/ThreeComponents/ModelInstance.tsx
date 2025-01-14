@@ -11,7 +11,8 @@ import {
 	useViewportSelector,
 } from '../../hooks/useRedux';
 import { setSelected as reduxSetSelected } from '../../reducers/viewportReducer';
-import Cube, { CubeProps } from './Cube';
+import Cube from './Cube';
+import { CubeProps } from '../../types/three';
 import { loadTexture, boxUVToVertexArray } from '../../util/textureUtil';
 import { InstancedUniformsMesh } from 'three-instanced-uniforms-mesh';
 import {

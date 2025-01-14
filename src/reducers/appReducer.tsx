@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { MeshState } from './meshReducer';
 
 type Action = {
 	type: string;
@@ -16,11 +17,20 @@ type Error = {
 type appState = {
 	actions: Action[];
 	errors: Error[];
+
+	model?: MeshState;
+	saved: boolean;
+	fromFile: boolean;
+	filePath?: string;
 };
 
 const appInitialState: appState = {
 	actions: [],
 	errors: [],
+
+	model: undefined,
+	saved: false,
+	fromFile: false,
 };
 
 const appSlice = createSlice({
