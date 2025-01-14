@@ -4,7 +4,10 @@ import { ThreeEvent, useLoader, useThree } from "@react-three/fiber";
 import { Line } from "@react-three/drei";
 import { Html } from "@react-three/drei";
 import { context } from "./context";
-import icon from "../../assets/curve.png";
+import icon from "../../../assets/curve.png";
+import { useModifiers } from "../../../hooks/useControls";
+import { round } from "../../../util";
+import { rotateModifierIncrement } from "../../../constants/KeyModifiers";
 
 const clickDir = /* @__PURE__ */ new THREE.Vector3();
 const intersectionDir = /* @__PURE__ */ new THREE.Vector3();
@@ -86,6 +89,7 @@ export const AxisRotator: React.FC<{
 	const objRef = React.useRef<THREE.Group>(null!);
 	const angle0 = React.useRef<number>(0);
 	const angle = React.useRef<number>(0);
+	const { keyModifiers, getMultiplier, getRounded } = useModifiers();
 	const clickInfo = React.useRef<{
 		clickPoint: THREE.Vector3;
 		origin: THREE.Vector3;
@@ -141,11 +145,12 @@ export const AxisRotator: React.FC<{
 				let deltaAngle = calculateAngle(clickPoint, intersection, origin, e1, e2);
 				let degrees = toDegrees(deltaAngle);
 
-				// @ts-ignore
-				if (e.shiftKey) {
-					degrees = Math.round(degrees / 10) * 10;
-					deltaAngle = toRadians(degrees);
-				}
+				// used to throttle small changes, since movement is so granular.
+				// This is to prevent jitter and unnecessary dispatches
+				if (Math.abs(degrees) < 0.001) return;
+				degrees = getRounded(degrees);
+				console.log("Degrees: ", degrees);
+				deltaAngle = toRadians(degrees);
 
 				if (min !== undefined && max !== undefined && max - min < 2 * Math.PI) {
 					deltaAngle = minimizeAngle(deltaAngle);

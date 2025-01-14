@@ -21,3 +21,13 @@ export function getDistance(vector1: { x: 0; y: 0 }, vector2: { x: 0; y: 0 }) {
 	// Calculate the distance using the Euclidean distance formula
 	return Math.sqrt(dx * dx + dy * dy);
 }
+
+export function round(number: number, increment: number, offset: number) {
+	return Math.ceil((number - offset) / increment) * increment + offset;
+}
+
+export function roundClosest(number: number, increment: number, offset: number) {
+	return Math.round((number - offset) / increment) * increment + offset;
+}
+
+

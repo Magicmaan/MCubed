@@ -1,17 +1,23 @@
 const modifiers = {
-	ALT: "Alt",
-	CTRL: "Control",
-	META: "meta",
-	SHIFT: "Shift",
+	small_shift: "Shift",
+	x_small_shift: "Control",
+
+	xx_small_shift_1: "Control",
+	xx_small_shift_2: "Shift",
 };
 
-const modifierIncrement = {
-	Alt: 1,
-	Meta: 1,
-	Control: 0.1,
-	Shift: 0.25,
-
-	ShiftControl: 0.01,
-	ControlShift: 0.01,
+const moveModifierIncrement = {
+	mega_shift: 8,
+	normal_shift: 1,
+	small_shift: 0.25,
+	x_small_shift: 0.1,
+	xx_small_shift: 0.01,
 };
-export { modifiers, modifierIncrement };
+const rotateModifierIncrement = {
+	mega_shift: 8,
+	normal_shift: 2.5,
+	small_shift: 22.5,
+	x_small_shift: 1,
+	xx_small_shift: 0.25,
+};
+export { modifiers, moveModifierIncrement, rotateModifierIncrement };

@@ -1,20 +1,28 @@
-import cube from "./cube";
-import arrows_up_down_left_right from "./arrows-up-down-left-right";
-import arrows_rotate from "./arrows-rotate";
-import arrows_up_right from "./arrows-up-right";
-import arrows_to_dot from "./arrows-to-dot";
-import arrows_to_circle from "./arrows-to-circle";
-import caret_down from "./caret-down.jsx";
-import caret_left from "./caret-left";
-import caret_right from "./caret-right";
-import caret_up from "./caret-up";
-import question from "./question";
-import xmark from "./xmark";
-import check from "./check";
-import lock from "./lock";
-import lock_open from "./lock-open";
-import border_all from "./border-all";
-import border_none from "./border-none";
+import cube from './cube';
+import arrows_up_down_left_right from './arrows-up-down-left-right';
+import arrows_rotate from './arrows-rotate';
+import arrows_up_right from './arrows-up-right';
+import arrows_to_dot from './arrows-to-dot';
+import arrows_to_circle from './arrows-to-circle';
+import caret_down from './caret-down.jsx';
+import caret_left from './caret-left';
+import caret_right from './caret-right';
+import caret_up from './caret-up';
+import question from './question';
+import xmark from './xmark';
+import check from './check';
+import lock from './lock';
+import lock_open from './lock-open';
+import border_all from './border-all';
+import border_none from './border-none';
+import arrows_down_to_line from './arrows-down-to-line';
+import copy from './copy';
+import paste from './paste';
+import mirror from './mirror';
+import ellipsis from './ellipsis';
+import ellipsis_vertical from './ellipsis-vertical';
+import exclamation from './exclamation';
+import clock from './clock';
 // prettier-ignore
 const icons: { [key: string]: string | {d:string,viewBox:string} } = {
 	"cube": cube,
@@ -23,6 +31,7 @@ const icons: { [key: string]: string | {d:string,viewBox:string} } = {
 	"arrow-up-right": arrows_up_right,
 	"arrows-to-dot": arrows_to_dot,
 	"arrows-to-circle": arrows_to_circle,
+	"arrows-down-to-line": arrows_down_to_line,
 	"caret-down": caret_down,
 	"caret-left": caret_left,
 	"caret-right": caret_right,
@@ -34,6 +43,13 @@ const icons: { [key: string]: string | {d:string,viewBox:string} } = {
 	"lock-open": lock_open,
 	"border-all": border_all,
 	"border-none": border_none,
+	"copy": copy,
+	"paste": paste,
+	"mirror": mirror,
+	"ellipsis": ellipsis,
+	"ellipsis-vertical": ellipsis_vertical,
+	"exclamation": exclamation,
+	"clock": clock,
 };
 
 type IconProps = {
@@ -56,21 +72,21 @@ const Icon = ({
 	center_y,
 }: IconProps) => {
 	var icon = icons[name];
-	var viewBox = "0 0 500 500";
+	var viewBox = '0 0 500 500';
 
 	if (!icon) {
-		console.log(`Icon not found: ${name}`);
+		console.error('Icon not found:', name);
 		return null;
 	}
-	if (typeof icon !== "string") {
+	if (typeof icon !== 'string') {
 		viewBox = icon.viewBox;
 		icon = icon.d;
 	}
 	if (!width) width = 24;
 	if (!height) height = 24;
-	if (!colour) colour = "black";
+	if (!colour) colour = 'black';
 
-	const viewBoxParts = viewBox.split(" ");
+	const viewBoxParts = viewBox.split(' ');
 	return (
 		<svg
 			width={width}
@@ -78,11 +94,17 @@ const Icon = ({
 			fill={colour}
 			viewBox={viewBox}
 			role="img"
-			xmlns="http://www.w3.org/2000/svg">
+			xmlns="http://www.w3.org/2000/svg"
+		>
 			<title>{alt_text}</title>
 			{center_x ? (
 				<g
-					transform={"translate(" + (parseFloat(viewBoxParts[2]) / 4).toFixed(0) + ",0)"}>
+					transform={
+						'translate(' +
+						(parseFloat(viewBoxParts[2]) / 4).toFixed(0) +
+						',0)'
+					}
+				>
 					<path d={icon} />
 				</g>
 			) : (

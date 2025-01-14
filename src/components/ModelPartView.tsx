@@ -1,80 +1,119 @@
-import React, { useEffect, useMemo, useState } from "react";
-import Cube from "../primitives/Cube"; // Make sure to import the Cube component
+import React, {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react';
 
-import "../styles/App.css";
-import { randomCubeColour } from "../constants/CubeColours";
-import { EditText, EditTextarea } from "react-edit-text";
-import "react-edit-text/dist/index.css";
-import Icon from "../assets/icons/solid/.all";
+import '../styles/App.css';
+import { randomCubeColour } from '../constants/CubeColours';
+import { EditText, EditTextarea } from 'react-edit-text';
+import 'react-edit-text/dist/index.css';
+import Icon from '../assets/icons/solid/.all';
 //import ContextMenu from "./ContextMenu";
 //import useContextMenu from "../hooks/useContextMenu.tsx";
-import { Menu, Item, Separator, Submenu, useContextMenu } from "react-contexify";
-import "react-contexify/dist/ReactContexify.css";
-import SideBarWidget from "./templates/SideBarWidget";
-import { setServers } from "dns";
+import {
+	Menu,
+	Item,
+	Separator,
+	Submenu,
+	useContextMenu,
+} from 'react-contexify';
+import 'react-contexify/dist/ReactContexify.css';
+import SideBarWidget from './templates/SideBarWidget';
+import { setServers } from 'dns';
 import meshSlice, {
+	meshAddCube,
 	meshAddRandom,
 	meshModify,
-	testReducer,
-} from "../reducers/meshReducer";
-import * as THREE from "three";
+	meshRemoveCube,
+} from '../reducers/meshReducer';
+import * as THREE from 'three';
 import {
 	useAppDispatch,
 	useAppSelector,
-	useMeshSelector,
+	useMeshDataSelector,
+	useViewportSelectedSelector,
 	useViewportSelector,
-} from "../hooks/useRedux";
-import { setSelected as reduxSetSelected } from "../reducers/viewportReducer";
+} from '../hooks/useRedux';
+import { setSelected as reduxSetSelected } from '../reducers/viewportReducer';
+import { invalidate } from '@react-three/fiber';
+import { eventNames } from 'process';
+import { ContextInfoItem } from './templates/ContextMenu';
+import { Button } from './ui/button';
 
 const ModelItem: React.FC<{
 	item: any;
-	itemKey: number;
 	selected?: number;
 	setSelected: (id: number) => void;
-}> = ({ item, itemKey, selected, setSelected }) => {
-	const MENU_ID = "context_model_part_" + item.id;
+}> = ({ item, selected: old, setSelected }) => {
+	const dispatch = useAppDispatch();
+	const selected = useViewportSelectedSelector();
+	const MENU_ID = 'context_model_part_' + item.id;
 	const { show } = useContextMenu({
 		id: MENU_ID,
 	});
-	function handleContextMenu(event: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
-		document.getElementById("model_part_" + item.id)?.click();
+	const handleContextMenu = (
+		event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+	) => {
+		document.getElementById('model_part_' + item.id)?.click();
 		show({
 			event,
-			props: {
-				key: "value",
-			},
 		});
-	}
-	const handleItemClick = ({ event }: { id: string; event: Event }) => {
-		//console.log("item clicked", id);
-		setSelected(parseInt(id));
+		event.preventDefault();
+	};
+	const handleItemClick = (
+		event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+	) => {
+		//dont click if right click or middle click
+		if (event.button !== 0 || event.buttons !== 1) {
+			return;
+		}
+		if (item.id === selected) {
+			setSelected(-1);
+			console.log('selected');
+		} else {
+			console.log('not selected');
+			setSelected(item.id);
+		}
+
+		event.preventDefault();
 	};
 
 	return (
 		<button
-			id={"model_part_" + item.id}
+			id={'model_part_' + item.id}
 			aria-pressed={selected === item.id}
-			key={itemKey}
-			data-test={"hi"}
-			onContextMenu={handleContextMenu}
-			onClick={() => {
-				console.log(item.id);
-				setSelected(parseInt(item.id));
+			key={item.id}
+			data-test={'hi'}
+			onContextMenuCapture={handleContextMenu}
+			onMouseDown={(e) => {
+				handleItemClick(e);
 			}}
-			className="bg-secondary rounded-md w-full h-10 flex flex-nowrap flex-row justify-stretch items-center focus:bg-button-hover aria-pressed:bg-button-hover">
+			className="pointer-events-auto flex h-10 w-full select-none flex-row flex-nowrap items-center justify-stretch rounded-md bg-secondary hover:bg-button-hover focus:outline-none aria-pressed:bg-button-selected"
+		>
 			<Icon name="cube" height={16} width={16} colour="red" />
 
 			<EditText name="cubeName" defaultValue={item.name} />
 
-			<Menu id={MENU_ID} theme="contextTheme">
-				<Item id={item.id} onClick={handleItemClick}>
-					{item.id}
-				</Item>
+			<Menu id={MENU_ID} theme="contextTheme" className="bg-red-500">
+				<ContextInfoItem
+					label={item.name}
+					title={`ID: ${item.id}`}
+					textSize="text-sm"
+				/>
 				<Item id="copy" onClick={handleItemClick}>
 					Copy
 				</Item>
 				<Item id="cut" onClick={handleItemClick}>
 					Cut
+				</Item>
+				<Item
+					id="delete"
+					onClick={() => dispatch(meshRemoveCube(item.id))}
+				>
+					Delete
 				</Item>
 				<Separator />
 				<Item disabled>Disabled</Item>
@@ -94,31 +133,37 @@ const ModelItem: React.FC<{
 
 const ModelPartView: React.FC = () => {
 	// const [partList, setPartList] = useState<Set<THREE.Mesh>>(new Set());
-	const partList = useMeshSelector().mesh;
-	const selected = useViewportSelector().selected;
+	const meshData = useMeshDataSelector();
+	const selected = useViewportSelectedSelector();
 
-	const MESH_WHITELIST = ["Mesh_Cube"];
 	const dispatch = useAppDispatch();
-	const setSelected = (id: number) => {
-		dispatch(reduxSetSelected(id));
-	};
 	return (
-		<SideBarWidget name="Model Part View">
-			<button
-				onClick={() => {
-					console.log("added cube");
-				}}>
-				Update Model
-			</button>
+		<SideBarWidget
+			name="Model Part View"
+			className="flex h-96 flex-shrink flex-grow"
+		>
+			<div className="dark pointer-events-auto flex h-auto w-full flex-row items-center justify-between p-1 pb-2">
+				<Button
+					title="Add Cube"
+					className="m-1 aspect-square h-8 w-8 items-center justify-center rounded-sm p-1 text-center dark:bg-main-500 dark:hover:bg-button-hover"
+					variant={'default'}
+					onClick={(e) => {
+						dispatch(meshAddCube());
+					}}
+				>
+					<p className="text-2xl leading-none">+</p>
+				</Button>
+			</div>
 
-			<div className="flex flex-col flex-nowrap space-y-1 items-center justify-center w-full h-auto overflow-y-scroll">
-				{partList.map((item, index) => (
+			<div className="h-full w-full flex-1 flex-col flex-nowrap items-center justify-center space-y-1 overflow-y-scroll">
+				{meshData.map((item, index) => (
 					<ModelItem
 						item={item}
 						key={index}
-						itemKey={index}
 						selected={selected}
-						setSelected={setSelected}
+						setSelected={(id: number) => {
+							dispatch(reduxSetSelected(id));
+						}}
 					/>
 				))}
 			</div>

@@ -21,7 +21,7 @@ const ToggleButtonIcon: React.FC<ToggleButtonIconProps> = ({
 
 	return (
 		<div
-			className="bg-secondary p-1 rounded-md w-min h-min justify-center items-center cursor-pointer aspect-square"
+			className="bg-secondary p-1 rounded-md w-min h-min justify-center items-center cursor-pointer aspect-square "
 			onClick={() => {
 				snapPivotToggle.current = !snapPivotToggle.current;
 				setRefresh((prev) => prev + 1);

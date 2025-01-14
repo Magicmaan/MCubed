@@ -4,6 +4,7 @@ import { Grid, useTexture, Text } from "@react-three/drei";
 import { DoubleSide } from "three";
 import { loadTexture } from "../../util/textureUtil";
 import * as THREE from "three";
+import { useViewportSelector } from "../../hooks/useRedux";
 
 interface GridPlaneProps {
 	size: number;
@@ -12,18 +13,15 @@ interface GridPlaneProps {
 	color?: string;
 }
 
-const GridPlane: React.FC<GridPlaneProps> = ({
-	size,
-	lineWidth,
-	density = 1,
-	color = "red",
-}) => {
+const GridPlane: React.FC<GridPlaneProps> = ({ size }) => {
+	const showGrid = useViewportSelector().showGrid;
+
 	const outlineTexture = React.useMemo(() => loadTexture("/src/assets/grid.png"), []);
 	const xMarkerTexture = React.useMemo(() => loadTexture("/src/assets/x_marker.png"), []);
 	const zMarkerTexture = React.useMemo(() => loadTexture("/src/assets/z_marker.png"), []);
 
 	return (
-		<group>
+		<group visible={showGrid}>
 			<Grid
 				args={[size, size]}
 				cellSize={size}

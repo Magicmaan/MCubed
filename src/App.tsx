@@ -1,10 +1,36 @@
-import { useState } from "react";
-import "./styles/App.css";
-import * as React from "react";
-import ModelView from "./pages/ModelView";
-import NavBar from "./components/NavBar";
-import { Provider } from "react-redux";
-import store from "./store"; // Import the store
+import { useState } from 'react';
+import './styles/App.css';
+import * as React from 'react';
+import ModelView from './pages/ModelView';
+import NavBar from './components/NavBar';
+import { Provider } from 'react-redux';
+import store from './store'; // Import the store
+import {
+	AlertDialog,
+	AlertDialogPortal,
+	AlertDialogOverlay,
+	AlertDialogTrigger,
+	AlertDialogContent,
+	AlertDialogHeader,
+	AlertDialogFooter,
+	AlertDialogTitle,
+	AlertDialogDescription,
+	AlertDialogAction,
+	AlertDialogCancel,
+} from './components/ui/alert-dialog';
+import { Button } from './components/ui/button';
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from './components/ui/card';
+import { ScrollArea } from './components/ui/scroll-area';
+import { useLocalStorage } from 'react-use';
+
+import Startup from './components/Startup';
 
 function App() {
 	const [count, setCount] = useState(0);
@@ -12,33 +38,28 @@ function App() {
 
 	//file stuff to be added
 	const [File, setFile] = useState(false);
-	var showStartup = useState(true);
+	var [isStartup, setStartup] = React.useState(true);
 	var blurApp = useState(false);
 	var showSAnim = useState(false);
 
 	const [currentView, setCurrentView] = useState(<ModelView />);
+
+	var sp = new URLSearchParams(window.location.search);
+	console.log(sp.get('j'));
+
+	const [val, setVal, remove] = useLocalStorage('test');
+	console.log(val);
+
+	console.log(localStorage);
+
 	return (
 		<Provider store={store}>
-			<div className="w-full h-full flex flex-col flex-nowrap transition-all duration-300">
+			<div className="dark flex h-screen w-screen flex-col flex-nowrap transition-all duration-300">
 				<NavBar />
 				{currentView}
-			</div>
 
-			{showStartup[0] && (
-				<div
-					aria-expanded={showStartup[0]}
-					className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-50 aria-expanded:opacity-100 opacity-0 flex items-center justify-center transition-opacity duration-500 ">
-					<div className="bg-black p-4 rounded-lg drop-shadow-lg">
-						<h1>File</h1>
-						<button
-							onClick={() => {
-								showStartup[1](false);
-							}}>
-							Close
-						</button>
-					</div>
-				</div>
-			)}
+				{isStartup && <Startup setStartup={setStartup} />}
+			</div>
 		</Provider>
 	);
 }

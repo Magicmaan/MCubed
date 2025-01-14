@@ -8,7 +8,7 @@ import { toTrun, toTrunPercentage } from "../../../util";
 import ToggleButtonIcon from "../../templates/ToggleButtonIcon";
 import { Html, OrbitControls } from "@react-three/drei";
 import { useAppDispatch } from "../../../hooks/useRedux";
-import { disableGimbal, enableGimbal } from "../../../reducers/viewportReducer";
+import { setControls, enableGimbal } from "../../../reducers/viewportReducer";
 import ResizeableBar from "../../ResizeableBar";
 import { Resizable } from "re-resizable";
 import ToolBar from "./ToolBar";
@@ -171,15 +171,6 @@ const InfoPanel: React.FC<{
 	const [refresh, setRefresh] = useState(0);
 	const dispatch = useAppDispatch();
 
-	// used to refresh the data on demand
-	// useEffect(() => {
-	// 	const interval = setInterval(() => {
-	// 		setRefresh((prev) => prev + 1);
-	// 	}, 200); // Toggle refresh every 1 second
-	// 	return () => clearInterval(interval); // Cleanup on unmount
-	// }, []);
-
-	//const cam: THREE.PerspectiveCamera | null = camRef.current;
 	const [cam, setCam] = useState<THREE.PerspectiveCamera | null>(camRef.current);
 
 	const snapPivotToggle = React.useRef(false);
@@ -214,7 +205,7 @@ const InfoPanel: React.FC<{
 	const lockDistance = useRef(false);
 	useEffect(() => {
 		if (lockDistance.current) {
-			dispatch(disableGimbal([false, false, false]));
+			dispatch(setControls([false, false, false]));
 		}
 	}, [lockDistance.current]);
 
@@ -287,7 +278,7 @@ const InfoPanel: React.FC<{
 													isActive={false}
 													onClick={() => {
 														lockDistance.current = !lockDistance.current;
-														dispatch(disableGimbal([false, true, false]));
+														dispatch(setControls([false, true, false]));
 														console.log("toggle distance", lockDistance.current);
 													}}
 													Icon_on={

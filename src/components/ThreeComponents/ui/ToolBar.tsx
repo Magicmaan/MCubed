@@ -26,7 +26,7 @@ const LongWidget: React.FC<{ width?: number; children?: React.ReactNode }> = ({
 	return (
 		<div
 			style={{ width: width }}
-			className={`h-full bg-tertiary rounded-full p-2 justify-center items-center`}>
+			className={`h-full bg-tertiary rounded-full p-2 justify-center items-center select-none`}>
 			<div className="w-full h-full flex justify-center items-center flex-row text-nowrap select-none">
 				{children}
 			</div>
@@ -51,7 +51,7 @@ const ToolBar: React.FC = () => {
 					<Icon name="arrows-to-circle" width={18} colour="#cacaca" />
 				</Widget>
 			</div>
-			<div className="bg-main w-auto h-full flex gap-2 rounded-full p-1 px-4 items-center justify-center ">
+			<div className="bg-main w-auto h-full flex gap-2 rounded-full p-1 px-4 items-center justify-center select-none ">
 				<LongWidget width={"auto"}>Transform mode</LongWidget>
 			</div>
 		</div>

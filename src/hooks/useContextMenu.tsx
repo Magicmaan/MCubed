@@ -1,5 +1,18 @@
 import { useState, useCallback } from "react";
 
+interface MenuItem {
+	label: string;
+	action: () => void;
+	key: string;
+	type?: "info" | "button";
+	icon?: string;
+}
+
+interface MenuPosition {
+	x: number;
+	y: number;
+}
+
 const useContextMenu = () => {
 	const [menuVisible, setMenuVisible] = useState(false);
 	const [menuItems, setMenuItems] = useState([
@@ -20,17 +33,7 @@ const useContextMenu = () => {
 		setMenuVisible(false);
 	}, []);
 
-	interface MenuItem {
-		label: string;
-		action: () => void;
-	}
-
-	interface MenuPosition {
-		x: number;
-		y: number;
-	}
-
-	const handleContextMenu = (event: React.MouseEvent, menuItems: MenuItem[]) => {
+	const handleContextMenu = (event: React.MouseEvent, menuItems?: MenuItem[]) => {
 		var parentElement = document.getElementById(event.target.id)?.parentElement;
 		event.preventDefault();
 		if (menuVisible) {
@@ -44,3 +47,4 @@ const useContextMenu = () => {
 };
 
 export default useContextMenu;
+export type { MenuItem, MenuPosition };
