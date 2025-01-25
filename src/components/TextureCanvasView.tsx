@@ -13,10 +13,10 @@ import {
 	useMeshTextureSelector,
 	useViewportSelector,
 } from '../hooks/useRedux';
-import { meshModifyIndex } from '../reducers/meshReducer';
+import { meshModifyIndex } from '../redux/reducers/meshReducer';
 import ToggleButtonIcon from './templates/ToggleButtonIcon';
 import { BoxUVMap, loadTexture } from '../util/textureUtil';
-import { getBase64 } from '../util/baseSFUtil';
+import { getBase64 } from '../util/fileUtil';
 import { readFile, readFileSync } from 'fs';
 import { Box } from 'lucide-react';
 
@@ -256,10 +256,10 @@ const TextureCanvasView: React.FC = () => {
 	const viewportStore = useViewportSelector();
 	const meshStore = useMeshStoreSelector();
 	const meshData = useMeshDataSelector();
-	const textureData = useRef(useMeshTextureSelector()[0].data);
+	const textureData = useMeshTextureSelector()[0].data;
 
 	const image = new Image();
-	image.src = textureData.current;
+	image.src = textureData;
 	image.width = 256;
 	image.height = 256;
 	image.style.imageRendering = 'pixelated';

@@ -4,7 +4,7 @@ import * as React from 'react';
 import ModelView from './pages/ModelView';
 import NavBar from './components/NavBar';
 import { Provider } from 'react-redux';
-import store from './store'; // Import the store
+import store from './redux/store'; // Import the store
 import {
 	AlertDialog,
 	AlertDialogPortal,

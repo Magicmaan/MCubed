@@ -41,13 +41,7 @@ function ModelView() {
 		showMenu,
 		hideMenu,
 		handleContextMenu,
-} = useContextMenu();
-
-	//REDUX STUFF
-	const mesh = useAppSelector((state) => state.mesh);
-	console.log('App mesh data ', mesh);hello sadasdadsdfsdfsfsfsdfdsf
-
-
+	} = useContextMenu();
 
 	return (
 		<div

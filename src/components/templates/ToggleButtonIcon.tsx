@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import Icon from "./Icon"; // Adjust the import according to your project structure
+import React, { useState, useRef } from 'react';
+import Icon from './Icon'; // Adjust the import according to your project structure
 
 interface ToggleButtonIconProps {
 	Icon_on?: React.ReactNode;
@@ -21,12 +21,13 @@ const ToggleButtonIcon: React.FC<ToggleButtonIconProps> = ({
 
 	return (
 		<div
-			className="bg-secondary p-1 rounded-md w-min h-min justify-center items-center cursor-pointer aspect-square "
+			className="aspect-square h-min w-min cursor-pointer items-center justify-center rounded-md bg-main-500 p-1"
 			onClick={() => {
 				snapPivotToggle.current = !snapPivotToggle.current;
 				setRefresh((prev) => prev + 1);
 				onClick();
-			}}>
+			}}
+		>
 			{Icon}
 			{snapPivotToggle.current ? Icon_on : Icon_off}
 		</div>

@@ -7,9 +7,13 @@ import {
 	NavChildItem,
 } from './NavButton';
 import '../styles/App.css';
-import { useAppDispatch, useViewportSelector } from '../hooks/useRedux';
-import { toggleGrid, toggleStats } from '../reducers/viewportReducer';
-import { RootState } from '../store';
+import {
+	useAppDispatch,
+	useMeshStoreSelector,
+	useViewportSelector,
+} from '../hooks/useRedux';
+import { toggleGrid, toggleStats } from '../redux/reducers/viewportReducer';
+import { RootState } from '../redux/store';
 import { connect, useDispatch } from 'react-redux';
 import {
 	Menubar,
@@ -34,6 +38,8 @@ import {
 } from './ui/alert-dialog';
 import { Button } from './ui/button';
 import ErrorAlert from './templates/ErrorAlert';
+import { saveMesh } from '../redux/reducers/meshReducer';
+import { setLocalStorage } from '../storage/localStorage';
 
 const styles = {
 	menubar: `dark rounded-none outline-none dark:bg-matisse-950 p-1 pt-0 dark:border-matisse-900`,
@@ -47,6 +53,7 @@ const NavBar: React.FC = () => {
 	const hasOpened = useState(false);
 	const currentButton = useState('');
 	const viewportData = useViewportSelector();
+	const meshStore = useMeshStoreSelector();
 	const dispatch = useAppDispatch();
 
 	return (
@@ -63,6 +70,16 @@ const NavBar: React.FC = () => {
 						New Window
 					</MenubarItem>
 					<MenubarSeparator />
+					<MenubarItem
+						className={styles.menuItem}
+						onClick={(e) => {
+							dispatch(saveMesh());
+							console.log('Saved');
+							e.preventDefault();
+						}}
+					>
+						Save
+					</MenubarItem>
 					<MenubarItem className={styles.menuItem}>Share</MenubarItem>
 					<MenubarSeparator />
 					<MenubarItem className={styles.menuItem}>Print</MenubarItem>

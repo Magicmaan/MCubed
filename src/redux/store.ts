@@ -1,6 +1,6 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { configureStore } from '@reduxjs/toolkit';
 // Import your reducers here
-import rootReducer from "./reducers"; // Assuming you have a rootReducer
+import rootReducer from './reducers'; // Assuming you have a rootReducer
 
 const store = configureStore({
 	reducer: rootReducer,
@@ -8,11 +8,11 @@ const store = configureStore({
 		getDefaultMiddleware({
 			serializableCheck: {
 				// Ignore these action types
-				ignoredActions: ["viewport/setScene"],
+				ignoredActions: ['viewport/setScene'],
 				// Ignore these field paths in all actions
-				ignoredActionPaths: ["meta.arg", "payload.timestamp"],
+				ignoredActionPaths: ['meta.arg', 'payload.timestamp'],
 				// Ignore these paths in the state
-				ignoredPaths: ["items.dates"],
+				ignoredPaths: ['items.dates'],
 			},
 		}),
 });

@@ -8,8 +8,11 @@ import {
 	useViewportSelectedSelector,
 	useViewportSelector,
 } from '../../hooks/useRedux';
-import { meshModify, meshModifyIndex } from '../../reducers/meshReducer';
-import { setControls } from '../../reducers/viewportReducer';
+import {
+	meshModifyID,
+	meshModifyIndex,
+} from '../../redux/reducers/meshReducer';
+import { setControls } from '../../redux/reducers/viewportReducer';
 import { invalidate, useFrame, useThree } from '@react-three/fiber';
 import { ForwardRefComponent } from '@react-three/drei/helpers/ts-utils';
 import { useStateList, useTimeoutFn, useUpdate } from 'react-use';
@@ -109,7 +112,7 @@ const PivotControlsComponent: React.FC<{
 		// means dispatches are throttled to 100 per second at best (10ms)
 		await new Promise((resolve) => setTimeout(resolve, 8));
 		dispatch(
-			meshModify({
+			meshModifyID({
 				id: selectedID,
 				position: position.toArray(),
 				rotation: new THREE.Euler()

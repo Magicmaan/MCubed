@@ -16,35 +16,45 @@ import {
 	setLocalStorage,
 } from '../storage/localStorage';
 import { v4 as uuidv4 } from 'uuid';
-import { useMeshDataSelector, useMeshStoreSelector } from '../hooks/useRedux';
+import {
+	useAppDispatch,
+	useMeshDataSelector,
+	useMeshStoreSelector,
+} from '../hooks/useRedux';
 import { get } from 'http';
-import { MeshState, MeshStateSerialised } from '../reducers/meshReducer';
+import {
+	loadMesh,
+	MeshState,
+	MeshStateSerialised,
+} from '../redux/reducers/meshReducer';
 import { MenubarSeparator } from './ui/menubar';
 import Icon from '../assets/icons/solid/.all';
-
-const serialiseMeshState = (meshState: MeshState): string => {
-	return JSON.stringify({
-		creationDate: Date.now(),
-		lastModified: Date.now(),
-		...meshState,
-	} as MeshStateSerialised);
-};
+import { serialiseMeshState } from '../storage/meshStorage';
+import { toFormatted } from '../util/dateUtil';
+import { getData, loadBBModelToMesh } from '../util/fileUtil';
+import { text } from 'stream/consumers';
+import { BBModelFile } from '../types/types';
 
 const Startup: React.FC<{
 	setStartup: React.Dispatch<React.SetStateAction<boolean>>;
 }> = ({ setStartup }) => {
 	//clearLocalStorage();
 
-	const meshStore = useMeshStoreSelector();
+	const dispatch = useAppDispatch();
 
-	setLocalStorage(uuidv4(), serialiseMeshState(meshStore));
+	const meshStore = useMeshStoreSelector();
+	//const serialisedMesh = serialiseMeshState(meshStore);
+	//if (serialisedMesh) {
+	//	setLocalStorage(meshStore.key, serialisedMesh);
+	//}
 
 	const storageKeys = getLocalStorageKeys();
 	const storageValues = storageKeys.map((key) => {
 		const data = getLocalStorage(key);
 		if (data) {
-			const obj = JSON.parse(data) as MeshStateSerialised;
-			console.log(obj);
+			console.log('key', key);
+			const obj = JSON.parse(data) as MeshState;
+			//console.log(obj);
 			return obj;
 		}
 	});
@@ -80,6 +90,88 @@ const Startup: React.FC<{
 						>
 							Mesh Model
 						</Button>
+						<div className="flex h-full w-10 grow"></div>
+						<MenubarSeparator />
+						<div className="flex h-full w-10 grow"></div>
+
+						<Button
+							className="m-0 flex w-full justify-start text-start"
+							variant={'outline'}
+							onClick={() => {
+								const input = document.getElementById(
+									'file_selector'
+								) as HTMLInputElement;
+								input.click();
+								//input.type = 'file';
+								//input.accept = '.bbmodel';
+								// input.onchange = (e) => {
+								// 	const file = (e.target as HTMLInputElement)
+								// 		.files;
+								// 	if (file && file.length > 0) {
+								// 		console.log(
+								// 			'Selected file path:',
+								// 			file[0]
+								// 		);
+								// 	}
+								// };
+								// input.click();
+							}}
+						>
+							Open
+							{/* need an input to actually get file */}
+							<input
+								id="file_selector"
+								type="file"
+								accept=".bbmodel"
+								onChange={(e) => {
+									const file = e.target.files?.[0];
+
+									if (file) {
+										let data: BBModelFile;
+										getData(file).then((d) => {
+											data = JSON.parse(d) as BBModelFile;
+										});
+
+										console.log(
+											'Selected file path:',
+											file
+										);
+										loadBBModelToMesh(file).then(
+											({ mesh, textures }) => {
+												const state = {
+													...meshStore,
+													mesh: mesh,
+													key: uuidv4(),
+													texture: textures,
+													// texture: [
+													// 	{
+													// 		name: 'test',
+													// 		data: data.textures[0]
+													// 			.source,
+													// 		path: 'test',
+													// 		local_path: 'test',
+													// 		width: 128,
+													// 		height: 128,
+													// 		active: true,
+													// 		id: 0,
+													// 	},
+													// ],
+												} as MeshState;
+												console.log('new mesh', state);
+												dispatch(loadMesh(state));
+												setStartup(false);
+
+												console.log('Loaded file');
+											}
+										);
+									}
+								}}
+								hidden
+							/>
+						</Button>
+
+						{/* Open Model */}
+
 						{/* Repeat the Button component as needed */}
 					</ScrollArea>
 
@@ -88,65 +180,27 @@ const Startup: React.FC<{
 							if (value) {
 								return (
 									<>
-										<div className="flex flex-col items-start justify-between p-1">
+										<Button
+											variant={'outline'}
+											// className="flex w-full flex-col items-start justify-between rounded-md p-1 hover:bg-button-hover"
+											className="flex w-full"
+											onMouseDown={(e) => {
+												console.log('Loaded', value);
+												dispatch(loadMesh(value));
+												setStartup(false);
+											}}
+										>
 											<p>{value.name}</p>
-											<div className="flex h-4 w-full flex-row items-center justify-start bg-blue-500">
-												<Icon
-													name="clock"
-													width={16}
-													height={16}
-												/>
+											<div className="flex h-4 w-full flex-row items-center justify-start bg-blue-500 pl-1 text-sm">
 												<p>
-													{(() => {
-														const modifiedDate =
-															new Date(
-																value.lastModified
-															);
-														const now = new Date();
-														const diff =
-															now.getTime() -
-															modifiedDate.getTime();
-														const diffMinutes =
-															Math.floor(
-																diff /
-																	(1000 * 60)
-															);
-														const diffHours =
-															Math.floor(
-																diff /
-																	(1000 *
-																		60 *
-																		60)
-															);
-														const diffDays =
-															Math.floor(
-																diff /
-																	(1000 *
-																		60 *
-																		60 *
-																		24)
-															);
-														if (diffMinutes < 60) {
-															return `${diffMinutes} minutes ago`;
-														} else if (
-															diffHours < 24
-														) {
-															return `${diffHours} hours ago`;
-														} else if (
-															diffDays === 0
-														) {
-															return 'Today';
-														} else if (
-															diffDays === 1
-														) {
-															return 'Yesterday';
-														} else {
-															return `${diffDays} days ago`;
-														}
-													})()}
+													{toFormatted(
+														new Date(
+															value.lastModified
+														)
+													)}
 												</p>
 											</div>
-										</div>
+										</Button>
 										<MenubarSeparator />
 									</>
 								);

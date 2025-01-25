@@ -75,8 +75,7 @@ const Icon = ({
 	var viewBox = '0 0 500 500';
 
 	if (!icon) {
-		console.error('Icon not found:', name);
-		return null;
+		icon = icons['question'];
 	}
 	if (typeof icon !== 'string') {
 		viewBox = icon.viewBox;

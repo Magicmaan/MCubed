@@ -1,5 +1,15 @@
-import React from "react";
-import Icon from "../../../assets/icons/solid/.all";
+import React from 'react';
+import Icon from '../../../assets/icons/solid/.all';
+import { Button } from '../../ui/button';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '../../ui/select';
+import DisplayDropDown from './DisplayDropDown';
+import { useAppDispatch, useViewportSelector } from '../../../hooks/useRedux';
 
 interface WidgetProps {
 	width: string;
@@ -10,36 +20,46 @@ const Widget: React.FC<{ width?: number; children?: React.ReactNode }> = ({
 	children,
 }) => {
 	return (
-		<div
-			className={`h-full aspect-square bg-tertiary rounded-full p-2 justify-center items-center`}>
-			<div className="w-full h-full flex flex-row justify-center items-center">
+		<Button
+			variant="outline"
+			className={`m-0 aspect-square h-8 items-center justify-center p-0`}
+		>
+			<div className="flex h-full w-auto flex-row items-center justify-center">
 				{children}
 			</div>
-		</div>
+		</Button>
 	);
 };
 
 const LongWidget: React.FC<{ width?: number; children?: React.ReactNode }> = ({
-	width = "auto",
+	width = 'auto',
 	children,
 }) => {
 	return (
 		<div
 			style={{ width: width }}
-			className={`h-full bg-tertiary rounded-full p-2 justify-center items-center select-none`}>
-			<div className="w-full h-full flex justify-center items-center flex-row text-nowrap select-none">
+			className={`h-full select-none items-center justify-center rounded-full bg-tertiary p-2`}
+		>
+			<div className="flex h-full w-full select-none flex-row items-center justify-center text-nowrap">
 				{children}
 			</div>
 		</div>
 	);
 };
 
-const ToolBar: React.FC = () => {
+const ToolBar: React.FC<{
+	children?: React.ReactNode;
+	dispatch?: any;
+}> = ({ dispatch, children }) => {
 	return (
-		<div className=" w-auto h-auto flex gap-2">
-			<div className="bg-main w-auto h-full flex gap-2 rounded-full p-1 px-4 items-center justify-center">
+		<div className="flex h-auto w-full flex-grow gap-2">
+			<div className="pointer-events-auto flex h-12 w-full items-center justify-start gap-1 rounded-md bg-main-700 p-1 px-4">
 				<Widget>
-					<Icon name="arrows-up-down-left-right" width={18} colour="#cacaca" />
+					<Icon
+						name="arrows-up-down-left-right"
+						width={18}
+						colour="#cacaca"
+					/>
 				</Widget>
 				<Widget>
 					<Icon name="arrows-to-dot" width={18} colour="#cacaca" />
@@ -50,9 +70,9 @@ const ToolBar: React.FC = () => {
 				<Widget>
 					<Icon name="arrows-to-circle" width={18} colour="#cacaca" />
 				</Widget>
-			</div>
-			<div className="bg-main w-auto h-full flex gap-2 rounded-full p-1 px-4 items-center justify-center select-none ">
-				<LongWidget width={"auto"}>Transform mode</LongWidget>
+				<div className="flex-grow" />
+				<DisplayDropDown dispatch={dispatch} />
+				{children}
 			</div>
 		</div>
 	);

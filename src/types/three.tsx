@@ -2,6 +2,7 @@ import { ThreeEvent } from '@react-three/fiber';
 import * as THREE from 'three';
 
 export type CubeProps = {
+	id: string;
 	type: 'Cube';
 	name: string;
 	size: [number, number, number];
@@ -9,8 +10,7 @@ export type CubeProps = {
 	rotation: [number, number, number];
 	scale: number;
 	pivot: [number, number, number];
-	id: number;
-
+	visible: boolean;
 	// material
 	colour: string;
 	auto_uv: boolean;
@@ -24,7 +24,6 @@ export type CubeProps = {
 	};
 	props?: any[];
 };
-
 export type THREETextureProps = {
 	name: string;
 	data: string;
@@ -35,7 +34,7 @@ export type THREETextureProps = {
 	height: number;
 
 	active: boolean;
-	id: number;
+	id: string;
 };
 
 export type THREEObjectProps = {
@@ -69,4 +68,30 @@ export type THREEObjectProps = {
 	onHover?: (event: THREE.Event) => void;
 	onPointerOver?: (event: THREE.Event) => void;
 	onPointerOut?: (event: THREE.Event) => void;
+};
+
+export type MeshState = {
+	name: string;
+	key: string;
+	mesh: CubeProps[];
+	texture: THREETextureProps[];
+	cubeCount: number;
+	textureCount: number;
+
+	hasChanged: boolean;
+	creationDate: number;
+	lastModified: number;
+};
+
+export type MeshStateSerialised = {
+	name: string;
+	key: string;
+	mesh: CubeProps[];
+	texture: THREETextureProps[];
+	cubeCount: number;
+	textureCount: number;
+
+	hasChanged: boolean;
+	creationDate: number;
+	lastModified: number;
 };

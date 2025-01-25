@@ -18,6 +18,7 @@ import {
 	useAppSelector,
 	useMeshDataSelector,
 	useMeshStoreSelector,
+	useViewportCameraLockSelector,
 	useViewportCameraSelector,
 	useViewportCameraSettingsSelector,
 	useViewportSelectedSelector,
@@ -25,9 +26,13 @@ import {
 } from '../../hooks/useRedux';
 import PivotControlsComponent from './PivotControlsComponent';
 import InfoPanel from './ui/InfoPanel';
-import { setControls, setSelected } from '../../reducers/viewportReducer';
+import {
+	setCameraLock,
+	setControls,
+	setSelected,
+} from '../../redux/reducers/viewportReducer';
 import ModelInstance from './ModelInstance';
-import { RootState } from '../../store';
+import { RootState } from '../../redux/store';
 
 const GetSceneRef: React.FC<{
 	setThree: React.Dispatch<React.SetStateAction<RootState | undefined>>;
@@ -47,6 +52,7 @@ const Viewport: React.FC = () => {
 
 	const viewportData = useViewportSelector();
 	const cameraControls = useViewportCameraSelector();
+	const cameraLock = useViewportCameraLockSelector();
 	const showGrid = viewportData.showGrid;
 	const showStats = viewportData.showStats;
 	const selected = useViewportSelectedSelector();
@@ -54,8 +60,7 @@ const Viewport: React.FC = () => {
 
 	const camera = useViewportCameraSettingsSelector();
 
-	const meshStore = useMeshStoreSelector();
-	const meshData = useMeshDataSelector();
+	const renderMode = viewportData.renderMode;
 
 	const selectionAnchorRef = React.useRef<THREE.Group | null>(null);
 	const texture = React.useMemo(() => {
@@ -79,7 +84,17 @@ const Viewport: React.FC = () => {
 		}
 	};
 
+	useEffect(() => {
+		console.log('Camera Controls', cameraControls);
+	}, [
+		cameraControls,
+		cameraControls?.zoom,
+		cameraControls?.pan,
+		cameraControls?.rotate,
+	]);
+
 	const raycaster = new THREE.Raycaster();
+	const savedCameraControls = React.useRef(cameraControls);
 
 	return (
 		<Canvas
@@ -90,29 +105,31 @@ const Viewport: React.FC = () => {
 				antialias: true,
 				toneMapping: THREE.NoToneMapping,
 			}}
-			onMouseDown={() => {
+			onMouseDown={(e) => {
 				isUsingCamera.current = true;
+				console.log('Canvas onMouseDown');
+				console.log('e', e);
+			}}
+			onMouseUp={() => {
+				isUsingCamera.current = false;
+				console.log('Canvas onMouseUp');
 			}}
 			onMouseEnter={() => {
-				dispatch(setControls({ zoom: true, pan: true, rotate: true }));
+				dispatch(setCameraLock(true));
 			}}
 			onMouseLeave={() => {
-				if (isUsingCamera.current) {
-					console.log('Canvas onMouseLeave but dragging');
-				} else {
-					console.log('Canvas onMouseLeave');
-					dispatch(
-						setControls({ zoom: false, pan: false, rotate: false })
-					);
+				console.log('Canvas onMouseLeave');
+				if (!isUsingCamera.current) {
+					dispatch(setCameraLock(false));
 				}
-			}}
-			onPointerMove={() => {
-				invalidate();
 			}}
 			onPointerMissed={() => {
 				console.log('Canvas onPointerMissed');
 				dispatch(setSelected(-1));
 				console.log('Selected: ', selected);
+				invalidate();
+			}}
+			onPointerMove={() => {
 				invalidate();
 			}}
 		>
@@ -131,9 +148,10 @@ const Viewport: React.FC = () => {
 
 			<GridPlane size={16} />
 			<OrbitControls
-				enableZoom={cameraControls?.zoom}
-				enablePan={cameraControls?.pan}
-				enableRotate={cameraControls?.rotate}
+				enableZoom={cameraControls?.zoom && cameraLock}
+				enablePan={cameraControls?.pan && cameraLock}
+				enableRotate={cameraControls?.rotate && cameraLock}
+				enableDamping
 				ref={orbitRef}
 				onStart={() => {
 					pivotPointRef.current?.position.copy(

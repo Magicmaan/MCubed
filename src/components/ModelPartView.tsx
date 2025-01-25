@@ -26,9 +26,9 @@ import { setServers } from 'dns';
 import meshSlice, {
 	meshAddCube,
 	meshAddRandom,
-	meshModify,
+	meshModifyID,
 	meshRemoveCube,
-} from '../reducers/meshReducer';
+} from '../redux/reducers/meshReducer';
 import * as THREE from 'three';
 import {
 	useAppDispatch,
@@ -37,7 +37,7 @@ import {
 	useViewportSelectedSelector,
 	useViewportSelector,
 } from '../hooks/useRedux';
-import { setSelected as reduxSetSelected } from '../reducers/viewportReducer';
+import { setSelected as reduxSetSelected } from '../redux/reducers/viewportReducer';
 import { invalidate } from '@react-three/fiber';
 import { eventNames } from 'process';
 import { ContextInfoItem } from './templates/ContextMenu';

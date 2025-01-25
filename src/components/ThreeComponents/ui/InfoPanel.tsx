@@ -1,18 +1,27 @@
-import React, { useState, useEffect, useRef } from "react";
-import { RootState, useFrame, Vector3 } from "@react-three/fiber";
-import * as THREE from "three";
-import Icon from "../../../assets/icons/solid/.all";
-import SideBarWidget from "../../templates/SideBarWidget";
-import InputSingle from "../../ValueDisplay";
-import { toTrun, toTrunPercentage } from "../../../util";
-import ToggleButtonIcon from "../../templates/ToggleButtonIcon";
-import { Html, OrbitControls } from "@react-three/drei";
-import { useAppDispatch } from "../../../hooks/useRedux";
-import { setControls, enableGimbal } from "../../../reducers/viewportReducer";
-import ResizeableBar from "../../ResizeableBar";
-import { Resizable } from "re-resizable";
-import ToolBar from "./ToolBar";
-import { NumberDisplaySingle, NumberDisplayVec3 } from "../../templates/NumberDisplay";
+import React, { useState, useEffect, useRef } from 'react';
+import { RootState, useFrame, Vector3 } from '@react-three/fiber';
+import * as THREE from 'three';
+import Icon from '../../../assets/icons/solid/.all';
+import SideBarWidget from '../../templates/SideBarWidget';
+import InputSingle from '../../ValueDisplay';
+import { toTrun, toTrunPercentage } from '../../../util';
+import ToggleButtonIcon from '../../templates/ToggleButtonIcon';
+import { Html, OrbitControls } from '@react-three/drei';
+import { useAppDispatch } from '../../../hooks/useRedux';
+import {
+	setControls,
+	enableGimbal,
+	setCamera,
+} from '../../../redux/reducers/viewportReducer';
+import ResizeableBar from '../../ResizeableBar';
+import { Resizable } from 're-resizable';
+import ToolBar from './ToolBar';
+import {
+	NumberDisplaySingle,
+	NumberDisplayVec3,
+} from '../../templates/NumberDisplay';
+import { Button } from '../../ui/button';
+import DisplayDropDown from './DisplayDropDown';
 
 const CameraDisplay: React.FC<{
 	camera?: THREE.PerspectiveCamera;
@@ -21,7 +30,7 @@ const CameraDisplay: React.FC<{
 }> = ({ camera, pivot, useGimbal }) => {
 	const [viewRange, setViewRange] = useState([16, 16, 16]);
 	const [viewRangeScale, setViewRangeScale] = useState(1);
-	const [axis, setAxis] = useState<"X" | "Z">("X");
+	const [axis, setAxis] = useState<'X' | 'Z'>('X');
 
 	const camPos = [
 		camera?.position.x ?? 0,
@@ -51,11 +60,15 @@ const CameraDisplay: React.FC<{
 
 	const camRadius3D = React.useRef<number | null>(null);
 	camRadius3D.current = Math.sqrt(
-		Math.pow(camX - pivotX, 2) + Math.pow(camY - pivotY, 2) + Math.pow(camZ - pivotZ, 2)
+		Math.pow(camX - pivotX, 2) +
+			Math.pow(camY - pivotY, 2) +
+			Math.pow(camZ - pivotZ, 2)
 	);
 	const camRadius2D = React.useRef<number | null>(null);
 	camRadius2D.current = parseFloat(
-		Math.sqrt(Math.pow(camX - pivotX, 2) + Math.pow(camZ - pivotZ, 2)).toFixed(2)
+		Math.sqrt(
+			Math.pow(camX - pivotX, 2) + Math.pow(camZ - pivotZ, 2)
+		).toFixed(2)
 	);
 
 	const zoomTimer = React.useRef<number>(0);
@@ -63,7 +76,13 @@ const CameraDisplay: React.FC<{
 	useEffect(() => {
 		if (camRadius2D.current) {
 			var radius = parseFloat(camRadius2D.current.toFixed(2));
-			if (camX > 100 || camX < 0 || camZ > 100 || camZ < 0 || radius > 40) {
+			if (
+				camX > 100 ||
+				camX < 0 ||
+				camZ > 100 ||
+				camZ < 0 ||
+				radius > 40
+			) {
 				setViewRangeScale((prev) => prev * 1.1);
 			}
 			if (radius < 10) {
@@ -101,7 +120,12 @@ const CameraDisplay: React.FC<{
 			}
 		};
 
-		const drawCircle = (x: number, y: number, radius: number, color: string) => {
+		const drawCircle = (
+			x: number,
+			y: number,
+			radius: number,
+			color: string
+		) => {
 			ctx.save();
 			ctx.beginPath();
 			ctx.arc(x, y, radius, 0, 2 * Math.PI);
@@ -110,7 +134,12 @@ const CameraDisplay: React.FC<{
 			ctx.restore();
 		};
 
-		const drawRing = (x: number, y: number, radius: number, color: string) => {
+		const drawRing = (
+			x: number,
+			y: number,
+			radius: number,
+			color: string
+		) => {
 			ctx.save();
 			ctx.beginPath();
 			ctx.arc(x, y, radius, 0, 2 * Math.PI);
@@ -120,24 +149,24 @@ const CameraDisplay: React.FC<{
 			ctx.restore();
 		};
 
-		ctx.fillStyle = "#1e1e20";
+		ctx.fillStyle = '#1e1e20';
 		ctx.fillRect(0, 0, 100, 100);
-		drawGrid(closeGridOpacity, "green");
-		drawRing(pivotX, pivotZ, camRadius2D.current, "green");
-		drawCircle(camX, camZ, 4, "red");
-		drawCircle(pivotX, pivotZ, 2, "red");
+		drawGrid(closeGridOpacity, 'green');
+		drawRing(pivotX, pivotZ, camRadius2D.current, 'green');
+		drawCircle(camX, camZ, 4, 'red');
+		drawCircle(pivotX, pivotZ, 2, 'red');
 
-		drawCircle(50, 50, 3, "blue");
+		drawCircle(50, 50, 3, 'blue');
 	};
 
 	return (
-		<div className="flex aspect-square w-full h-full rounded-md bg-red-500 justify-center items-center">
+		<div className="flex aspect-square h-full w-full items-center justify-center rounded-md bg-red-500">
 			<canvas
 				width="100%"
 				height="100%"
 				ref={(canvas) => {
 					if (canvas) {
-						const ctx = canvas.getContext("2d");
+						const ctx = canvas.getContext('2d');
 						if (ctx) {
 							drawCanvas(ctx);
 						}
@@ -148,9 +177,12 @@ const CameraDisplay: React.FC<{
 	);
 };
 
-const InfoValue: React.FC<{ name: string; value: number }> = ({ name, value }) => {
+const InfoValue: React.FC<{ name: string; value: number }> = ({
+	name,
+	value,
+}) => {
 	return (
-		<div className="flex flex-row space-x-2 pl-2 flex-nowrap">
+		<div className="flex flex-row flex-nowrap space-x-2 pl-2">
 			<p className="text-sm">{name}</p>
 			<p>{value}</p>
 		</div>
@@ -163,15 +195,23 @@ const InfoPanel: React.FC<{
 	pivot: React.RefObject<THREE.Group<THREE.Object3DEventMap>>;
 	useGimbal: [boolean[], React.Dispatch<React.SetStateAction<boolean[]>>];
 	orbit: React.RefObject<typeof OrbitControls & { target: THREE.Vector3 }>;
-}> = ({ scene, camera: camRef, pivot: pivotRef, useGimbal, orbit: orbitRef }) => {
+}> = ({
+	scene,
+	camera: camRef,
+	pivot: pivotRef,
+	useGimbal,
+	orbit: orbitRef,
+}) => {
 	const [showInfo, setShowInfo] = useState(false);
-	const [camera, setCamera] = useState<THREE.PerspectiveCamera | null>(
-		camRef?.current ?? null
-	);
+	// const [camera, setCamera] = useState<THREE.PerspectiveCamera | null>(
+	// 	camRef?.current ?? null
+	// );
 	const [refresh, setRefresh] = useState(0);
 	const dispatch = useAppDispatch();
 
-	const [cam, setCam] = useState<THREE.PerspectiveCamera | null>(camRef.current);
+	const [cam, setCam] = useState<THREE.PerspectiveCamera | null>(
+		camRef.current
+	);
 
 	const snapPivotToggle = React.useRef(false);
 
@@ -179,8 +219,17 @@ const InfoPanel: React.FC<{
 		<ToggleButtonIcon
 			isActive={false}
 			onClick={() => {}}
-			Icon_on={<Icon name="lock" height={10} width={10} colour="#d1d1d1" />}
-			Icon_off={<Icon name="lock-open" height={12} width={12} colour="#888888" />}
+			Icon_on={
+				<Icon name="lock" height={18} width={18} colour="#d1d1d1" />
+			}
+			Icon_off={
+				<Icon
+					name="lock-open"
+					height={12}
+					width={12}
+					colour="#888888"
+				/>
+			}
 		/>
 	);
 
@@ -200,208 +249,441 @@ const InfoPanel: React.FC<{
 	const rotation = cam?.rotation ?? new THREE.Euler(0, 0, 0);
 	const pivot = orbitRef.current?.target ?? new THREE.Vector3(0, 0, 0);
 	const distance =
-		orbitRef.current?.target.distanceTo(cam?.position ?? new THREE.Vector3(0, 0, 0)) ?? 0;
+		orbitRef.current?.target.distanceTo(
+			cam?.position ?? new THREE.Vector3(0, 0, 0)
+		) ?? 0;
 
 	const lockDistance = useRef(false);
-	useEffect(() => {
-		if (lockDistance.current) {
-			dispatch(setControls([false, false, false]));
-		}
-	}, [lockDistance.current]);
-
+	const lockRotate = useRef(false);
+	const lockPivot = useRef(false);
 	return (
 		<Html
 			position={[0, 0, 0]}
 			fullscreen
-			className="flex-col select-none absolute pointer-events-none rounded-xl p-2">
-			<div className="w-full h-10 justify-start bg-main bg-opacity-50 flex flex-row gap-5 rounded-full select-none pointer-events-none">
-				<ToolBar />
-				<div className=" w-auto h-full flex flex-grow justify-end items-end ">
-					<div className="flex w-auto h-full  p-1 bg-primary items-start justify-start pointer-events-none">
-						<div
-							className={
-								"pointer-events-auto transition-all duration-100  " +
-								"aria-expanded:scale-0 scale-100 h-full aspect-square " +
-								"bg-primary flex items-center justify-center bg-blue-500 " +
-								"rounded-full hover:border-2 border-highlight-200"
-							}
-							aria-expanded={showInfo}
-							onClick={() => {
-								setShowInfo(!showInfo);
-								//console.log("press");
-							}}>
-							<Icon
-								name="question"
-								center_x
-								height={20}
-								width={20}
-								colour="red"
-								alt_text="increment"
-							/>
-						</div>
+			className="pointer-events-none absolute select-none flex-col rounded-xl p-2"
+		>
+			<div className="flex w-full flex-row items-stretch">
+				<ToolBar dispatch={dispatch}>
+					<div className="flex aspect-square h-full w-auto items-center justify-center bg-red-300">
+						<div className="absolute flex w-auto flex-col items-end justify-end">
+							<div
+								onClick={() => setShowInfo(!showInfo)}
+								className="pointer-events-auto flex aspect-square h-7 w-7 items-center justify-center rounded-full bg-black"
+							>
+								<Icon name="question" colour="white" />
+							</div>
 
-						<ResizeableBar
-							aria-expanded={showInfo}
-							id="infoPanel"
-							width={300}
-							resizable={[true, true, true, true]}
-							onMouseEnter={() => {
-								//dispatch(disableGimbal([false, false, false]));
-							}}
-							onMouseLeave={() => {
-								// if (!lockDistance.current) {
-								// 	dispatch(enableGimbal());
-								// }
-							}}
-							className={
-								"overflow-y-show pointer-events-auto select-none transition-all duration-500 origin-top-right " +
-								"absolute w-96 h-72 bg-secondary items-stretch justify-stretch " +
-								"rounded-xl space-y-2 flex-shrink-0 scale-0 aria-expanded:scale-100 " +
-								"aria-expanded:rounded-xl aria-expanded:top-0 aria-expanded:right-0 "
-							}>
-							<SideBarWidget
-								name="Info"
-								showExitButton
-								onExit={() => setShowInfo(!showInfo)}>
-								{showInfo ? (
-									<div className="flex flex-col space-y-2 items-start justify-start select-none pointer-events-auto overflow-x-hidden w-full h-auto overflow-y-show scrollbar scrollbar-always">
-										<h2 className="select-none">Camera</h2>
-										<div className="flex flex-row space-x-2 px-2 items-center justify-between h-8 rounded-md ">
-											<div className="items-center justify-center text-right content-center h-20 w-20 p-2 rounded-md ">
-												<p className="text-sm">Distance</p>
-											</div>
-											<div className="h-auto w-24 justify-start items-start">
-												<NumberDisplaySingle size="small" value={distance} />
-											</div>
-											<div className="text-sm flex flex-col gap-1  h-auto w-auto ">
-												<ToggleButtonIcon
-													isActive={false}
-													onClick={() => {
-														lockDistance.current = !lockDistance.current;
-														dispatch(setControls([false, true, false]));
-														console.log("toggle distance", lockDistance.current);
-													}}
-													Icon_on={
-														<Icon name="lock" height={10} width={10} colour="#d1d1d1" />
-													}
-													Icon_off={
-														<Icon
-															name="lock-open"
-															height={12}
-															width={12}
-															colour="#888888"
+							<div className="absolute right-0 translate-y-full">
+								{showInfo && (
+									<div className="pointer-events-auto flex w-80 flex-col rounded-md bg-matisse-900 p-2">
+										<div className="flex h-min w-full flex-col items-start justify-start rounded-md bg-main p-2 pl-0">
+											<h2 className="pl-2">Camera</h2>
+
+											<div className="flex w-min flex-row flex-nowrap items-start justify-start bg-main p-1 pb-0 pl-0">
+												<div className="m-2 flex w-auto flex-col justify-center rounded-md bg-main-500 p-3">
+													<p className="text-sm text-text">
+														Distance
+													</p>
+													<div className="row flex w-48 justify-start rounded-sm">
+														<NumberDisplaySingle
+															index={0}
+															value={distance}
+															setValue={(
+																value
+															) => {
+																const newDistance =
+																	value; // Adjust the value as needed
+																const direction =
+																	new THREE.Vector3()
+																		.subVectors(
+																			cam?.position ??
+																				new THREE.Vector3(),
+																			orbitRef
+																				.current
+																				?.target ??
+																				new THREE.Vector3()
+																		)
+																		.normalize();
+																const newPosition =
+																	direction
+																		.multiplyScalar(
+																			newDistance
+																		)
+																		.add(
+																			orbitRef
+																				.current
+																				?.target ??
+																				new THREE.Vector3()
+																		);
+																cam?.position.copy(
+																	newPosition
+																);
+															}}
 														/>
-													}
-												/>
-											</div>
-										</div>
-										<div className="flex flex-row space-x-2 px-2 items-center justify-between h-auto w-min rounded-md ">
-											<div className="items-center justify-center text-right content-center h-20 w-20 p-2 rounded-md ">
-												<p className="text-sm">Rotation</p>
-											</div>
-											<div className="h-auto w-24">
-												<NumberDisplayVec3
-													size="small"
-													orientation="column"
-													vec={[
-														(rotation.x * 180) / Math.PI,
-														(rotation.y * 180) / Math.PI,
-														(rotation.z * 180) / Math.PI,
-													]}
-												/>
+													</div>
+												</div>
+												<div className="dark m-auto flex h-full w-auto flex-col justify-between space-y-1 bg-red-500">
+													<Button
+														variant={'outline'}
+														className="pointer-events-auto m-0 aspect-square h-7 w-7 p-0"
+														onClick={() => {
+															console.log(
+																'lock distance'
+															);
+															if (
+																lockDistance.current
+															) {
+																dispatch(
+																	setControls(
+																		{
+																			zoom: false,
+																		}
+																	)
+																);
+															} else {
+																dispatch(
+																	setControls(
+																		{
+																			zoom: true,
+																		}
+																	)
+																);
+															}
+															lockDistance.current =
+																!lockDistance.current;
+														}}
+													>
+														{lockDistance.current ? (
+															<Icon
+																name="lock-open"
+																width={16}
+																height={16}
+																colour="#bbbbbb"
+															/>
+														) : (
+															<Icon
+																name="lock"
+																width={16}
+																height={16}
+																colour="#bbbbbb"
+															/>
+														)}
+													</Button>
+												</div>
 											</div>
 
-											<div className="text-sm flex flex-col gap-1  h-auto w-auto ">
-												{LockButton}
-												{LockButton}
-												{LockButton}
-											</div>
-										</div>
-										<div className="flex flex-row space-x-2 px-2 items-center justify-between h-auto w-min rounded-md ">
-											<div className="items-center justify-center text-right content-center h-20 w-20 p-2 rounded-md ">
-												<p className="text-sm">Pivot</p>
-											</div>
-											<div className="h-auto w-24">
-												<NumberDisplayVec3
-													size="small"
-													orientation="column"
-													vec={[pivot.x, pivot.y, pivot.z]}
-												/>
-											</div>
-											<div className="text-sm flex flex-col gap-1  h-auto w-auto ">
-												<ToggleButtonIcon
-													isActive={false}
-													onClick={() => {
-														orbitRef.current?.target.copy(
-															new THREE.Vector3(
-																Math.round(pivot.x),
-																Math.round(pivot.y),
-																Math.round(pivot.z)
-															)
-														);
-													}}
-													Icon={
+											<div className="flex w-min flex-row flex-nowrap items-start justify-start bg-main p-1 pb-0 pl-0 pt-0">
+												<div className="m-2 flex w-auto flex-col justify-center rounded-md bg-main-500 p-3">
+													<p className="text-sm text-text">
+														Rotation
+													</p>
+													<div className="row flex w-48 justify-start rounded-sm">
+														<NumberDisplayVec3
+															vec={[
+																(rotation.x *
+																	180) /
+																	Math.PI,
+																(rotation.y *
+																	180) /
+																	Math.PI,
+																(rotation.z *
+																	180) /
+																	Math.PI,
+															]}
+															setVec={(
+																x,
+																y,
+																z
+															) => {
+																orbitRef.current?.target.copy(
+																	new THREE.Vector3(
+																		x *
+																			(Math.PI /
+																				180),
+																		y *
+																			(Math.PI /
+																				180),
+																		z *
+																			(Math.PI /
+																				180)
+																	)
+																);
+															}}
+														/>
+													</div>
+												</div>
+												<div className="dark m-auto flex h-full w-auto flex-col justify-between space-y-1 bg-red-500">
+													<Button
+														variant={'outline'}
+														title="To 0"
+														className="m-0 aspect-square h-7 w-7 p-0"
+														onClick={() => {
+															orbitRef.current?.target.copy(
+																new THREE.Vector3(
+																	0,
+																	0,
+																	0
+																)
+															);
+														}}
+													>
+														<Icon
+															name="arrows-to-dot"
+															width={16}
+															height={16}
+															colour="#bbbbbb"
+														/>
+													</Button>
+
+													<Button
+														variant={'outline'}
+														title="Round Rotation"
+														className="m-0 aspect-square h-7 w-7 p-0"
+														onClick={() => {
+															orbitRef.current?.target.copy(
+																new THREE.Vector3(
+																	Math.round(
+																		(rotation.x *
+																			180) /
+																			Math.PI
+																	),
+																	Math.round(
+																		(rotation.y *
+																			180) /
+																			Math.PI
+																	),
+																	Math.round(
+																		(rotation.z *
+																			180) /
+																			Math.PI
+																	)
+																)
+															);
+														}}
+													>
 														<Icon
 															name="border-all"
-															height={16}
 															width={16}
-															colour="#d1d1d1"
+															height={16}
+															colour="#bbbbbb"
 														/>
-													}
-												/>
+													</Button>
 
-												<ToggleButtonIcon
-													isActive={true}
-													onClick={() => {
-														orbitRef.current?.target.copy(new THREE.Vector3(0, 0, 0));
-													}}
-													Icon_on={
+													<Button
+														variant={'outline'}
+														className="pointer-events-auto m-0 aspect-square h-7 w-7 p-0"
+														onClick={() => {
+															console.log(
+																'lock rotation'
+															);
+															if (
+																lockRotate.current
+															) {
+																dispatch(
+																	setControls(
+																		{
+																			rotate: false,
+																		}
+																	)
+																);
+															} else {
+																dispatch(
+																	setControls(
+																		{
+																			rotate: true,
+																		}
+																	)
+																);
+															}
+															lockRotate.current =
+																!lockRotate.current;
+														}}
+													>
+														{lockRotate.current ? (
+															<Icon
+																name="lock-open"
+																width={16}
+																height={16}
+																colour="#bbbbbb"
+															/>
+														) : (
+															<Icon
+																name="lock"
+																width={16}
+																height={16}
+																colour="#bbbbbb"
+															/>
+														)}
+													</Button>
+												</div>
+											</div>
+
+											<div className="flex w-min flex-row flex-nowrap items-center justify-start bg-main p-1 pl-0">
+												<div className="m-2 flex w-auto flex-col justify-center rounded-md bg-main-500 p-3">
+													<p className="text-sm text-text">
+														Pivot
+													</p>
+													<div className="row flex w-48 justify-start rounded-sm">
+														<NumberDisplayVec3
+															size="small"
+															vec={[
+																pivot.x,
+																pivot.y,
+																pivot.z,
+															]}
+															setVec={(
+																x,
+																y,
+																z
+															) => {
+																orbitRef.current?.target.copy(
+																	new THREE.Vector3(
+																		x,
+																		y,
+																		z
+																	)
+																);
+															}}
+														/>
+													</div>
+												</div>
+												<div className="dark m-auto flex h-full w-auto flex-col justify-between space-y-1 bg-red-500">
+													<Button
+														variant={'outline'}
+														title="To 0"
+														className="m-0 aspect-square h-7 w-7 p-0"
+														onClick={() => {
+															orbitRef.current?.target.copy(
+																new THREE.Vector3(
+																	0,
+																	0,
+																	0
+																)
+															);
+														}}
+													>
 														<Icon
 															name="arrows-to-dot"
-															height={16}
 															width={16}
-															colour="#d1d1d1"
+															height={16}
+															colour="#bbbbbb"
 														/>
-													}
-													Icon_off={
+													</Button>
+
+													<Button
+														variant={'outline'}
+														title="Round Pivot"
+														className="m-0 aspect-square h-7 w-7 p-0"
+														onClick={() => {
+															orbitRef.current?.target.copy(
+																new THREE.Vector3(
+																	Math.round(
+																		pivot.x
+																	),
+																	Math.round(
+																		pivot.y
+																	),
+																	Math.round(
+																		pivot.z
+																	)
+																)
+															);
+														}}
+													>
 														<Icon
-															name="arrows-to-dot"
-															height={16}
+															name="border-all"
+															alt_text="Round Pivot"
 															width={16}
-															colour="#888888"
+															height={16}
+															colour="#bbbbbb"
 														/>
-													}
-												/>
+													</Button>
+
+													<Button
+														variant={'outline'}
+														className="pointer-events-auto m-0 aspect-square h-7 w-7 p-0"
+														onClick={() => {
+															console.log(
+																'lock pivot'
+															);
+															if (
+																lockPivot.current
+															) {
+																dispatch(
+																	setControls(
+																		{
+																			pan: false,
+																		}
+																	)
+																);
+															} else {
+																dispatch(
+																	setControls(
+																		{
+																			pan: true,
+																		}
+																	)
+																);
+															}
+															lockPivot.current =
+																!lockPivot.current;
+														}}
+													>
+														{lockPivot.current ? (
+															<Icon
+																name="lock-open"
+																width={16}
+																height={16}
+																colour="#bbbbbb"
+															/>
+														) : (
+															<Icon
+																name="lock"
+																width={16}
+																height={16}
+																colour="#bbbbbb"
+															/>
+														)}
+													</Button>
+												</div>
 											</div>
 										</div>
-
-										<CameraDisplay camera={cam} pivot={pivot} />
-
-										<p className="text-sm">Camera Controls</p>
-										<p className="text-sm">Lock Radius</p>
+										<CameraDisplay
+											camera={cam}
+											pivot={pivot}
+										/>
+										<p>Camera Controls</p>
+										<p>Lock Radius</p>
 										<button
-											className="bg-blue-500 text-white px-2 py-1 rounded"
 											onClick={() => {
-												useGimbal[1]((prev) => [prev[0], !prev[0], prev[2]]);
-												console.log("toggle rad", useGimbal[0]);
-											}}>
+												useGimbal[1]((prev) => [
+													prev[0],
+													!prev[0],
+													prev[2],
+												]);
+											}}
+										>
 											Toggle Pan
 										</button>
+										<div>
+											<button
+												onClick={() =>
+													setRefresh(
+														(prev) => prev + 1
+													)
+												}
+											>
+												Toggle Refresh
+											</button>
+										</div>
 									</div>
-								) : null}
-
-								<div className="flex flex-row space-x-2 pl-2 ">
-									<button
-										className="bg-blue-500 text-white px-2 py-1 rounded"
-										onClick={() => setRefresh((prev) => prev + 1)}>
-										Toggle Refresh
-									</button>
-								</div>
-							</SideBarWidget>
-						</ResizeableBar>
+								)}
+							</div>
+						</div>
 					</div>
-				</div>
+				</ToolBar>
 			</div>
+			<DisplayDropDown dispatch={dispatch} />
 		</Html>
 	);
 };

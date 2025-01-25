@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { MeshState } from './meshReducer';
+import { MeshState } from '../meshReducer';
 
 type Action = {
 	type: string;

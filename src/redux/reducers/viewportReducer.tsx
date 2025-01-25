@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Box } from '@react-three/drei'; // Adjust the import path as necessary
-import { createTexture } from '../util/textureUtil';
+import { createTexture } from '../../util/textureUtil';
 import * as THREE from 'three';
 import { RootState } from '@react-three/fiber';
 import { MutableRefObject } from 'react';
@@ -21,10 +21,12 @@ type viewportState = {
 		rotate: boolean;
 	};
 	background?: string; // background colour of viewport
-	cameraLock?: [boolean, any]; // lock camera to object
+	cameraLock: boolean; // lock camera to object
+
+	renderMode?: 'wireframe' | 'solid' | 'texture' | 'render'; // render mode of viewport
 	showGrid?: boolean;
 	showStats?: boolean;
-	selected?: number; // selected objects
+	selected?: string; // selected objects
 	mesh?: any[]; // mesh array
 };
 const viewportInitialState: viewportState = {
@@ -41,11 +43,12 @@ const viewportInitialState: viewportState = {
 		pan: true,
 		rotate: true,
 	},
+	renderMode: 'solid',
 	background: '#000000',
-	cameraLock: [false, null], // Changed function to null
+	cameraLock: false, // Changed function to null
 	showGrid: true,
 	showStats: false,
-	selected: 0, // initialize selected as an empty array
+	selected: '0', // initialize selected as an empty array
 	mesh: [], // initialize mesh as an empty array
 };
 
@@ -56,7 +59,12 @@ const viewportSlice = createSlice({
 		test(state) {
 			console.log('Test reducer for mesh');
 		},
-
+		setRenderMode(
+			state,
+			action: PayloadAction<viewportState['renderMode']>
+		) {
+			state.renderMode = action.payload;
+		},
 		setControls(
 			state,
 			action: PayloadAction<{
@@ -69,11 +77,16 @@ const viewportSlice = createSlice({
 			const pan = action.payload.pan ?? state.cameraControls.pan;
 			const rotate = action.payload.rotate ?? state.cameraControls.rotate;
 
+			console.log('Setting controls', zoom, pan, rotate);
+
 			state.cameraControls = {
 				zoom: zoom,
 				pan: pan,
 				rotate: rotate,
 			};
+		},
+		setCameraLock(state, action: PayloadAction<boolean>) {
+			state.cameraLock = action.payload;
 		},
 		toggleGrid(state) {
 			state.showGrid = !state.showGrid;
@@ -87,8 +100,15 @@ const viewportSlice = createSlice({
 			}
 			state.mesh.push(action.payload); // Ensure payload is serializable
 		},
-		setSelected(state, action: PayloadAction<number | undefined>) {
+		setSelected(state, action: PayloadAction<string | undefined>) {
 			state.selected = action.payload;
+		},
+
+		setCamera(
+			state,
+			action: PayloadAction<viewportState['cameraSettings']>
+		) {
+			state.cameraSettings = action.payload;
 		},
 
 		// Define your reducers here
@@ -99,7 +119,10 @@ export default viewportSlice;
 export const {
 	test,
 	setControls,
+	setCameraLock,
+	setCamera,
 	toggleGrid,
+	setRenderMode,
 	meshAdd,
 	toggleStats,
 	setSelected,

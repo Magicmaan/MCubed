@@ -229,9 +229,9 @@ class BoxUVMap {
 		this.back = [backS.x, backS.y, backS.w, backS.h];
 	}
 
-	getBounds() {
-		x = this.
-	}
+	// getBounds() {
+	// 	x = this.
+	// }
 	toPixels() {
 		const tUV = this.applyPosition();
 

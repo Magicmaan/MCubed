@@ -13,7 +13,7 @@ import {
 } from '../ui/alert-dialog';
 import { Button } from '../ui/button';
 import { LoremIpsum, loremIpsum } from 'react-lorem-ipsum';
-import type { Error } from '../../reducers/appReducer';
+import type { Error } from '../../redux/reducers/appReducer';
 
 const ErrorAlert: React.FC<{
 	error?: string;

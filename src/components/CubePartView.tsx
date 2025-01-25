@@ -33,12 +33,12 @@ import {
 	useViewportSelector,
 } from '../hooks/useRedux';
 import { text } from 'stream/consumers';
-import { meshModify } from '../reducers/meshReducer.tsx';
+import { meshModifyID } from '../redux/reducers/meshReducer.tsx';
 import { Menu } from 'react-contexify';
 import { getClipboardDataAsVector } from '../util/copyPasteUtil.tsx';
 import { getClipboardData } from '../util/copyPasteUtil.tsx';
 import { ErrorBoundary } from 'react-error-boundary';
-import { addError } from '../reducers/appReducer.tsx';
+import { addError } from '../redux/reducers/appReducer.tsx';
 
 const CubePartView: React.FC = () => {
 	//const data = React.useContext(modelContext);
@@ -48,12 +48,14 @@ const CubePartView: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const selected = useViewportSelectedSelector() ?? -1;
 
-	var cube = meshData[selected] as CubeProps;
+	var cube = meshData.find((item) => item.id === selected) as CubeProps;
+
+	//meshData[selected] as CubeProps;
 
 	const sizeSetVec = (x: number, y: number, z: number) => {
 		if (selected !== -1) {
 			console.log('Setting size for', selected, 'to', [x, y, z]);
-			dispatch(meshModify({ id: cube.id, size: [x, y, z] }));
+			dispatch(meshModifyID({ id: cube.id, size: [x, y, z] }));
 		}
 	};
 	const sizeContextMenuID = 'cubePartView_size';
@@ -73,7 +75,7 @@ const CubePartView: React.FC = () => {
 	const positionSetVec = (x: number, y: number, z: number) => {
 		if (selected !== -1) {
 			console.log('Setting position for', selected, 'to', [x, y, z]);
-			dispatch(meshModify({ id: cube.id, position: [x, y, z] }));
+			dispatch(meshModifyID({ id: cube.id, position: [x, y, z] }));
 		}
 	};
 	const positionContextMenuID = 'cubePartView_position';
@@ -92,8 +94,17 @@ const CubePartView: React.FC = () => {
 
 	const rotationSetVec = (x: number, y: number, z: number) => {
 		if (selected !== -1) {
-			console.log('Setting rotation for', selected, 'to', [x, y, z]);
-			dispatch(meshModify({ id: cube.id, rotation: [x, y, z] }));
+			const radX = (x * Math.PI) / 180;
+			const radY = (y * Math.PI) / 180;
+			const radZ = (z * Math.PI) / 180;
+			console.log('Setting rotation for', selected, 'to', [
+				radX,
+				radY,
+				radZ,
+			]);
+			dispatch(
+				meshModifyID({ id: cube.id, rotation: [radX, radY, radZ] })
+			);
 		}
 	};
 	const rotationContextMenuID = 'cubePartView_rotation';
@@ -113,7 +124,7 @@ const CubePartView: React.FC = () => {
 	const pivotSetVec = (x: number, y: number, z: number) => {
 		if (selected !== -1) {
 			console.log('Setting pivot for', selected, 'to', [x, y, z]);
-			dispatch(meshModify({ id: cube.id, pivot: [x, y, z] }));
+			dispatch(meshModifyID({ id: cube.id, pivot: [x, y, z] }));
 		}
 	};
 	const pivotContextMenuID = 'cubePartView_pivot';
@@ -133,7 +144,9 @@ const CubePartView: React.FC = () => {
 	return (
 		<SideBarWidget name={cube?.name ?? 'Cube Selector'}>
 			{cube ? (
-				<div className="flex h-5/6 min-h-64 w-full flex-col items-center justify-center space-y-2 overflow-scroll">
+				<div className="flex h-5/6 min-h-72 w-full flex-col items-center justify-center space-y-2 overflow-scroll">
+					<p className="text-[0.5rem] text-gray-500">{cube?.id}</p>
+
 					<div
 						className="pointer-events-auto flex h-auto w-full flex-col items-center justify-center rounded-sm border-main-800 bg-main-500 p-1"
 						onContextMenuCapture={(e) => {
@@ -554,7 +567,7 @@ const CubePartView: React.FC = () => {
 					</div>
 				</div>
 			) : (
-				<div className="flex h-5/6 min-h-64 w-full flex-col items-center justify-center space-y-2 overflow-scroll">
+				<div className="flex h-5/6 min-h-72 w-full flex-col items-center justify-center space-y-2 overflow-scroll">
 					<p className="text-sm dark:text-gray-600">
 						No Cube Selected
 					</p>

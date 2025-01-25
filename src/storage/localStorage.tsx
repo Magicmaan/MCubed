@@ -7,10 +7,11 @@ const getLocalStorageKeys = () => {
 const clearLocalStorage = () => {
 	localStorage.clear();
 };
-
 const setLocalStorage = (key: string, value: string) => {
 	localStorage.setItem(key, value);
 };
+
+
 
 export {
 	getLocalStorage,

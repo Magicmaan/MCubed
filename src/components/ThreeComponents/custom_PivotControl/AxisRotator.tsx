@@ -1,13 +1,13 @@
-import * as React from "react";
-import * as THREE from "three";
-import { ThreeEvent, useLoader, useThree } from "@react-three/fiber";
-import { Line } from "@react-three/drei";
-import { Html } from "@react-three/drei";
-import { context } from "./context";
-import icon from "../../../assets/curve.png";
-import { useModifiers } from "../../../hooks/useControls";
-import { round } from "../../../util";
-import { rotateModifierIncrement } from "../../../constants/KeyModifiers";
+import * as React from 'react';
+import * as THREE from 'three';
+import { ThreeEvent, useLoader, useThree } from '@react-three/fiber';
+import { Line } from '@react-three/drei';
+import { Html } from '@react-three/drei';
+import { context } from './context';
+import icon from '../../../assets/curve.png';
+import { useModifiers } from '../../../hooks/useControls';
+import { round } from '../../../util';
+import { rotateModifierIncrement } from '../../../constants/KeyModifiers';
 
 const clickDir = /* @__PURE__ */ new THREE.Vector3();
 const intersectionDir = /* @__PURE__ */ new THREE.Vector3();
@@ -84,7 +84,9 @@ export const AxisRotator: React.FC<{
 	} = React.useContext(context);
 
 	// @ts-expect-error new in @react-three/fiber@7.0.5
-	const camControls = useThree((state) => state.controls) as { enabled: boolean };
+	const camControls = useThree((state) => state.controls) as {
+		enabled: boolean;
+	};
 	const divRef = React.useRef<HTMLDivElement>(null!);
 	const objRef = React.useRef<THREE.Group>(null!);
 	const angle0 = React.useRef<number>(0);
@@ -104,7 +106,7 @@ export const AxisRotator: React.FC<{
 		(e: ThreeEvent<PointerEvent>) => {
 			if (annotations) {
 				divRef.current.innerText = `${toDegrees(angle.current).toFixed(0)}º`;
-				divRef.current.style.display = "block";
+				divRef.current.style.display = 'block';
 			}
 			e.stopPropagation();
 			const clickPoint = e.point.clone();
@@ -120,9 +122,17 @@ export const AxisRotator: React.FC<{
 			const normal = new THREE.Vector3()
 				.setFromMatrixColumn(objRef.current.matrixWorld, 2)
 				.normalize();
-			const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(normal, origin);
+			const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(
+				normal,
+				origin
+			);
 			clickInfo.current = { clickPoint, origin, e1, e2, normal, plane };
-			onDragStart({ component: "Rotator", axis, origin, directions: [e1, e2, normal] });
+			onDragStart({
+				component: 'Rotator',
+				axis,
+				origin,
+				directions: [e1, e2, normal],
+			});
 			camControls && (camControls.enabled = false);
 			// @ts-ignore
 			e.target.setPointerCapture(e.pointerId);
@@ -135,26 +145,43 @@ export const AxisRotator: React.FC<{
 			e.stopPropagation();
 			if (!isHovered) setIsHovered(true);
 			if (clickInfo.current) {
-				const { clickPoint, origin, e1, e2, normal, plane } = clickInfo.current;
-				const [min, max] = rotationLimits?.[axis] || [undefined, undefined];
+				const { clickPoint, origin, e1, e2, normal, plane } =
+					clickInfo.current;
+				const [min, max] = rotationLimits?.[axis] || [
+					undefined,
+					undefined,
+				];
 
 				ray.copy(e.ray);
 				ray.intersectPlane(plane, intersection);
 				ray.direction.negate();
 				ray.intersectPlane(plane, intersection);
-				let deltaAngle = calculateAngle(clickPoint, intersection, origin, e1, e2);
+				let deltaAngle = calculateAngle(
+					clickPoint,
+					intersection,
+					origin,
+					e1,
+					e2
+				);
 				let degrees = toDegrees(deltaAngle);
 
 				// used to throttle small changes, since movement is so granular.
 				// This is to prevent jitter and unnecessary dispatches
 				if (Math.abs(degrees) < 0.001) return;
 				degrees = getRounded(degrees);
-				console.log("Degrees: ", degrees);
+				console.log('Degrees: ', degrees);
 				deltaAngle = toRadians(degrees);
 
-				if (min !== undefined && max !== undefined && max - min < 2 * Math.PI) {
+				if (
+					min !== undefined &&
+					max !== undefined &&
+					max - min < 2 * Math.PI
+				) {
 					deltaAngle = minimizeAngle(deltaAngle);
-					deltaAngle = deltaAngle > Math.PI ? deltaAngle - 2 * Math.PI : deltaAngle;
+					deltaAngle =
+						deltaAngle > Math.PI
+							? deltaAngle - 2 * Math.PI
+							: deltaAngle;
 					deltaAngle = THREE.MathUtils.clamp(
 						deltaAngle,
 						min - angle0.current,
@@ -164,7 +191,9 @@ export const AxisRotator: React.FC<{
 				} else {
 					angle.current = minimizeAngle(angle0.current + deltaAngle);
 					angle.current =
-						angle.current > Math.PI ? angle.current - 2 * Math.PI : angle.current;
+						angle.current > Math.PI
+							? angle.current - 2 * Math.PI
+							: angle.current;
 				}
 
 				if (annotations) {
@@ -172,7 +201,11 @@ export const AxisRotator: React.FC<{
 					divRef.current.innerText = `${degrees.toFixed(0)}º`;
 				}
 				rotMatrix.makeRotationAxis(normal, deltaAngle);
-				posNew.copy(origin).applyMatrix4(rotMatrix).sub(origin).negate();
+				posNew
+					.copy(origin)
+					.applyMatrix4(rotMatrix)
+					.sub(origin)
+					.negate();
 				rotMatrix.setPosition(posNew);
 				onDrag(rotMatrix);
 			}
@@ -183,7 +216,7 @@ export const AxisRotator: React.FC<{
 	const onPointerUp = React.useCallback(
 		(e: ThreeEvent<PointerEvent>) => {
 			if (annotations) {
-				divRef.current.style.display = "none";
+				divRef.current.style.display = 'none';
 			}
 			e.stopPropagation();
 			angle0.current = angle.current;
@@ -204,7 +237,11 @@ export const AxisRotator: React.FC<{
 	const matrixL = React.useMemo(() => {
 		const dir1N = dir1.clone().normalize();
 		const dir2N = dir2.clone().normalize();
-		return new THREE.Matrix4().makeBasis(dir1N, dir2N, dir1N.clone().cross(dir2N));
+		return new THREE.Matrix4().makeBasis(
+			dir1N,
+			dir2N,
+			dir1N.clone().cross(dir2N)
+		);
 	}, [dir1, dir2]);
 
 	const r = fixed ? 0.65 : scale * 0.65;
@@ -238,17 +275,18 @@ export const AxisRotator: React.FC<{
 			onPointerUp={onPointerUp}
 			onPointerOut={onPointerOut}
 			matrix={matrixL}
-			matrixAutoUpdate={false}>
+			matrixAutoUpdate={false}
+		>
 			{annotations && (
 				<Html position={[r, r, 0]}>
 					<div
 						style={{
-							display: "none",
-							background: "#151520",
-							color: "white",
-							padding: "6px 8px",
+							display: 'none',
+							background: '#151520',
+							color: 'white',
+							padding: '6px 8px',
 							borderRadius: 7,
-							whiteSpace: "nowrap",
+							whiteSpace: 'nowrap',
 						}}
 						className={annotationsClass}
 						ref={divRef}
@@ -256,7 +294,12 @@ export const AxisRotator: React.FC<{
 				</Html>
 			)}
 			{/* The invisible mesh being raycast */}
-			<Line points={arc} lineWidth={lineWidth} visible={false} userData={userData} />
+			<Line
+				points={arc}
+				lineWidth={lineWidth}
+				visible={false}
+				userData={userData}
+			/>
 			{/* The visible mesh */}
 
 			<Line
