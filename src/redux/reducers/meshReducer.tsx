@@ -39,19 +39,19 @@ const meshInitialState: MeshState = {
 	textureCount: 1,
 	mesh: [],
 	texture: [
-		{
-			name: 'test',
-			data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACABAMAAAAxEHz4AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAbUExURf///yQiMhcVIg0MFuTAXPHPdbZvItWsQsmMNMmMu0YAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAENSURBVGje7ZQxjoNAEAT5gvkBJrBjBi2TI/kDlnz57Qk2PnRnYlbCPNt2MMlEbuKupKJpbbCqwjiUdds31cFcoLzubuPr0gwPVO1VY9eXZnig/ZKQ5dGb8YE5a9b7ZN4xkLrpsU1meOCU1/GSdDHjAxL+hii/5h0D3WXoZTHDA+e4/f/MYTHjL0hjiOuwmPEXrDFkTd9meEBX0Sgpm+EB0fcHymKGB6q6m7epKc3wQHmsNTfHyvzxoe8A3AXfAbgLvgNwF3wH4C74DsBd8B2Au+A7AHfBdwDugu8A3AXfAbgLvgNwF3wH4C74DsBd8B2Au+A7AHfBd2B3FwghhBBCCCGEEEIIIYQQQj6iKJ6VAumzIuHGAwAAAABJRU5ErkJggg==',
-			path: 'test',
-			local_path: 'test',
-			width: 128,
-			height: 128,
-			active: true,
-			id: 0,
-		},
+		// {
+		// 	name: 'test',
+		// 	data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACABAMAAAAxEHz4AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAbUExURf///yQiMhcVIg0MFuTAXPHPdbZvItWsQsmMNMmMu0YAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAENSURBVGje7ZQxjoNAEAT5gvkBJrBjBi2TI/kDlnz57Qk2PnRnYlbCPNt2MMlEbuKupKJpbbCqwjiUdds31cFcoLzubuPr0gwPVO1VY9eXZnig/ZKQ5dGb8YE5a9b7ZN4xkLrpsU1meOCU1/GSdDHjAxL+hii/5h0D3WXoZTHDA+e4/f/MYTHjL0hjiOuwmPEXrDFkTd9meEBX0Sgpm+EB0fcHymKGB6q6m7epKc3wQHmsNTfHyvzxoe8A3AXfAbgLvgNwF3wH4C74DsBd8B2Au+A7AHfBdwDugu8A3AXfAbgLvgNwF3wH4C74DsBd8B2Au+A7AHfBd2B3FwghhBBCCCGEEEIIIYQQQj6iKJ6VAumzIuHGAwAAAABJRU5ErkJggg==',
+		// 	path: 'test',
+		// 	local_path: 'test',
+		// 	width: 128,
+		// 	height: 128,
+		// 	active: true,
+		// 	id: 0,
+		// },
 		{
 			name: 'template',
-			data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACABAMAAAAxEHz4AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAGUExURQDL/xm85W5ACUgAAAAJcEhZcwAADsIAAA7CARUoSoAAAAB6SURBVGje7dTBCQAhDARA00HSf7N3HKYB4+sYPys+QhB21j5xnBH5XU7zva39cJY3NhgOGH+iATuzYpQrM0Z5YYPpgMkn1vDMN+CBOvOAB508UGce8KCTB+rMAx508kCdecCDTh6oMw940MkDdeYBDzp5oM48+IcHVQ8JA1SB2r7cmgAAAABJRU5ErkJggg==',
+			data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACABAMAAAAxEHz4AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAPUExURYv/AInlGQDL/xm85QAAADX3vzIAAAAJcEhZcwAADsEAAA7BAbiRa+0AAAC8SURBVGje7ZSxDcQgEASPDnAL0IFpgMD91/TInMmPRfpkNlnpLc2vTmLMk8pMjballF9Arff7Q7QHwBxQ/EOsTywQAfIRzZ7+dAnQR/67QL7BSL4m4G412g7IDrhrtE8tUAHKES9P24zt/vNasPuI1mPa9cDywYEFIkA+IgAHbDyir+eCDQ987QB5gQpQjtjE4AN8UPABPsAH+AAf4AN8gA/wAT7AB/gAH+ADfIAP8AE+wAf4AB/gg1Ba+wExCYbNRv/itAAAAABJRU5ErkJggg==',
 			path: 'UV_template',
 			local_path: 'UV_template',
 			width: 128,
@@ -83,6 +83,7 @@ const meshSlice = createSlice({
 				props: [],
 				id: uuidv4(),
 				auto_uv: true,
+				visible: true,
 				uv: new BoxUVMap({
 					width: 16,
 					height: 16,
@@ -102,7 +103,7 @@ const meshSlice = createSlice({
 			}
 		},
 
-		meshModifyID(state, action: PayloadAction<CubeProps>) {
+		meshModifyID(state, action: PayloadAction<Partial<CubeProps>>) {
 			const p = action.payload;
 			const index = state.mesh.findIndex((item) => item.id === p.id);
 

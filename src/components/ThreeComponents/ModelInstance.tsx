@@ -35,8 +35,8 @@ const ModelInstance: React.FC<{
 	const textures = useMeshTextureSelector();
 	//TODO, switch to dataURL
 
-	let texture = textures.find((texture) => texture.active);
-	if (renderMode === 'solid') {
+	let texture = textures.find((texture) => texture.active === true);
+	if (renderMode === 'solid' || texture === undefined) {
 		texture = textures.find((texture) => texture.id === 'TEMPLATE');
 	}
 

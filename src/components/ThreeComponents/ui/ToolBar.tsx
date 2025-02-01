@@ -15,12 +15,16 @@ interface WidgetProps {
 	width: string;
 }
 
-const Widget: React.FC<{ width?: number; children?: React.ReactNode }> = ({
-	width: inWidth,
-	children,
-}) => {
+interface WidgetProps {
+	width?: number;
+	children?: React.ReactNode;
+	title?: string;
+}
+
+const Widget: React.FC<WidgetProps> = ({ children, title }) => {
 	return (
 		<Button
+			title={title}
 			variant="outline"
 			className={`m-0 aspect-square h-8 items-center justify-center p-0`}
 		>
@@ -49,25 +53,25 @@ const LongWidget: React.FC<{ width?: number; children?: React.ReactNode }> = ({
 
 const ToolBar: React.FC<{
 	children?: React.ReactNode;
-	dispatch?: any;
+	dispatch?: unknown;
 }> = ({ dispatch, children }) => {
 	return (
 		<div className="flex h-auto w-full flex-grow gap-2">
-			<div className="pointer-events-auto flex h-12 w-full items-center justify-start gap-1 rounded-md bg-main-700 p-1 px-4">
-				<Widget>
+			<div className="pointer-events-auto flex h-12 w-full items-center justify-start gap-1 rounded-md bg-main p-1 px-4">
+				<Widget title="Move">
 					<Icon
 						name="arrows-up-down-left-right"
 						width={18}
 						colour="#cacaca"
 					/>
 				</Widget>
-				<Widget>
+				<Widget title="Size">
 					<Icon name="arrows-to-dot" width={18} colour="#cacaca" />
 				</Widget>
-				<Widget>
+				<Widget title="Rotate">
 					<Icon name="arrows-rotate" width={18} colour="#cacaca" />
 				</Widget>
-				<Widget>
+				<Widget title="Pivot">
 					<Icon name="arrows-to-circle" width={18} colour="#cacaca" />
 				</Widget>
 				<div className="flex-grow" />

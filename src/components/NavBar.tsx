@@ -36,6 +36,8 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from './ui/alert-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+
 import { Button } from './ui/button';
 import ErrorAlert from './templates/ErrorAlert';
 import { saveMesh } from '../redux/reducers/meshReducer';
@@ -49,7 +51,10 @@ const styles = {
 	menuItem: `dark:hover:bg-button-selected dark:focus:bg-button-selected`,
 };
 
-const NavBar: React.FC = () => {
+const NavBar: React.FC<{
+	view: JSX.Element;
+	setView: (state: 'model' | 'texture') => void;
+}> = ({ view, setView }) => {
 	const hasOpened = useState(false);
 	const currentButton = useState('');
 	const viewportData = useViewportSelector();
@@ -136,6 +141,18 @@ const NavBar: React.FC = () => {
 				</MenubarContent>
 			</MenubarMenu>
 
+			<div className="absolute right-1/2 h-auto w-auto translate-x-1/2 items-center">
+				<Tabs
+					defaultValue="model"
+					className="flex w-44"
+					onValueChange={(e) => setView(e as 'model' | 'texture')}
+				>
+					<TabsList className="flex w-auto justify-evenly gap-2">
+						<TabsTrigger value="model">Model</TabsTrigger>
+						<TabsTrigger value="texture">Texture</TabsTrigger>
+					</TabsList>
+				</Tabs>
+			</div>
 			<ErrorAlert
 				error="This is an error message"
 				info="An Error occured "

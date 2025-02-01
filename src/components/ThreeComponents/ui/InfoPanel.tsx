@@ -264,14 +264,20 @@ const InfoPanel: React.FC<{
 		>
 			<div className="flex w-full flex-row items-stretch">
 				<ToolBar dispatch={dispatch}>
-					<div className="flex aspect-square h-full w-auto items-center justify-center bg-red-300">
+					<div className="pointer-events-auto flex aspect-square h-full w-auto items-center justify-center">
 						<div className="absolute flex w-auto flex-col items-end justify-end">
-							<div
+							<Button
+								variant={'outline'}
 								onClick={() => setShowInfo(!showInfo)}
-								className="pointer-events-auto flex aspect-square h-7 w-7 items-center justify-center rounded-full bg-black"
+								className="m-0 aspect-square h-8 items-center justify-center p-0"
 							>
-								<Icon name="question" colour="white" />
-							</div>
+								<Icon
+									name="clapperboard"
+									colour="white"
+									width={16}
+									height={16}
+								/>
+							</Button>
 
 							<div className="absolute right-0 translate-y-full">
 								{showInfo && (
@@ -683,7 +689,6 @@ const InfoPanel: React.FC<{
 					</div>
 				</ToolBar>
 			</div>
-			<DisplayDropDown dispatch={dispatch} />
 		</Html>
 	);
 };

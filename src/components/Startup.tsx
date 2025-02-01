@@ -142,20 +142,10 @@ const Startup: React.FC<{
 													...meshStore,
 													mesh: mesh,
 													key: uuidv4(),
-													texture: textures,
-													// texture: [
-													// 	{
-													// 		name: 'test',
-													// 		data: data.textures[0]
-													// 			.source,
-													// 		path: 'test',
-													// 		local_path: 'test',
-													// 		width: 128,
-													// 		height: 128,
-													// 		active: true,
-													// 		id: 0,
-													// 	},
-													// ],
+													texture: [
+														...meshStore.texture,
+														...textures,
+													],
 												} as MeshState;
 												console.log('new mesh', state);
 												dispatch(loadMesh(state));

@@ -214,7 +214,7 @@ const Cube: React.FC<{
 							attach="material"
 							color="white"
 							transparent={true}
-							opacity={0.5}
+							opacity={1}
 						/>
 					</>
 				)}

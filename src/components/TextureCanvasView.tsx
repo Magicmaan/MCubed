@@ -19,6 +19,8 @@ import { BoxUVMap, loadTexture } from '../util/textureUtil';
 import { getBase64 } from '../util/fileUtil';
 import { readFile, readFileSync } from 'fs';
 import { Box } from 'lucide-react';
+import { uv } from 'three/webgpu';
+import TextureCanvas from './TextureCanvas';
 
 //TODO:
 // - Add ability to change UV map
@@ -256,294 +258,47 @@ const TextureCanvasView: React.FC = () => {
 	const viewportStore = useViewportSelector();
 	const meshStore = useMeshStoreSelector();
 	const meshData = useMeshDataSelector();
-	const textureData = useMeshTextureSelector()[0].data;
 
-	const image = new Image();
-	image.src = textureData;
-	image.width = 256;
-	image.height = 256;
-	image.style.imageRendering = 'pixelated';
+	const activeTexture = useMemo(() => {
+		const src =
+			meshStore.texture.find((t) => t.active) ||
+			meshStore.texture.find((t) => t.id === 'TEMPLATE');
+		const image = new Image();
 
-	const uvs = useRef(new UVMap({ sourceWidth: 256, sourceHeight: 256 }));
+		if (src) {
+			image.src = src.data;
+			image.width = src.width;
+			image.height = src.height;
+			image.style.imageRendering = 'pixelated';
+		}
+		return image;
+	}, [meshStore.texture]);
 
-	const testUV = new BoxUVMap({ width: 16, height: 16, depth: 16 });
-	testUV.setPosition(16, 16);
-	// const boxUVs = useRef([
-	// 	new BoxUVMap({ width: 16, height: 16, depth: 16 }),
-	// 	testUV,
-	// ]);
+	const boxUVs = useMemo(() => {
+		console.log('Recalculating UVs');
 
-	// const [boxUVs, setBoxUVs] = useState<BoxUVMap[]>(
-	// 	meshData.map(
-	// 		(cube) =>
-	// 			new BoxUVMap({
-	// 				width: cube.size[0],
-	// 				height: cube.size[1],
-	// 				depth: cube.size[2],
-	// 			})
-	// 	)
-	// );
-
-	const boxUVs = useRef<BoxUVMap[]>();
-	const [reload, setReload] = useState(false);
-	useEffect(() => {
-		boxUVs.current = meshData.map((cube) =>
-			new BoxUVMap({}).fromUVMap(cube.uv, 128, 128)
+		return meshData.map((cube) =>
+			new BoxUVMap({ cubeID: cube.id }).fromUVMap(
+				cube.uv,
+				activeTexture.width,
+				activeTexture.height
+			)
 		);
 	}, [meshData]);
 
-	const isDragging = useRef(false);
-	const mousePosition = useRef({ x: 0, y: 0 });
-
-	const dragState = useRef<'board' | 'uv'>('uv');
-	const position = useState({ x: 0, y: 0 });
-	const scale = useState(1);
-
-	const dispatch = useAppDispatch();
-
-	const drawSrcImage = (ctx: CanvasRenderingContext2D) => {
-		ctx.fillStyle = '#dbdbdb';
-		ctx.fillRect(
-			position[0].x - 5,
-			position[0].y - 5,
-			image.width + 10,
-			image.height + 10
-		);
-		ctx.drawImage(
-			image,
-			position[0].x,
-			position[0].y,
-			image.width,
-			image.height
-		);
-	};
-
-	const drawHighlightRect = (
-		ctx: CanvasRenderingContext2D,
-		stroke: string,
-		fill: string,
-		x: number,
-		y: number,
-		w: number,
-		h: number
-	) => {
-		ctx.strokeStyle = stroke;
-		ctx.fillStyle = fill;
-		ctx.strokeRect(x * 2, y * 2, w * 2, h * 2);
-		ctx.fillRect(x * 2, y * 2, w * 2, h * 2);
-	};
-
-	const drawUVMap = (ctx: CanvasRenderingContext2D) => {
-		const width = image.width;
-		const height = image.height;
-
-		if (boxUVs.current) {
-			boxUVs.current.forEach((uvobj) => {
-				var map = uvobj.toPixels();
-				//console.log("Map UV", UV);
-				//console.log("Map", map);
-				//top
-				drawHighlightRect(
-					ctx,
-					'white',
-					'rgba(255, 255, 255, 0.25)',
-					map.top[0] + position[0].x / 2,
-					map.top[1] + position[0].y / 2,
-					map.top[2],
-					map.top[3]
-				);
-				//bottom
-				drawHighlightRect(
-					ctx,
-					'black',
-					'rgba(0, 0, 0, 0.25)',
-					map.bottom[0] + position[0].x / 2,
-					map.bottom[1] + position[0].y / 2,
-					map.bottom[2],
-					map.bottom[3]
-				);
-				// left
-				drawHighlightRect(
-					ctx,
-					'rgb(0, 255, 0)',
-					'rgba(0, 255, 0, 0.25)',
-					map.left[0] + position[0].x / 2,
-					map.left[1] + position[0].y / 2,
-					map.left[2],
-					map.left[3]
-				);
-				// right
-				drawHighlightRect(
-					ctx,
-					'red',
-					'rgba(255, 0, 0, 0.25)',
-					map.right[0] + position[0].x / 2,
-					map.right[1] + position[0].y / 2,
-					map.right[2],
-					map.right[3]
-				);
-				// front
-				drawHighlightRect(
-					ctx,
-					'blue',
-					'rgba(0, 0, 255, 0.25)',
-					map.front[0] + position[0].x / 2,
-					map.front[1] + position[0].y / 2,
-					map.front[2],
-					map.front[3]
-				);
-				// back
-				drawHighlightRect(
-					ctx,
-					'yellow',
-					'rgba(255, 255, 0, 0.25)',
-					map.back[0] + position[0].x / 2,
-					map.back[1] + position[0].y / 2,
-					map.back[2],
-					map.back[3]
-				);
-			});
-		}
-	};
-
-	const getCanvasPosition = (
-		ctx: CanvasRenderingContext2D,
-		inx: number,
-		iny: number
-	) => {
-		const rect = ctx.canvas.getBoundingClientRect();
-		const x = inx - rect.left;
-		const y = iny - rect.top;
-		return { x, y };
-	};
-
-	const drawCanvas = (ctx: CanvasRenderingContext2D) => {
-		ctx.canvas.width = 256;
-		ctx.canvas.height = 256;
-		ctx.imageSmoothingEnabled = false;
-
-		//ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-		ctx.scale(scale[0], scale[0]);
-
-		drawSrcImage(ctx);
-		drawUVMap(ctx);
-
-		const mouseXY = getCanvasPosition(
-			ctx,
-			mousePosition.current.x,
-			mousePosition.current.y
-		);
-		ctx.fillStyle = 'rgba(255, 255, 255, 1)';
-		ctx.fillRect(mouseXY.x / scale[0], mouseXY.y / scale[0], 16, 16);
-	};
-
-	const onWheel = React.useCallback(
-		(e: React.WheelEvent<HTMLCanvasElement>) => {
-			//Wheel", e);
-			const delta = e.deltaY;
-			if (delta > 0) {
-				scale[1]((prev) => prev - 0.1);
-			} else {
-				scale[1]((prev) => prev + 0.1);
-			}
-			//scale[1](newScale);
-			//console.log("Scale", scale);
-		},
-		[]
-	);
-
-	const canvasDrag = (e: React.PointerEvent<HTMLCanvasElement>) => {
-		position[1]({
-			x: e.movementX / scale[0] + position[0].x,
-			y: e.movementY / scale[0] + position[0].y,
-		});
-	};
-
-	const uvDrag = React.useCallback(
-		(e: React.PointerEvent<HTMLCanvasElement>) => {
-			uvs.current.addPosition(
-				Math.round(e.movementX / 2 / scale[0]),
-				Math.round(e.movementY / 2 / scale[0])
-			);
-		},
-		[]
-	);
+	console.log('boxUVs', boxUVs[0]);
+	console.log('boxUVs pixeluv', boxUVs[0]?.toPixels());
 
 	return (
 		<SideBarWidget name="Texture">
 			<div
-				className="flex cursor-default select-none flex-col flex-nowrap gap-1 rounded-lg bg-red-200 p-1"
+				className="flex h-auto w-auto cursor-default select-none flex-col flex-nowrap gap-1 rounded-lg bg-red-200 p-1"
 				style={{ imageRendering: 'pixelated' }}
 			>
-				<canvas
-					onWheel={onWheel}
-					onPointerDown={(e) => {
-						mousePosition.current = { x: e.clientX, y: e.clientY };
-						boxUVs.current?.forEach((uvobj) => {
-							const bounds = uvobj.getBounds();
-
-							const mouseXY = getCanvasPosition(
-								e.currentTarget.getContext(
-									'2d'
-								) as CanvasRenderingContext2D,
-								e.clientX,
-								e.clientY
-							);
-							const x = mouseXY.x / scale[0];
-							const y = mouseXY.y / scale[0];
-							if (
-								x > pixelUV.top[0] &&
-								x < pixelUV.top[2] &&
-								y > pixelUV.top[1] &&
-								y < pixelUV.top[3]
-							) {
-								dragState.current = 'uv';
-								console.log('UV DRAG');
-							}
-						});
-						isDragging.current = true;
-					}}
-					onPointerMove={(e) => {
-						mousePosition.current = { x: e.clientX, y: e.clientY };
-						if (isDragging.current) {
-							if (dragState.current === 'board') {
-								//console.log("deltas", e);
-
-								canvasDrag(e);
-							} else if (dragState.current === 'uv') {
-								uvs.current.addPosition(
-									Math.round(e.movementX / 2 / scale[0]),
-									Math.round(e.movementY / 2 / scale[0])
-								);
-							}
-						}
-					}}
-					onPointerUp={(e) => {
-						isDragging.current = false;
-					}}
-					onClick={(e) => {}}
-					className="pointer-events-auto aspect-square h-[256px] w-[256px] rounded-md border-2 border-black bg-black"
-					style={{ imageRendering: 'pixelated' }}
-					ref={(canvas) => {
-						if (canvas) {
-							const ctx = canvas.getContext('2d');
-							if (ctx) {
-								ctx.imageSmoothingEnabled = false;
-								drawCanvas(ctx);
-							}
-						}
-					}}
-				>
-					Your browser does not support the HTML5 canvas tag.
-				</canvas>
-				<img
-					src={textureData.current}
-					alt="Texture"
-					style={{ imageRendering: 'pixelated' }}
-				/>
-				<div className="h-10 w-full rounded-sm bg-red-500">
-					{/* <ToggleButtonIcon /> */}
+				<div className="flex h-auto w-auto flex-row flex-nowrap gap-1 bg-blue-500 p-1">
+					<TextureCanvas image={activeTexture} boxUVs={boxUVs} />
 				</div>
+
 				<input
 					className="pointer-events-auto"
 					type="file"

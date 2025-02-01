@@ -31,6 +31,7 @@ import { ScrollArea } from './components/ui/scroll-area';
 import { useLocalStorage } from 'react-use';
 
 import Startup from './components/Startup';
+import TextureView from './pages/TextureView';
 
 function App() {
 	const [count, setCount] = useState(0);
@@ -42,7 +43,7 @@ function App() {
 	var blurApp = useState(false);
 	var showSAnim = useState(false);
 
-	const [currentView, setCurrentView] = useState(<ModelView />);
+	const [currentView, setCurrentView] = useState<JSX.Element>(<ModelView />);
 
 	var sp = new URLSearchParams(window.location.search);
 	console.log(sp.get('j'));
@@ -55,7 +56,16 @@ function App() {
 	return (
 		<Provider store={store}>
 			<div className="dark flex h-screen w-screen flex-col flex-nowrap transition-all duration-300">
-				<NavBar />
+				<NavBar
+					view={currentView}
+					setView={(state: 'model' | 'texture') => {
+						if (state === 'model') {
+							setCurrentView(<ModelView />);
+						} else {
+							setCurrentView(<TextureView />);
+						}
+					}}
+				/>
 				{currentView}
 
 				{isStartup && <Startup setStartup={setStartup} />}

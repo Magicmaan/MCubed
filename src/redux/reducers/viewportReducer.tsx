@@ -43,7 +43,7 @@ const viewportInitialState: viewportState = {
 		pan: true,
 		rotate: true,
 	},
-	renderMode: 'solid',
+	renderMode: 'texture',
 	background: '#000000',
 	cameraLock: false, // Changed function to null
 	showGrid: true,

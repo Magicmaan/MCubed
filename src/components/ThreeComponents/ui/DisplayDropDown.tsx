@@ -85,38 +85,43 @@ const DisplayDropDown: React.FC<DisplayDropDownProps> = ({ dispatch }) => {
 				);
 			}}
 		>
-			<SelectTrigger className="m-0 w-auto p-1">
+			<SelectTrigger
+				className="m-0 w-auto p-1 dark:bg-popup-bg dark:hover:bg-button-hover"
+				title="Render Mode"
+			>
 				<SelectValue
 					placeholder={
-						<svg width={18} height={18}>
-							<rect
-								x="0"
-								y="0"
-								width="100%"
-								height="100%"
-								rx="35%"
-								ry="35%"
-								fill="#cacaca"
-							/>
-						</svg>
+						<div className="flex flex-row items-center justify-center gap-2">
+							{textureSVG}
+							Texture
+						</div>
 					}
-					className="m-0 p-0"
+					className="m-0"
 				/>
 			</SelectTrigger>
 			<SelectContent className="dark m-0 p-0">
-				<SelectItem value="wireFrame">
+				<SelectItem
+					value="wireFrame"
+					className="dark:focus:bg-button-hover"
+				>
 					<div className="flex flex-row items-center justify-center gap-2">
 						{wireframeSVG}
 						Wireframe
 					</div>
 				</SelectItem>
-				<SelectItem value="solid">
+				<SelectItem
+					value="solid"
+					className="dark:focus:bg-button-hover"
+				>
 					<div className="flex flex-row items-center justify-center gap-2">
 						{solidSVG}
 						Solid
 					</div>
 				</SelectItem>
-				<SelectItem value="texture">
+				<SelectItem
+					value="texture"
+					className="dark:focus:bg-button-hover"
+				>
 					<div className="flex flex-row items-center justify-center gap-2">
 						{textureSVG}
 						Texture

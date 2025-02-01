@@ -153,6 +153,8 @@ class BoxUVMap {
 	height: number;
 	depth: number;
 
+	cubeID: string;
+
 	boxBounds: {
 		x: number;
 		y: number;
@@ -174,14 +176,17 @@ class BoxUVMap {
 		width = 0,
 		height = 0,
 		depth = 0,
+		cubeID = '0',
 	}: {
 		width?: number;
 		height?: number;
 		depth?: number;
+		cubeID?: string;
 	}) {
 		this.width = width;
 		this.height = height;
 		this.depth = depth;
+		this.cubeID = cubeID;
 
 		this.top = [0, 0, 0, 0];
 		this.bottom = [0, 0, 0, 0];
@@ -227,6 +232,18 @@ class BoxUVMap {
 		this.right = [rightS.x, rightS.y, rightS.w, rightS.h];
 		this.front = [frontS.x, frontS.y, frontS.w, frontS.h];
 		this.back = [backS.x, backS.y, backS.w, backS.h];
+	}
+
+	wrapBox() {
+		var width = this.front[2];
+		var height = this.left[3];
+		var depth = this.top[3];
+		var position = { x: this.left[0], y: this.top[1] };
+
+		this.width = width;
+		this.height = height;
+		this.depth = depth;
+		this.position = position;
 	}
 
 	// getBounds() {
@@ -309,6 +326,23 @@ class BoxUVMap {
 		this.right = positionedUV.right;
 		this.front = positionedUV.front;
 		this.back = positionedUV.back;
+
+		this.wrapBox();
+		this.calculateBounds();
+
+		return this;
+	}
+
+	calculateBounds() {
+		const tUV = this.applyPosition();
+
+		this.boxBounds = {
+			x: tUV.left[0],
+			y: tUV.top[1],
+			w: tUV.left[2] + tUV.right[2] + tUV.back[2] + tUV.front[2],
+			h: tUV.front[1] + tUV.front[3] - tUV.top[1],
+		};
+		//this.position = { x: this.boxBounds.x, y: this.boxBounds.y };
 		return this;
 	}
 
@@ -357,6 +391,11 @@ class BoxUVMap {
 	setPosition(x: number, y: number) {
 		this.position = { x, y };
 		return this;
+	}
+
+	getBounds() {
+		this.calculateBounds();
+		return this.boxBounds;
 	}
 }
 
