@@ -1,14 +1,7 @@
-import React, {
-	useEffect,
-	useRef,
-	useState,
-	useMemo,
-	useCallback,
-} from 'react';
+import React, { useRef, useState } from 'react';
 import { BoxUVMap } from '../util/textureUtil';
 import { useAppDispatch } from '../hooks/useRedux';
 import { meshModifyID } from '../redux/reducers/meshReducer';
-import { uv } from 'three/webgpu';
 
 const TextureCanvas: React.FC<{
 	image: HTMLImageElement;
@@ -21,18 +14,18 @@ const TextureCanvas: React.FC<{
 	const drawUVBounds = useRef(true);
 
 	const canvasRef = useRef<HTMLCanvasElement>();
-	const canvasWidth = canvasRef.current?.width;
-	const canvasHeight = canvasRef.current?.height;
+
 	const [imageScale, setImageScale] = useState(1);
 	const [imagePosition, setImagePosition] = useState({ x: 16, y: 0 });
 
 	const dispatch = useAppDispatch();
 	const getCanvasMousePosition = (e: React.MouseEvent) => {
-		if (canvasRef.current === null) return { x: 0, y: 0 };
+		if (!canvasRef.current) return { x: 0, y: 0 };
 
 		const canvasPosition = canvasRef.current?.getBoundingClientRect();
 		const scaleX = canvasRef.current.width / canvasPosition.width;
 		const scaleY = canvasRef.current.height / canvasPosition.height;
+
 		const mouseX = (e.clientX - (canvasPosition?.x || 0)) * scaleX;
 		const mouseY = (e.clientY - (canvasPosition?.y || 0)) * scaleY;
 		return { x: mouseX, y: mouseY };

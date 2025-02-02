@@ -19,8 +19,10 @@ import { BoxUVMap, loadTexture } from '../util/textureUtil';
 import { getBase64 } from '../util/fileUtil';
 import { readFile, readFileSync } from 'fs';
 import { Box } from 'lucide-react';
-import { uv } from 'three/webgpu';
+import { temp, uv } from 'three/webgpu';
 import TextureCanvas from './TextureCanvas';
+import { THREETextureProps } from '../types/three';
+import { Item, Menu, useContextMenu } from 'react-contexify';
 
 //TODO:
 // - Add ability to change UV map
@@ -258,11 +260,11 @@ const TextureCanvasView: React.FC = () => {
 	const viewportStore = useViewportSelector();
 	const meshStore = useMeshStoreSelector();
 	const meshData = useMeshDataSelector();
+	const currentTexture = meshStore.texture.find((t) => t.active);
+	const templateTexture = meshStore.texture.find((t) => t.id === 'TEMPLATE');
 
 	const activeTexture = useMemo(() => {
-		const src =
-			meshStore.texture.find((t) => t.active) ||
-			meshStore.texture.find((t) => t.id === 'TEMPLATE');
+		const src = currentTexture || templateTexture;
 		const image = new Image();
 
 		if (src) {
@@ -272,7 +274,7 @@ const TextureCanvasView: React.FC = () => {
 			image.style.imageRendering = 'pixelated';
 		}
 		return image;
-	}, [meshStore.texture]);
+	}, [currentTexture]);
 
 	const boxUVs = useMemo(() => {
 		return meshData.map((cube) =>
@@ -310,8 +312,49 @@ const TextureCanvasView: React.FC = () => {
 						}
 					}}
 				/>
+				<TextureItem texture={currentTexture} />
+				<TextureItem texture={templateTexture} />
 			</div>
 		</SideBarWidget>
+	);
+};
+
+const TextureItem: React.FC<{
+	texture?: THREETextureProps;
+}> = ({ texture }) => {
+	const dispatch = useAppDispatch();
+	const MENU_ID = 'context_texture_' + (texture?.id || 'default');
+	const { show } = useContextMenu({
+		id: MENU_ID,
+	});
+	const handleContextMenu = (
+		event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+	) => {
+		show({
+			event,
+		});
+		event.preventDefault();
+		event.stopPropagation();
+	};
+
+	return (
+		<button
+			id={'texture_' + (texture?.id || 'default')}
+			onContextMenuCapture={handleContextMenu}
+			className="pointer-events-auto flex h-14 w-full select-none flex-row flex-nowrap items-center justify-start gap-2 rounded-md bg-secondary hover:bg-button-hover focus:outline-none"
+		>
+			<div className="aspect-square h-full w-auto items-center justify-center bg-red-500">
+				<img src={texture?.data} className="h-full w-full" />
+			</div>
+			{texture?.name || 'Unnamed Texture'}
+
+			<Menu id={MENU_ID} theme="contextTheme" className="bg-red-500">
+				<Item id="reload" onClick={() => {}}>
+					Reload
+				</Item>
+				<Item id="delete">Delete</Item>
+			</Menu>
+		</button>
 	);
 };
 
