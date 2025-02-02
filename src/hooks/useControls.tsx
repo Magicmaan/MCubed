@@ -1,6 +1,6 @@
-import { useKeyPress } from "react-use";
-import * as keys from "../constants/KeyModifiers";
-import { round, roundClosest } from "../util";
+import { useKeyPress } from 'react-use';
+import * as keys from '../constants/KeyModifiers';
+import { round, roundClosest } from '../util';
 
 /**
  * Custom hook that provides key modifier states and utility functions for calculating multipliers and rounding values.
@@ -12,8 +12,8 @@ import { round, roundClosest } from "../util";
  */
 const useModifiers = () => {
 	const keyModifiers = {
-		mega_shift: "",
-		normal_shift: "",
+		mega_shift: '',
+		normal_shift: '',
 		small_shift: useKeyPress(keys.modifiers.small_shift),
 		x_small_shift: useKeyPress(keys.modifiers.x_small_shift),
 

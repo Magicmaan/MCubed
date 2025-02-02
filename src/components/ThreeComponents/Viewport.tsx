@@ -32,7 +32,8 @@ import {
 	setSelected,
 } from '../../redux/reducers/viewportReducer';
 import ModelInstance from './ModelInstance';
-import { RootState } from '../../redux/store';
+import { RootState } from '@react-three/fiber';
+import { int } from 'three/webgpu';
 
 const GetSceneRef: React.FC<{
 	setThree: React.Dispatch<React.SetStateAction<RootState | undefined>>;
@@ -48,7 +49,7 @@ const Viewport: React.FC = () => {
 	);
 
 	const isUsingCamera = React.useRef(false);
-	const [threeScene, setThreeScene] = useState();
+	const threeScene = React.useRef<RootState | undefined>(undefined);
 
 	const viewportData = useViewportSelector();
 	const cameraControls = useViewportCameraSelector();
@@ -84,17 +85,11 @@ const Viewport: React.FC = () => {
 		}
 	};
 
-	useEffect(() => {
-		console.log('Camera Controls', cameraControls);
-	}, [
-		cameraControls,
-		cameraControls?.zoom,
-		cameraControls?.pan,
-		cameraControls?.rotate,
-	]);
-
-	const raycaster = new THREE.Raycaster();
 	const savedCameraControls = React.useRef(cameraControls);
+
+	const handlePointerMove = (e: ThreeEvent<PointerEvent>) => {
+		invalidate();
+	};
 
 	return (
 		<Canvas
@@ -105,34 +100,24 @@ const Viewport: React.FC = () => {
 				antialias: true,
 				toneMapping: THREE.NoToneMapping,
 			}}
-			onMouseDown={(e) => {
-				isUsingCamera.current = true;
-				console.log('Canvas onMouseDown');
-				console.log('e', e);
-			}}
-			onMouseUp={() => {
+			onPointerUp={() => {
 				isUsingCamera.current = false;
-				console.log('Canvas onMouseUp');
 			}}
 			onMouseEnter={() => {
 				dispatch(setCameraLock(true));
 			}}
 			onMouseLeave={() => {
-				console.log('Canvas onMouseLeave');
 				if (!isUsingCamera.current) {
 					dispatch(setCameraLock(false));
 				}
 			}}
 			onPointerMissed={() => {
-				console.log('Canvas onPointerMissed');
-				dispatch(setSelected(-1));
-				console.log('Selected: ', selected);
+				dispatch(setSelected('-1'));
 				invalidate();
 			}}
-			onPointerMove={() => {
-				invalidate();
-			}}
+			onPointerMove={handlePointerMove}
 		>
+			<GetSceneRef setThree={(scene) => (threeScene.current = scene)} />
 			{/* <GetSceneRef setThree={setThreeScene} /> */}
 			<PerspectiveCamera
 				makeDefault
@@ -163,26 +148,26 @@ const Viewport: React.FC = () => {
 						orbitRef.current?.target
 					);
 
-					if (e?.target.object && threeScene) {
-						const cameraPosition = e?.target.object.position;
-						const cameraDirection = new THREE.Vector3();
-						e?.target.object.getWorldDirection(cameraDirection);
-						raycaster.setFromCamera(
-							new THREE.Vector2(0.5, 0.5),
-							e?.target.object
-						);
+					// if (e?.target.object && threeScene.current) {
+					// 	const cameraPosition = e?.target.object.position;
+					// 	const cameraDirection = new THREE.Vector3();
+					// 	e?.target.object.getWorldDirection(cameraDirection);
+					// 	raycaster.setFromCamera(
+					// 		new THREE.Vector2(0.5, 0.5),
+					// 		e?.target.object
+					// 	);
 
-						const intersects = raycaster.intersectObjects(
-							threeScene.scene.children,
-							true
-						);
-						if (intersects.length > 0) {
-							const mesh = intersects[0].object;
-							if (mesh) {
-								// Camera is intersecting with a mesh
-							}
-						}
-					}
+					// 	const intersects = raycaster.intersectObjects(
+					// 		threeScene.current.scene.children,
+					// 		true
+					// 	);
+					// 	if (intersects.length > 0) {
+					// 		const mesh = intersects[0].object;
+					// 		if (mesh) {
+					// 			// Camera is intersecting with a mesh
+					// 		}
+					// 	}
+					// }
 				}}
 				onEnd={() => {
 					pivotPointRef.current?.position.copy(

@@ -42,9 +42,10 @@ import { invalidate } from '@react-three/fiber';
 import { eventNames } from 'process';
 import { ContextInfoItem } from './templates/ContextMenu';
 import { Button } from './ui/button';
+import { CubeProps } from '../types/three';
 
 const ModelItem: React.FC<{
-	item: any;
+	item: CubeProps;
 	selected?: number;
 	setSelected: (id: number) => void;
 }> = ({ item, selected: old, setSelected }) => {
@@ -62,6 +63,7 @@ const ModelItem: React.FC<{
 			event,
 		});
 		event.preventDefault();
+		event.stopPropagation();
 	};
 	const handleItemClick = (
 		event: React.MouseEvent<HTMLButtonElement, MouseEvent>
@@ -101,6 +103,7 @@ const ModelItem: React.FC<{
 				<ContextInfoItem
 					label={item.name}
 					title={`ID: ${item.id}`}
+					icon="cube"
 					textSize="text-sm"
 				/>
 				<Item id="copy" onClick={handleItemClick}>
@@ -111,7 +114,7 @@ const ModelItem: React.FC<{
 				</Item>
 				<Item
 					id="delete"
-					onClick={() => dispatch(meshRemoveCube(item.id))}
+					onClick={() => dispatch(meshRemoveCube({ id: item.id }))}
 				>
 					Delete
 				</Item>

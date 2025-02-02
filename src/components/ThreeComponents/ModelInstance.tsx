@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as THREE from 'three';
-import { useFrame, ThreeEvent, invalidate } from '@react-three/fiber';
+import { useFrame, ThreeEvent, invalidate, useThree } from '@react-three/fiber';
 import {
 	useAppDispatch,
 	useMeshDataSelector,
@@ -23,7 +23,7 @@ import {
 	useTexture,
 	Wireframe,
 } from '@react-three/drei';
-import { uv } from 'three/webgpu';
+import { int, uv } from 'three/webgpu';
 import { meshModifyIndex } from '../../redux/reducers/meshReducer';
 import { is } from '@react-three/fiber/dist/declarations/src/core/utils';
 
@@ -39,17 +39,27 @@ const ModelInstance: React.FC<{
 	if (renderMode === 'solid' || texture === undefined) {
 		texture = textures.find((texture) => texture.id === 'TEMPLATE');
 	}
-
-	React.useEffect(() => {
-		console.log('TEXTURE', texture);
-	}, [textures, texture]);
-
+	const dispatch = useAppDispatch();
+	const scene = useThree();
+	const raycaster = scene.raycaster;
 	// React.useEffect(() => {
 	// 	console.log('ModelInstance', modelData);
 	// }, [modelData, textures, texture]);
 
+	const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
+		if (!scene) return;
+		const intersects = scene.raycaster
+			.intersectObjects(scene.scene.children, true)
+			.filter((i) => i.object.type === 'Cube');
+		if (intersects.length === 0) return;
+
+		console.log('intersects click', intersects);
+
+		dispatch(reduxSetSelected(intersects[0].object.userData.id));
+	};
+
 	return (
-		<Select onChange={(e) => console.log('SELECT COMPONENT', e)}>
+		<group onPointerDown={handlePointerDown}>
 			{modelData.map((cube, index) => (
 				<Cube
 					cube={cube as CubeProps}
@@ -59,7 +69,7 @@ const ModelInstance: React.FC<{
 					selectionAnchorRef={selectionAnchorRef}
 				/>
 			))}
-		</Select>
+		</group>
 	);
 };
 

@@ -8,9 +8,12 @@ import { Canvas, useLoader } from '@react-three/fiber';
 import icon from '../../../assets/arrow.png';
 import { darkenColor, lightenColor } from '../../../util/textureUtil';
 import { round } from '../../../util';
-import { useKey, useKeyPress } from 'react-use';
+import { useKey, useKeyPress, useKeyPressEvent, useRaf } from 'react-use';
 import { useModifiers } from '../../../hooks/useControls';
-import { moveModifierIncrement } from '../../../constants/KeyModifiers';
+import {
+	modifiers,
+	moveModifierIncrement,
+} from '../../../constants/KeyModifiers';
 
 const vec1 = /* @__PURE__ */ new THREE.Vector3();
 const vec2 = /* @__PURE__ */ new THREE.Vector3();
@@ -66,8 +69,27 @@ export const AxisArrow: React.FC<{
 		onDragEnd,
 		userData,
 	} = React.useContext(context);
+	const moveMultiplier = React.useRef(1);
 
-	const { keyModifiers, getMultiplier, getRounded } = useModifiers();
+	useKeyPressEvent(
+		modifiers.small_shift,
+		() => (moveMultiplier.current = moveModifierIncrement.small_shift),
+		() => (moveMultiplier.current = 1)
+	);
+	useKeyPressEvent(
+		modifiers.x_small_shift,
+		() => (moveMultiplier.current = moveModifierIncrement.x_small_shift),
+		() => (moveMultiplier.current = 1)
+	);
+
+	// useKey(
+	// 	modifiers.small_shift,
+	// 	() => (moveMultiplier.current = moveModifierIncrement.small_shift)
+	// );
+	// useKey(
+	// 	modifiers.x_small_shift,
+	// 	() => (moveMultiplier.current = moveModifierIncrement.x_small_shift)
+	// );
 
 	// @ts-expect-error new in @react-three/fiber@7.0.5
 	const camControls = useThree((state) => state.controls) as {
@@ -139,7 +161,7 @@ export const AxisArrow: React.FC<{
 				// }
 
 				// used to get movement based on key modifiers
-				offset = getRounded(offset);
+				offset = round(offset, moveMultiplier.current, 0);
 
 				//stops carrying on if the offset is 0.01 or less (so 0)
 				if (Math.abs(offset - previousDistance) < 0.01) {

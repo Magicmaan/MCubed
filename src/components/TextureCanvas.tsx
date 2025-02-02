@@ -8,18 +8,22 @@ import React, {
 import { BoxUVMap } from '../util/textureUtil';
 import { useAppDispatch } from '../hooks/useRedux';
 import { meshModifyID } from '../redux/reducers/meshReducer';
+import { uv } from 'three/webgpu';
 
 const TextureCanvas: React.FC<{
 	image: HTMLImageElement;
 	boxUVs: BoxUVMap[];
 }> = ({ image, boxUVs }) => {
+	console.log('boxUV', boxUVs[0]);
+	console.log('image size', image.width, image.height);
+
 	const drawUVs = useRef(true);
 	const drawUVBounds = useRef(true);
 
 	const canvasRef = useRef<HTMLCanvasElement>();
 	const canvasWidth = canvasRef.current?.width;
 	const canvasHeight = canvasRef.current?.height;
-	const [imageScale, setImageScale] = useState(2);
+	const [imageScale, setImageScale] = useState(1);
 	const [imagePosition, setImagePosition] = useState({ x: 16, y: 0 });
 
 	const dispatch = useAppDispatch();
@@ -48,28 +52,76 @@ const TextureCanvas: React.FC<{
 		front: number[];
 		back: number[];
 	}) => {
+		// const width = uv.front[2] - uv.front[0];
+		// uv.bottom = [uv.top[0] + width, uv.top[1], uv.top[2], uv.top[3]];
+
 		// apply scale and position to UV map
-		uv.top = scaleAndPositionRect(uv.top);
-		uv.bottom = scaleAndPositionRect(uv.bottom);
-		uv.left = scaleAndPositionRect(uv.left);
-		uv.right = scaleAndPositionRect(uv.right);
-		uv.front = scaleAndPositionRect(uv.front);
-		uv.back = scaleAndPositionRect(uv.back);
+		// prettier-ignore
+		uv.top = [
+			(((uv.top[0]+uv.top[2]) /2 * imageScale) + imagePosition.x ),
+			(uv.top[1] * imageScale) / 2 + imagePosition.y,
+			uv.top[2] * imageScale,
+			uv.top[3] * imageScale,
+		];
+		uv.bottom = [
+			((uv.bottom[0] + uv.bottom[2]) / 2) * imageScale +
+				imagePosition.x +
+				uv.top[2] / 2,
+			(uv.bottom[1] * imageScale) / 2 + imagePosition.y,
+			uv.bottom[2] * imageScale,
+			uv.bottom[3] * imageScale,
+		];
+		uv.left = [
+			((uv.left[0] + uv.left[2]) / 2) * imageScale +
+				imagePosition.x -
+				uv.top[2] / 2,
+			(uv.left[1] * imageScale) / 2 + imagePosition.y + uv.top[3] / 2,
+			uv.left[2] * imageScale,
+			uv.left[3] * imageScale,
+		];
+
+		uv.front = [
+			((uv.front[0] + uv.front[2]) / 2) * imageScale + imagePosition.x,
+			(uv.front[1] * imageScale) / 2 + imagePosition.y + uv.top[3] / 2,
+			uv.front[2] * imageScale,
+			uv.front[3] * imageScale,
+		];
+		uv.back = [
+			((uv.back[0] + uv.back[2]) / 2) * imageScale + imagePosition.x,
+			(uv.back[1] * imageScale) / 2 + imagePosition.y + uv.top[3] / 2,
+			uv.back[2] * imageScale,
+			uv.back[3] * imageScale,
+		];
+		uv.right = [
+			((uv.right[0] + uv.right[2]) / 2) * imageScale +
+				imagePosition.x +
+				uv.front[2] +
+				uv.back[2] / 2,
+			(uv.right[1] * imageScale) / 2 + imagePosition.y + uv.top[3] / 2,
+			uv.right[2] * imageScale,
+			uv.right[3] * imageScale,
+		];
 
 		return uv;
 	};
 
 	const scaleAndPositionRect = (rect: number[]) => {
 		const scale = imageScale;
-		const position = imagePosition;
+		const position = {
+			x: imagePosition.x,
+			y: imagePosition.y,
+		};
 		const scaledRect = [
 			rect[0] * scale,
 			rect[1] * scale,
 			rect[2] * scale,
 			rect[3] * scale,
 		];
+		scaledRect[0] /= 2;
+		scaledRect[1] /= 2;
 		scaledRect[0] += position.x;
 		scaledRect[1] += position.y;
+
 		return scaledRect;
 	};
 	const scaleAndPositionBounds = ({
@@ -87,7 +139,6 @@ const TextureCanvas: React.FC<{
 	};
 
 	const drawSrcImage = (ctx: CanvasRenderingContext2D) => {
-		console.log('drawing image at', imagePosition);
 		ctx.drawImage(
 			image,
 			imagePosition.x,
@@ -120,10 +171,23 @@ const TextureCanvas: React.FC<{
 		if (!drawUVs.current) return;
 		if (boxUVs) {
 			boxUVs.forEach((uvobj) => {
-				console.log('raw box uv', uvobj.toPixels());
-				console.log('raw uv box', uvobj.toUVMap(128, 128));
-				const map = scaleAndPositionUV(uvobj.toPixels());
+				//console.log('raw box uv', uvobj.toPixels());
+				//console.log('raw uv box', uvobj.toUVMap(128, 128));
+				//const map = scaleAndPositionUV(uvobj.toPixels());
 				const bounds = scaleAndPositionBounds(uvobj.getBounds());
+
+				const w = uvobj.width * imageScale;
+				const h = uvobj.height * imageScale;
+				const d = uvobj.depth * imageScale;
+
+				const map = {
+					top: [bounds[0] + d, bounds[1], w, d],
+					bottom: [bounds[0] + w + d, bounds[1], w, d],
+					left: [bounds[0], bounds[1] + d, d, h],
+					right: [bounds[0] + d, bounds[1] + d, d, h],
+					front: [bounds[0] + d * 2, bounds[1] + d, w, h],
+					back: [bounds[0] + d + w + d, bounds[1] + d, w, h],
+				};
 
 				console.log(
 					'box top face',
@@ -211,7 +275,7 @@ const TextureCanvas: React.FC<{
 	};
 
 	const drawCanvas = (ctx: CanvasRenderingContext2D) => {
-		ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+		ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 		drawSrcImage(ctx);
 		drawUVMap(ctx);
 	};
@@ -295,8 +359,8 @@ const TextureCanvas: React.FC<{
 		if (!focusedUV.current) return;
 
 		const newPos = getCanvasMousePosition(e);
-		newPos.x -= imagePosition.x + uvGrabOffset.current.x;
-		newPos.y -= imagePosition.y + uvGrabOffset.current.y;
+		newPos.x -= uvGrabOffset.current.x;
+		newPos.y -= uvGrabOffset.current.y;
 
 		console.log('uv grab offset', newPos);
 
@@ -305,8 +369,8 @@ const TextureCanvas: React.FC<{
 			height: focusedUV.current.height,
 			depth: focusedUV.current.depth,
 		}).setPosition(
-			Math.floor(newPos.x / imageScale / 2),
-			Math.floor(newPos.y / imageScale / 2)
+			Math.floor(newPos.x / imageScale),
+			Math.floor(newPos.y / imageScale)
 		);
 
 		//focusedUV.current = updatedUV;
@@ -321,12 +385,19 @@ const TextureCanvas: React.FC<{
 
 	return (
 		<canvas
-			className="pointer-events-auto flex h-full w-full rounded-md border-2 border-black bg-black"
-			style={{ imageRendering: 'pixelated' }}
+			className="pointer-events-auto flex aspect-square h-full w-full rounded-md border-2 border-black bg-black"
+			style={{
+				imageRendering: 'pixelated',
+				width: '100%',
+				height: '100%',
+			}}
+			width={image.width * 4}
+			height={image.height * 4}
 			ref={(canvas) => {
 				if (canvas) {
 					canvasRef.current = canvas;
 					const context = canvas.getContext('2d');
+					console.log('canvas size', canvas.width, canvas.height);
 					if (context) {
 						context.imageSmoothingEnabled = false;
 						drawCanvas(context);
@@ -344,6 +415,11 @@ const TextureCanvas: React.FC<{
 				} else {
 					setImageScale((prev) => prev + 0.1);
 				}
+				e.stopPropagation();
+			}}
+			onScroll={(e) => {
+				e.stopPropagation();
+				e.preventDefault();
 			}}
 		>
 			Your browser does not support the HTML5 canvas tag.

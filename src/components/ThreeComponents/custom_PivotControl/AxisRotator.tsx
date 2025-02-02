@@ -200,13 +200,27 @@ export const AxisRotator: React.FC<{
 					degrees = toDegrees(angle.current);
 					divRef.current.innerText = `${degrees.toFixed(0)}º`;
 				}
-				rotMatrix.makeRotationAxis(normal, deltaAngle);
-				posNew
-					.copy(origin)
-					.applyMatrix4(rotMatrix)
-					.sub(origin)
-					.negate();
-				rotMatrix.setPosition(posNew);
+				console.log('Normal: ', normal);
+
+				const pos = new THREE.Vector3().setFromMatrixPosition(
+					objRef.current.matrixWorld
+				);
+				console.log('Position: ', pos);
+
+				const tempRot = new THREE.Matrix4().makeRotationAxis(
+					normal,
+					angle.current
+				);
+				const rot = new THREE.Euler().setFromRotationMatrix(tempRot);
+				rotMatrix.makeRotationFromEuler(rot);
+				console.log('Rotation: ', rot);
+
+				// posNew
+				// 	.copy(origin)
+				// 	.applyMatrix4(rotMatrix)
+				// 	.sub(origin)
+				// 	.negate();
+				// rotMatrix.setPosition(posNew);
 				onDrag(rotMatrix);
 			}
 		},

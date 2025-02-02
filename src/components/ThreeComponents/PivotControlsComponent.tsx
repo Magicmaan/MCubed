@@ -8,14 +8,12 @@ import {
 	useViewportSelectedSelector,
 	useViewportSelector,
 } from '../../hooks/useRedux';
-import {
-	meshModifyID,
-	meshModifyIndex,
-} from '../../redux/reducers/meshReducer';
+import { meshModifyID } from '../../redux/reducers/meshReducer';
 import { setControls } from '../../redux/reducers/viewportReducer';
-import { invalidate, useFrame, useThree } from '@react-three/fiber';
-import { ForwardRefComponent } from '@react-three/drei/helpers/ts-utils';
-import { useStateList, useTimeoutFn, useUpdate } from 'react-use';
+import { invalidate, useFrame } from '@react-three/fiber';
+
+import { useUpdate } from 'react-use';
+import { OnDragStartProps } from './custom_PivotControl/context';
 
 // PLEASE DO NOT TOUCH
 // I HAVE NO IDEA HOW THIS WORKS BUT IT DOES
@@ -26,8 +24,8 @@ import { useStateList, useTimeoutFn, useUpdate } from 'react-use';
 const PivotControlsComponent: React.FC<{
 	selectionAnchorRef: React.MutableRefObject<THREE.Group<THREE.Object3DEventMap> | null>;
 }> = ({ selectionAnchorRef }) => {
-	var preMatrix = new THREE.Matrix4();
-	var preMatrixInv = new THREE.Matrix4();
+	const preMatrix = new THREE.Matrix4();
+	const preMatrixInv = new THREE.Matrix4();
 	const viewportStore = useViewportSelector();
 	const dispatch = useAppDispatch();
 	const isDispatching = React.useRef(false);
@@ -41,8 +39,7 @@ const PivotControlsComponent: React.FC<{
 	);
 
 	React.useEffect(() => {
-		console.log('selected changed pivot', selectedID);
-		if (selectedID === -1) {
+		if (selectedID === '-1') {
 			visible.current = false;
 			selectedRef.current = undefined;
 		} else {
@@ -68,15 +65,7 @@ const PivotControlsComponent: React.FC<{
 				);
 				//also move the selection anchor to the pivot
 				selectionAnchorRef.current?.matrix.copy(
-					pivotRef.current.matrix
-				);
-				console.log(
-					'Current selected position',
-					pivotRef.current?.position
-				);
-				console.log(
-					'Selected ref position',
-					selectedRef.current?.position
+					pivotRef.current?.matrix
 				);
 			}
 			visible.current = true;
@@ -89,25 +78,22 @@ const PivotControlsComponent: React.FC<{
 	const visible = React.useRef(false);
 	//console.log(three);
 	const pivotRef = React.useRef<THREE.Group<THREE.Object3DEventMap>>(null);
-	const pivotMatrix = pivotRef.current?.matrixWorld;
-	const pivotMatrixRef = React.useRef<THREE.Matrix4>(new THREE.Matrix4());
+
+	const dragType = React.useRef<'Arrow' | 'Slider' | 'Rotator' | 'Sphere'>(
+		'Arrow'
+	);
 
 	const handleDispatch = async (
 		position: THREE.Vector3,
-		quaternion: THREE.Quaternion,
-		dispatch: any
+		quaternion: THREE.Quaternion
 	) => {
 		//used to throttle dispatches, as the drag event is called wayyy too much
 		if (isDispatching.current) return;
-		if (selectedID === -1 || selectedID === undefined) {
+		if (selectedID === '-1' || selectedID === undefined) {
 			return;
 		}
 		isDispatching.current = true;
 
-		var cubeIndex = meshData.findIndex((item) => item.id === selectedID);
-		const cube = meshData.find((item, index) =>
-			item.id === selectedID ? index : -1
-		);
 		//add 10ms to give function time 10ms + some change to finish
 		// means dispatches are throttled to 100 per second at best (10ms)
 		await new Promise((resolve) => setTimeout(resolve, 8));
@@ -123,26 +109,56 @@ const PivotControlsComponent: React.FC<{
 		isDispatching.current = false;
 	};
 
-	const onDragStart = React.useCallback(() => {
-		dispatch(setControls({ zoom: false, pan: false, rotate: false }));
-		preMatrix.copy(selectionAnchorRef.current?.matrix);
-		preMatrixInv.copy(preMatrix).invert();
-		invalidate();
-	}, [selectedID]);
+	const onDragStart = React.useCallback(
+		(props: OnDragStartProps) => {
+			console.log('drag origin', props.origin);
+			dragType.current = props.component as
+				| 'Arrow'
+				| 'Slider'
+				| 'Rotator'
+				| 'Sphere';
+			dispatch(setControls({ zoom: false, pan: false, rotate: false }));
+			preMatrix.copy(
+				selectionAnchorRef.current?.matrix || new THREE.Matrix4()
+			);
+			preMatrixInv.copy(preMatrix).invert();
+			invalidate();
+		},
+		[selectedID]
+	);
 	const onDrag = React.useCallback(
 		(matrix: THREE.Matrix4) => {
 			if (!selectionAnchorRef.current) return;
+
+			const oldPos = new THREE.Vector3();
+			selectionAnchorRef.current.matrix.decompose(
+				oldPos,
+				new THREE.Quaternion(),
+				new THREE.Vector3()
+			);
 
 			// the magic sauce..
 			const matrixToApply = preMatrixInv
 				.clone()
 				.multiply(matrix)
 				.multiply(preMatrix);
+			//idek how this works, but it does
+			if (dragType.current === 'Rotator') {
+				matrixToApply.setPosition(oldPos);
+			}
 
 			selectionAnchorRef.current.matrix.copy(matrixToApply);
 			selectionAnchorRef.current.matrixWorld.copy(matrixToApply);
 			pivotRef.current?.matrix.copy(matrixToApply);
 			pivotRef.current?.matrixWorld.copy(matrixToApply);
+
+			// if (dragType.current === 'Rotator') {
+			// 	selectionAnchorRef.current.matrix.setPosition(oldPos);
+			// 	selectionAnchorRef.current.matrixWorld.setPosition(oldPos);
+
+			// 	pivotRef.current?.matrix.setPosition(oldPos);
+			// 	pivotRef.current?.matrixWorld.setPosition(oldPos);
+			// }
 
 			pivotRef.current?.updateMatrixWorld(true);
 			selectionAnchorRef.current.updateMatrixWorld(true);
@@ -152,7 +168,7 @@ const PivotControlsComponent: React.FC<{
 			const quaternion = new THREE.Quaternion();
 			const scale = new THREE.Vector3();
 			matrixToApply.decompose(position, quaternion, scale);
-			handleDispatch(position, quaternion, dispatch);
+			handleDispatch(position, quaternion);
 			invalidate();
 		},
 		[selectedID]
@@ -160,7 +176,7 @@ const PivotControlsComponent: React.FC<{
 	const onDragEnd = React.useCallback(() => {
 		if (!selectionAnchorRef.current) return;
 		if (viewportStore.selected === undefined) return;
-		if (viewportStore.selected === -1) return;
+		if (viewportStore.selected === '-1') return;
 
 		if (selectionAnchorRef.current instanceof THREE.Object3D) {
 			selectionAnchorRef.current.updateMatrixWorld(true);
@@ -170,9 +186,6 @@ const PivotControlsComponent: React.FC<{
 			prePosition,
 			new THREE.Quaternion(),
 			new THREE.Vector3()
-		);
-		const distanceMoved = prePosition.distanceTo(
-			selectionAnchorRef.current.position
 		);
 		//pivotMatrix.copy(pivotRef.current.matrixWorld);
 		//console.log(`Distance moved: ${distanceMoved}`);
@@ -203,8 +216,8 @@ const PivotControlsComponent: React.FC<{
 		<group
 			//ref={pivotRef}
 			visible={visible.current}
-			onUpdate={(self) => {
-				if (selectedID === -1) {
+			onUpdate={() => {
+				if (selectedID === '-1') {
 					visible.current = false;
 				} else {
 					visible.current = true;

@@ -18,13 +18,10 @@ const ResizeableBar: React.FC<
 
 	const handleMouseMove = (e: MouseEvent) => {};
 	const handleMouseUp = () => {
-		//console.log("MOUSE UP");
 		setIsResizing(false);
 	};
 
 	const handleMouseDown = (e: MouseEvent) => {
-		console.log('MOUSE DOWN');
-
 		var width = ref.current?.offsetWidth;
 		var height = ref.current?.offsetHeight;
 		var x = e.clientX - ref.current?.getBoundingClientRect().left;
@@ -38,19 +35,13 @@ const ResizeableBar: React.FC<
 				e.clientY >= rect.top &&
 				e.clientY <= rect.bottom
 			) {
-				console.log('x: ', x, 'y: ', y);
-				console.log('INSIDE');
 				if (isBorderCheck(x, y, width, height)[0]) {
-					console.log('LEFT');
 					setIsResizing(true);
 				} else if (isBorderCheck(x, y, width, height)[1]) {
-					console.log('TOP');
 					setIsResizing(true);
 				} else if (isBorderCheck(x, y, width, height)[2]) {
-					console.log('RIGHT');
 					setIsResizing(true);
 				} else if (isBorderCheck(x, y, width, height)[3]) {
-					console.log('BOTTOM');
 					setIsResizing(true);
 				}
 			}

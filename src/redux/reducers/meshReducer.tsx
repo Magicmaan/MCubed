@@ -51,7 +51,7 @@ const meshInitialState: MeshState = {
 		// },
 		{
 			name: 'template',
-			data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACABAMAAAAxEHz4AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAPUExURYv/AInlGQDL/xm85QAAADX3vzIAAAAJcEhZcwAADsEAAA7BAbiRa+0AAAC8SURBVGje7ZSxDcQgEASPDnAL0IFpgMD91/TInMmPRfpkNlnpLc2vTmLMk8pMjballF9Arff7Q7QHwBxQ/EOsTywQAfIRzZ7+dAnQR/67QL7BSL4m4G412g7IDrhrtE8tUAHKES9P24zt/vNasPuI1mPa9cDywYEFIkA+IgAHbDyir+eCDQ987QB5gQpQjtjE4AN8UPABPsAH+AAf4AN8gA/wAT7AB/gAH+ADfIAP8AE+wAf4AB/gg1Ba+wExCYbNRv/itAAAAABJRU5ErkJggg==',
+			data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACABAMAAAAxEHz4AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAYUExURYv/AInlGQD/lhnlkP+iAOWaGQDL/xm85fS4KQgAAAAJcEhZcwAADsAAAA7AAWrWiQkAAAEaSURBVGje7ZTBDYNAEAOhA9ICdAAthA5IC1wHXPuJWN8+IbJ5ej/+nOaslXY6TD/GTO+YdY8pd9n1/XACpmk+Aeu6nYBSjvPBXf4AHQAjAG8Adjy8zicaiAB5iQYAMLwCMC8B2D4BOGq5y/h/GACYAdgAOMpdAiA3UAHKEl+YBfPB1D+nY3/OBuwR5TGxHkgfPNBABMhLNAAA4ohaRgPCAy0BkBuoAGWJrAfSB+zP2YA9ojwm1gPpgwcaiAB5iQYAQBxRy2hAeKAlAHIDFaAskfVA+oD9ORuwR5THxHogffBAAxEgL9EAAIgjahkNCA+0BEBuoAKUJVZx7AP7YLcP7AP7wD6wD+wD+8A+sA/sA/vAPrAP7IPLqfULwTtrNRImI8IAAAAASUVORK5CYII=',
 			path: 'UV_template',
 			local_path: 'UV_template',
 			width: 128,
@@ -94,7 +94,7 @@ const meshSlice = createSlice({
 			});
 			state.cubeCount++;
 		},
-		meshRemoveCube(state, action: PayloadAction<{ id: number }>) {
+		meshRemoveCube(state, action: PayloadAction<{ id: string }>) {
 			const index = state.mesh.findIndex(
 				(item) => item.id === action.payload.id
 			);

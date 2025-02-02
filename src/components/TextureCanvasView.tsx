@@ -275,8 +275,6 @@ const TextureCanvasView: React.FC = () => {
 	}, [meshStore.texture]);
 
 	const boxUVs = useMemo(() => {
-		console.log('Recalculating UVs');
-
 		return meshData.map((cube) =>
 			new BoxUVMap({ cubeID: cube.id }).fromUVMap(
 				cube.uv,
@@ -286,16 +284,13 @@ const TextureCanvasView: React.FC = () => {
 		);
 	}, [meshData]);
 
-	console.log('boxUVs', boxUVs[0]);
-	console.log('boxUVs pixeluv', boxUVs[0]?.toPixels());
-
 	return (
 		<SideBarWidget name="Texture">
 			<div
 				className="flex h-auto w-auto cursor-default select-none flex-col flex-nowrap gap-1 rounded-lg bg-red-200 p-1"
 				style={{ imageRendering: 'pixelated' }}
 			>
-				<div className="flex h-auto w-auto flex-row flex-nowrap gap-1 bg-blue-500 p-1">
+				<div className="flex aspect-square h-auto w-auto flex-row flex-nowrap gap-1 bg-blue-500 p-1">
 					<TextureCanvas image={activeTexture} boxUVs={boxUVs} />
 				</div>
 
@@ -303,22 +298,15 @@ const TextureCanvasView: React.FC = () => {
 					className="pointer-events-auto"
 					type="file"
 					accept="image/png"
-					onClick={(e) => {
-						console.log('File click', e);
-					}}
+					onClick={(e) => {}}
 					onChange={(e) => {
 						const file = e.target.files?.[0];
 						if (file) {
-							console.log('File', file);
-
 							getBase64(file)
 								.then((result) => {
-									console.log('File Is', result);
 									textureData.current = result as string;
 								})
-								.catch((err) => {
-									console.log(err);
-								});
+								.catch((err) => {});
 						}
 					}}
 				/>

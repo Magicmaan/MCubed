@@ -19,6 +19,7 @@ import {
 import Icon from '../../assets/icons/solid/.all';
 import { v4 as uuid } from 'uuid';
 import { ErrorBoundary } from 'react-error-boundary';
+import { useKeyPress } from 'react-use';
 
 const NumberDisplayVec3 = ({
 	vec,
@@ -79,6 +80,9 @@ const NumberDisplaySingle = ({
 	size?: 'small' | 'medium' | 'large';
 	decimalPlaces?: number;
 }) => {
+	//key modifiers
+	const { keyModifiers, getMultiplier, getRounded } = useModifiers();
+
 	const contextMenuID = `vector_single_${uuid()}`;
 	const { show } = useContextMenu({ id: contextMenuID });
 	const handleContextMenu = (
@@ -107,7 +111,6 @@ const NumberDisplaySingle = ({
 	var textSize: string;
 	var borderRadius: string = 'rounded-md';
 	var borderWidth: string = 'border-b-4';
-	const { getMultiplier } = useModifiers();
 
 	switch (size) {
 		case 'small':
@@ -183,8 +186,10 @@ const NumberDisplaySingle = ({
 						e.preventDefault();
 						return;
 					}
-					if (e.key === 'ArrowUp' && setValue) setValue(value + 1);
-					if (e.key === 'ArrowDown' && setValue) setValue(value - 1);
+					if (e.key === 'ArrowUp' && setValue)
+						setValue(value + 1 * getMultiplier());
+					if (e.key === 'ArrowDown' && setValue)
+						setValue(value - 1 * getMultiplier());
 					if (e.key === 'r' && setValue) setValue(Math.round(value));
 					if (e.key === 't' && setValue) setValue(Math.trunc(value));
 					if (e.key === 'f' && setValue) setValue(-value);

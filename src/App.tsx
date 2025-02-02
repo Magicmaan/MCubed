@@ -46,12 +46,8 @@ function App() {
 	const [currentView, setCurrentView] = useState<JSX.Element>(<ModelView />);
 
 	var sp = new URLSearchParams(window.location.search);
-	console.log(sp.get('j'));
 
-	const [val, setVal, remove] = useLocalStorage('test');
-	console.log(val);
 
-	console.log(localStorage);
 
 	return (
 		<Provider store={store}>

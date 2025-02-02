@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import * as React from 'react';
-import { useFrame, ThreeEvent, invalidate } from '@react-three/fiber';
+import { useFrame, ThreeEvent, invalidate, useThree } from '@react-three/fiber';
 import { Html, useTexture, Wireframe } from '@react-three/drei';
 import {
 	useAppDispatch,
@@ -9,10 +9,7 @@ import {
 	useViewportSelectedSelector,
 	useViewportSelector,
 } from '../../hooks/useRedux';
-import {
-	setSelected as reduxSetSelected,
-	setControls,
-} from '../../redux/reducers/viewportReducer';
+import { setControls } from '../../redux/reducers/viewportReducer';
 import { BoxUVMap, boxUVToVertexArray } from '../../util/textureUtil';
 import {
 	CubeProps,
@@ -33,14 +30,19 @@ import { Button } from './ui/button';
 const Cube: React.FC<{
 	cube: CubeProps;
 	index: number;
-	texture: THREETextureProps;
+	texture?: THREETextureProps;
 	selectionAnchorRef: React.MutableRefObject<THREE.Group<THREE.Object3DEventMap> | null>;
 }> = ({ cube, index, texture: textureSource, selectionAnchorRef }) => {
 	const ref = React.useRef<THREE.Mesh>(null);
 	const geometryRef = React.useRef<THREE.BoxGeometry>(null);
 	const selectedID = useViewportSelectedSelector();
-	const renderMode = useViewportSelector().renderMode;
+
+	let renderMode = useViewportSelector().renderMode;
 	const texture = useTexture(textureSource.data);
+	if (!textureSource) {
+		renderMode = 'solid';
+	}
+
 	const outlineVisible = React.useRef(false);
 	const selected = React.useRef(false);
 	const [mouseDownPos, setMouseDownPos] = React.useState<THREE.Vector3>(
@@ -149,17 +151,6 @@ const Cube: React.FC<{
 		[cube.uv, cube.auto_uv]
 	);
 
-	const setSelected = (e: ThreeEvent<MouseEvent>) => {
-		console.log('Selecting');
-		//if (cube.id !== undefined) {
-		dispatch(reduxSetSelected(cube.id));
-		// selected.current = true;
-		// outlineVisible.current = true;
-		//}
-		invalidate();
-		clickTimer.current = 1;
-	};
-
 	return (
 		<group
 			position={cube.pivot}
@@ -174,6 +165,8 @@ const Cube: React.FC<{
 				position={cube.position}
 				rotation={cube.rotation}
 				scale={cube.scale}
+				type="Cube"
+				name={cube.name}
 				onPointerLeave={() => {
 					isMouseDown.current = false;
 				}}
@@ -181,7 +174,6 @@ const Cube: React.FC<{
 					setMouseDownPos(
 						new THREE.Vector3(e.point.x, e.point.y, e.point.z)
 					);
-					dispatch(reduxSetSelected(cube.id));
 					isMouseDown.current = true;
 				}}
 				onPointerMove={(e) => {
