@@ -99,29 +99,19 @@ const mapCube = (cube: BBModelCube, uvWidth: number, uvHeight: number) => {
 	if (cube.uv_offset === undefined) {
 		cube.uv_offset = [0, 0];
 	}
-	if (cube.uv_offset[1] === undefined) {
-		cube.uv_offset[1] = 0;
-	}
-	const uvMap = {
-		top: cube.faces.up.uv.map((uv, index) =>
-			index % 2 === 0 ? uv / uvWidth : uv / uvHeight
-		),
-		bottom: cube.faces.down.uv.map((uv, index) =>
-			index % 2 === 0 ? uv / uvWidth : uv / uvHeight
-		),
-		left: cube.faces.east.uv.map((uv, index) =>
-			index % 2 === 0 ? uv / uvWidth : uv / uvHeight
-		),
-		right: cube.faces.west.uv.map((uv, index) =>
-			index % 2 === 0 ? uv / uvWidth : uv / uvHeight
-		),
-		front: cube.faces.south.uv.map((uv, index) =>
-			index % 2 === 0 ? uv / uvWidth : uv / uvHeight
-		),
-		back: cube.faces.north.uv.map((uv, index) =>
-			index % 2 === 0 ? uv / uvWidth : uv / uvHeight
-		),
-	};
+
+	const UvMapN = new BoxUVMap({
+		cubeID: cube.uuid,
+		width: size[0],
+		height: size[1],
+		depth: size[2],
+	}).setPosition(cube.uv_offset[0], cube.uv_offset[1]);
+
+	const uvMap = UvMapN.toUVMap(uvWidth, uvHeight);
+
+	const temp = uvMap.front;
+	uvMap.front = uvMap.back;
+	uvMap.back = temp;
 
 	if (cube.mirror_uv) {
 		console.log('Mirroring UV');
@@ -135,7 +125,7 @@ const mapCube = (cube: BBModelCube, uvWidth: number, uvHeight: number) => {
 		size: size,
 		position: position,
 		rotation: rotation,
-		pivot: cube.origin,
+		pivot: [0, 0, 0],
 		scale: cube.inflate,
 		visible: true,
 		id: cube.uuid,

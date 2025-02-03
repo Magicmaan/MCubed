@@ -103,6 +103,13 @@ const Cube: React.FC<{
 				cube.position[2]
 			);
 			ref.current?.position.copy(worldPos);
+			ref.current?.matrixWorld.makeRotationFromEuler(
+				new THREE.Euler(
+					cube.rotation[0],
+					cube.rotation[1],
+					cube.rotation[2]
+				)
+			);
 			ref.current?.matrixWorld.setPosition(worldPos);
 		}
 		if (
@@ -152,12 +159,7 @@ const Cube: React.FC<{
 	);
 
 	return (
-		<group
-			position={cube.pivot}
-			rotation={cube.rotation}
-			matrixAutoUpdate={false}
-			visible={cube.visible}
-		>
+		<group matrixAutoUpdate={true} visible={cube.visible}>
 			<mesh
 				onUpdate={onUpdate}
 				ref={ref}

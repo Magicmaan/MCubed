@@ -34,33 +34,33 @@ const PivotControlsComponent: React.FC<{
 	const selectedID = useViewportSelectedSelector();
 
 	const meshData = useMeshDataSelector();
-	const selectedRef = React.useRef(
+	const selectedCube = React.useRef(
 		meshData.find((item) => item.id === selectedID)
 	);
 
 	React.useEffect(() => {
 		if (selectedID === '-1') {
 			visible.current = false;
-			selectedRef.current = undefined;
+			selectedCube.current = undefined;
 		} else {
 			// on selected change, move gizmo to cubes position
 			const selectIndex = meshData.findIndex(
 				(item) => item.id === selectedID
 			);
-			selectedRef.current = meshData[selectIndex];
-			if (selectedRef.current) {
+			selectedCube.current = meshData[selectIndex];
+			if (selectedCube.current) {
 				pivotRef.current?.matrix.setPosition(
 					new THREE.Vector3(
-						selectedRef.current?.position[0] || 0,
-						selectedRef.current?.position[1] || 0,
-						selectedRef.current?.position[2] || 0
+						selectedCube.current?.position[0] || 0,
+						selectedCube.current?.position[1] || 0,
+						selectedCube.current?.position[2] || 0
 					)
 				);
 				pivotRef.current?.matrix.makeRotationFromEuler(
 					new THREE.Euler(
-						selectedRef.current?.rotation[0] || 0,
-						selectedRef.current?.rotation[1] || 0,
-						selectedRef.current?.rotation[2] || 0
+						selectedCube.current?.rotation[0] || 0,
+						selectedCube.current?.rotation[1] || 0,
+						selectedCube.current?.rotation[2] || 0
 					)
 				);
 				//also move the selection anchor to the pivot
@@ -130,13 +130,6 @@ const PivotControlsComponent: React.FC<{
 		(matrix: THREE.Matrix4) => {
 			if (!selectionAnchorRef.current) return;
 
-			const oldPos = new THREE.Vector3();
-			selectionAnchorRef.current.matrix.decompose(
-				oldPos,
-				new THREE.Quaternion(),
-				new THREE.Vector3()
-			);
-
 			// the magic sauce..
 			const matrixToApply = preMatrixInv
 				.clone()
@@ -144,7 +137,13 @@ const PivotControlsComponent: React.FC<{
 				.multiply(preMatrix);
 			//idek how this works, but it does
 			if (dragType.current === 'Rotator') {
-				matrixToApply.setPosition(oldPos);
+				matrixToApply.setPosition(
+					new THREE.Vector3(
+						selectedCube.current?.position[0],
+						selectedCube.current?.position[1],
+						selectedCube.current?.position[2]
+					)
+				);
 			}
 
 			selectionAnchorRef.current.matrix.copy(matrixToApply);
@@ -167,7 +166,11 @@ const PivotControlsComponent: React.FC<{
 			const position = new THREE.Vector3();
 			const quaternion = new THREE.Quaternion();
 			const scale = new THREE.Vector3();
-			matrixToApply.decompose(position, quaternion, scale);
+			selectionAnchorRef.current.matrixWorld.decompose(
+				position,
+				quaternion,
+				scale
+			);
 			handleDispatch(position, quaternion);
 			invalidate();
 		},
@@ -196,15 +199,15 @@ const PivotControlsComponent: React.FC<{
 
 	useFrame(() => {
 		if (pivotRef.current) {
-			selectedRef.current = meshData.find(
+			selectedCube.current = meshData.find(
 				(item) => item.id === selectedID
 			);
 
 			pivotRef.current?.matrix.setPosition(
 				new THREE.Vector3(
-					selectedRef.current?.position[0] || 0,
-					selectedRef.current?.position[1] || 0,
-					selectedRef.current?.position[2] || 0
+					selectedCube.current?.position[0] || 0,
+					selectedCube.current?.position[1] || 0,
+					selectedCube.current?.position[2] || 0
 				)
 			);
 

@@ -14,6 +14,10 @@ import {
 	modifiers,
 	moveModifierIncrement,
 } from '../../../constants/KeyModifiers';
+import {
+	useMeshDataSelector,
+	useViewportSelectedSelector,
+} from '../../../hooks/useRedux';
 
 const vec1 = /* @__PURE__ */ new THREE.Vector3();
 const vec2 = /* @__PURE__ */ new THREE.Vector3();
@@ -106,6 +110,12 @@ export const AxisArrow: React.FC<{
 	const [dragOffset, setDragOffset] = React.useState(0);
 	const meshRef = React.useRef<THREE.Mesh>(null!);
 
+	const meshData = useMeshDataSelector();
+	const selectedID = useViewportSelectedSelector();
+	const selectedCube = React.useRef(
+		meshData.find((item) => item.id === selectedID)
+	);
+
 	var previousDistance = 0;
 	const onPointerDown = React.useCallback(
 		(e: ThreeEvent<PointerEvent>) => {
@@ -118,8 +128,10 @@ export const AxisArrow: React.FC<{
 				objRef.current.matrixWorld
 			);
 			const clickPoint = e.point.clone();
-			const origin = new THREE.Vector3().setFromMatrixPosition(
-				objRef.current.matrixWorld
+			const origin = new THREE.Vector3(
+				selectedCube.current?.position[0] || 0,
+				selectedCube.current?.position[1] || 0,
+				selectedCube.current?.position[2] || 0
 			);
 			const dir = direction.clone().applyMatrix4(rotation).normalize();
 			clickInfo.current = { clickPoint, dir };
@@ -176,11 +188,21 @@ export const AxisArrow: React.FC<{
 				if (annotations) {
 					divRef.current.innerText = `${translation.current[axis].toFixed(2)}`;
 				}
-				offsetMatrix.makeTranslation(
-					dir.x * offset,
-					dir.y * offset,
-					dir.z * offset
+
+				// used to translate along angle
+				const rotation = new THREE.Matrix4().extractRotation(
+					objRef.current.matrixWorld
 				);
+				const rotatedDir = dir
+					.clone()
+					.applyMatrix4(rotation)
+					.normalize();
+				offsetMatrix.makeTranslation(
+					rotatedDir.x * offset,
+					rotatedDir.y * offset,
+					rotatedDir.z * offset
+				);
+
 				setDragOffset(offset);
 				onDrag(offsetMatrix);
 			}

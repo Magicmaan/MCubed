@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { BoxUVMap } from '../util/textureUtil';
 import { useAppDispatch } from '../hooks/useRedux';
 import { meshModifyID } from '../redux/reducers/meshReducer';
@@ -13,7 +13,7 @@ const TextureCanvas: React.FC<{
 	const drawUVs = useRef(true);
 	const drawUVBounds = useRef(true);
 
-	const canvasRef = useRef<HTMLCanvasElement>();
+	const canvasRef = useRef<HTMLCanvasElement>(null);
 
 	const [imageScale, setImageScale] = useState(1);
 	const [imagePosition, setImagePosition] = useState({ x: 16, y: 0 });
@@ -355,26 +355,32 @@ const TextureCanvas: React.FC<{
 		newPos.x -= uvGrabOffset.current.x;
 		newPos.y -= uvGrabOffset.current.y;
 
-		console.log('uv grab offset', newPos);
-
 		const updatedUV = new BoxUVMap({
 			width: focusedUV.current.width,
 			height: focusedUV.current.height,
 			depth: focusedUV.current.depth,
 		}).setPosition(
-			Math.floor(newPos.x / imageScale),
-			Math.floor(newPos.y / imageScale)
+			Math.floor((newPos.x - imagePosition.x) / imageScale),
+			Math.floor((newPos.y - imagePosition.y) / imageScale)
 		);
-
-		//focusedUV.current = updatedUV;
 
 		dispatch(
 			meshModifyID({
 				id: focusedUV.current.cubeID,
-				uv: updatedUV.toUVMap(128, 128) as any,
+				uv: updatedUV.toUVMap(image.width, image.height) as any,
 			})
 		);
 	};
+
+	useEffect(() => {
+		if (canvasRef.current) {
+			const context = canvasRef.current.getContext('2d');
+			if (context) {
+				context.imageSmoothingEnabled = false;
+				drawCanvas(context);
+			}
+		}
+	}, [imageScale, imagePosition, boxUVs]);
 
 	return (
 		<canvas
@@ -386,17 +392,7 @@ const TextureCanvas: React.FC<{
 			}}
 			width={image.width * 4}
 			height={image.height * 4}
-			ref={(canvas) => {
-				if (canvas) {
-					canvasRef.current = canvas;
-					const context = canvas.getContext('2d');
-					console.log('canvas size', canvas.width, canvas.height);
-					if (context) {
-						context.imageSmoothingEnabled = false;
-						drawCanvas(context);
-					}
-				}
-			}}
+			ref={canvasRef}
 			onMouseDown={handleMouseDown}
 			onMouseMove={handleMouseMove}
 			onMouseUp={handleMouseUp}

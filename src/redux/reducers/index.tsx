@@ -3,6 +3,7 @@ import { combineReducers } from '@reduxjs/toolkit';
 import meshSlice from './meshReducer.tsx'; // Example reducer
 import viewportSlice from './viewportReducer.tsx';
 import appSlice from './appReducer.tsx';
+import undoable from 'redux-undo';
 
 const rootReducer = combineReducers({
 	mesh: meshSlice.reducer,

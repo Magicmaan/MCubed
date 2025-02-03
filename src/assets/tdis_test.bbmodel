@@ -251,7 +251,7 @@
 			"to": [10.5, 39.5, -10.5],
 			"autouv": 0,
 			"color": 2,
-			"origin": [0, 37.5, -11.5],
+			"origin": [-0.5, 37.5, -11.5],
 			"uv_offset": [64, 28],
 			"faces": {
 				"north": {
@@ -3018,7 +3018,7 @@
 			"uuid": "a5b2ae94-6b9d-51f7-26e7-08d1f3f2bade"
 		},
 		{
-			"name": "frame",
+			"name": "frame_important",
 			"box_uv": true,
 			"rescale": false,
 			"locked": false,
@@ -3165,7 +3165,6 @@
 			"to": [11.5, 41, 11.5],
 			"autouv": 0,
 			"color": 3,
-			"rotation": [0, -180, 0],
 			"origin": [10, 21.5, 10],
 			"uv_offset": [54, 64],
 			"faces": {
@@ -3210,7 +3209,6 @@
 			"to": [-8.5, 41, 11.5],
 			"autouv": 0,
 			"color": 3,
-			"rotation": [0, -180, 0],
 			"origin": [-10, 21.5, 10],
 			"uv_offset": [41, 64],
 			"faces": {

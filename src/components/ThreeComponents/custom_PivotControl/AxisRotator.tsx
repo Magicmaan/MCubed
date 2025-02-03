@@ -8,6 +8,10 @@ import icon from '../../../assets/curve.png';
 import { useModifiers } from '../../../hooks/useControls';
 import { round } from '../../../util';
 import { rotateModifierIncrement } from '../../../constants/KeyModifiers';
+import {
+	useMeshDataSelector,
+	useViewportSelectedSelector,
+} from '../../../hooks/useRedux';
 
 const clickDir = /* @__PURE__ */ new THREE.Vector3();
 const intersectionDir = /* @__PURE__ */ new THREE.Vector3();
@@ -83,6 +87,10 @@ export const AxisRotator: React.FC<{
 		userData,
 	} = React.useContext(context);
 
+	const meshData = useMeshDataSelector();
+	const selectedID = useViewportSelectedSelector();
+	const selectedCube = meshData.find((item) => item.id === selectedID);
+
 	// @ts-expect-error new in @react-three/fiber@7.0.5
 	const camControls = useThree((state) => state.controls) as {
 		enabled: boolean;
@@ -110,8 +118,10 @@ export const AxisRotator: React.FC<{
 			}
 			e.stopPropagation();
 			const clickPoint = e.point.clone();
-			const origin = new THREE.Vector3().setFromMatrixPosition(
-				objRef.current.matrixWorld
+			const origin = new THREE.Vector3(
+				selectedCube?.position[0] || 0,
+				selectedCube?.position[1] || 0,
+				selectedCube?.position[2] || 0
 			);
 			const e1 = new THREE.Vector3()
 				.setFromMatrixColumn(objRef.current.matrixWorld, 0)
@@ -212,6 +222,7 @@ export const AxisRotator: React.FC<{
 					angle.current
 				);
 				const rot = new THREE.Euler().setFromRotationMatrix(tempRot);
+				rotMatrix.setPosition(pos);
 				rotMatrix.makeRotationFromEuler(rot);
 				console.log('Rotation: ', rot);
 

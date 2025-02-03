@@ -1,0 +1,99 @@
+{
+	"meta": {
+		"format_version": "4.10",
+		"model_format": "modded_entity",
+		"box_uv": true
+	},
+	"name": "model",
+	"model_identifier": "",
+	"modded_entity_entity_class": "",
+	"modded_entity_version": "1.17",
+	"modded_entity_flip_y": true,
+	"visible_box": [1, 1, 0],
+	"variable_placeholders": "",
+	"variable_placeholder_buttons": [],
+	"timeline_setups": [],
+	"unhandled_root_fields": {},
+	"resolution": {
+		"width": 128,
+		"height": 128
+	},
+	"elements": [
+		{
+			"name": "cube",
+			"box_uv": true,
+			"rescale": false,
+			"locked": false,
+			"light_emission": 0,
+			"render_order": "default",
+			"allow_mirror_modeling": true,
+			"tardis_control": "",
+			"from": [-9, 0, -9],
+			"to": [9, 18, 9],
+			"autouv": 0,
+			"color": 5,
+			"origin": [0, 8, 0],
+			"uv_offset": [11, 6],
+			"faces": {
+				"north": {
+					"uv": [29, 24, 47, 42],
+					"texture": 0
+				},
+				"east": {
+					"uv": [11, 24, 29, 42],
+					"texture": 0
+				},
+				"south": {
+					"uv": [65, 24, 83, 42],
+					"texture": 0
+				},
+				"west": {
+					"uv": [47, 24, 65, 42],
+					"texture": 0
+				},
+				"up": {
+					"uv": [47, 24, 29, 6],
+					"texture": 0
+				},
+				"down": {
+					"uv": [65, 6, 47, 24],
+					"texture": 0
+				}
+			},
+			"type": "cube",
+			"uuid": "86a673cb-569d-1520-527e-7a3e07e7df52"
+		}
+	],
+	"outliner": ["86a673cb-569d-1520-527e-7a3e07e7df52"],
+	"textures": [
+		{
+			"path": "E:\\theob\\Documents\\ReactProjects\\MCubed\\src\\assets\\modeltext.png",
+			"name": "modeltext.png",
+			"folder": "block",
+			"namespace": "",
+			"id": "0",
+			"group": "",
+			"width": 128,
+			"height": 128,
+			"uv_width": 128,
+			"uv_height": 128,
+			"particle": false,
+			"use_as_default": false,
+			"layers_enabled": false,
+			"sync_to_project": "",
+			"render_mode": "default",
+			"render_sides": "auto",
+			"pbr_channel": "color",
+			"frame_time": 1,
+			"frame_order_type": "loop",
+			"frame_order": "",
+			"frame_interpolate": false,
+			"visible": true,
+			"internal": true,
+			"saved": true,
+			"uuid": "ab259859-5a23-363c-95c5-cf0592c5d801",
+			"relative_path": "modeltext.png",
+			"source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAAAXNSR0IArs4c6QAAA5BJREFUeF7tmj9qVHEYRV9AUEhvAhFRFNxCehfhEtyMsdDKKiuwcxHBOo0g+AcDidimsFLGeiacyXt5Y86c1De/N/fek+/3zWR2hn62OoGdrXaf+SEAthyCAAiALU9gy+03AQJg/gQ+nH77M8VTj4/eTnHM8P741db+IWzE+AKAw6cPRpV38vnHsADgYG9/1DlnF+cBMCrBa/xyAFwjtBv6lSZAE+CG0Lri2CbA/JmvemIToAkwP41NgPkzbwKsSKB3ARuAsQmwgdBXPLIdoB1gfhqbAPNn3g7QDrA0ga6AroD5x1FXwPyZdwV0BXQFLEugzwE2MI26AjYQ+v/2OcAUEfSFkPEprvUu4Pn50STf5Nk/fTn+lQ/D8O7jm0nOufPi1yTn3Hvyeq08J3noyEPWesELAA737o965MnFz2EBwKP93VHnfD2//AfA7uOHo865/PJ9WABw9+DZqHN+n30aAgBEGAAgpBklTYAmAMetK2B1Vl0BkKOuABjUTLKugK4AjlpXQFdAbwNXMNAOAAdJOwAMaiZZO0A7AEetHaAdoB2gHaD/BSxjoCUQ3iQtgTComWQtgS2BHLWWwJbAvhByxd+L/vsAfFakvC0JrLUD3BZTvU6eQADwrJTKAFDWyk0FAM9KqQwAZa3cVADwrJTKAFDWyk0FAM9KqQwAZa3cVADwrJTKAFDWyk0FAM9KqQwAZa3cVADwrJTKAFDWyk0FAM9KqQwAZa3cVADwrJTKAFDWyk0FAM9KqQwAZa3cVADwrJTKAFDWyk0FAM9KqQwAZa3cVADwrJTKAFDWyk0FAM9KqQwAZa3cVADwrJTKAFDWyk0FAM9KqQwAZa3cVADwrJTKAFDWyk0FAM9KqQwAZa3cVADwrJTKAFDWyk0FAM9KqQwAZa3cVADwrJTKAFDWyk0FAM9KqQwAZa3cVADwrJTKAFDWyk0FAM9KqQwAZa3cVADwrJTKAFDWyk0FAM9KqQwAZa3cVADwrJTKAFDWyk0FAM9KqQwAZa3cVADwrJTKAFDWyk0FAM9KqQwAZa3cVADwrJTKAFDWyk0FAM9KqQwAZa3cVADwrJTKAFDWyk0FAM9KqQwAZa3cVADwrJTKAFDWyk0FAM9KqQwAZa3cVADwrJTKAFDWyk0FAM9KqQwAZa3cVADwrJTKAFDWyk0FAM9KqQwAZa3cVADwrJTKAFDWyk0FAM9KqQwAZa3c1F8/WS6ffCDMfgAAAABJRU5ErkJggg=="
+		}
+	]
+}
