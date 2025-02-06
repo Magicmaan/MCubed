@@ -8,10 +8,4 @@ import { BrowserRouter, Route, Routes, useParams } from 'react-router';
 // const rootElement = document.getElementById("root");
 // const root = ReactDOM.createRoot(rootElement!);
 
-const TestComponent = () => {
-	let { j } = useParams();
-	console.log('Search URL ', j);
-	return <div>Hi</div>;
-};
-
 ReactDOM.render(<App />, document.getElementById('root'));

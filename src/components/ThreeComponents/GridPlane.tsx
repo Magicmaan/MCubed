@@ -1,10 +1,10 @@
-import React from "react";
-import { Canvas } from "@react-three/fiber";
-import { Grid, useTexture, Text } from "@react-three/drei";
-import { DoubleSide } from "three";
-import { loadTexture } from "../../util/textureUtil";
-import * as THREE from "three";
-import { useViewportSelector } from "../../hooks/useRedux";
+import React from 'react';
+import { Canvas } from '@react-three/fiber';
+import { Grid, useTexture, Text } from '@react-three/drei';
+import { DoubleSide } from 'three';
+import { loadTexture } from '../../util/textureUtil';
+import * as THREE from 'three';
+import { useViewportSelector } from '../../hooks/useRedux';
 
 interface GridPlaneProps {
 	size: number;
@@ -13,12 +13,37 @@ interface GridPlaneProps {
 	color?: string;
 }
 
+const DebugGridPlane: React.FC = () => {
+	const showWorldGrid = useViewportSelector().showWorldGrid;
+	return (
+		<group visible={showWorldGrid}>
+			<Grid
+				args={[256, 256]}
+				cellSize={16}
+				side={DoubleSide}
+				cellThickness={0}
+				sectionThickness={1}
+				sectionColor={'#888888'}
+			/>
+		</group>
+	);
+};
+
 const GridPlane: React.FC<GridPlaneProps> = ({ size }) => {
 	const showGrid = useViewportSelector().showGrid;
 
-	const outlineTexture = React.useMemo(() => loadTexture("/src/assets/grid.png"), []);
-	const xMarkerTexture = React.useMemo(() => loadTexture("/src/assets/x_marker.png"), []);
-	const zMarkerTexture = React.useMemo(() => loadTexture("/src/assets/z_marker.png"), []);
+	const outlineTexture = React.useMemo(
+		() => loadTexture('/src/assets/grid.png'),
+		[]
+	);
+	const xMarkerTexture = React.useMemo(
+		() => loadTexture('/src/assets/x_marker.png'),
+		[]
+	);
+	const zMarkerTexture = React.useMemo(
+		() => loadTexture('/src/assets/z_marker.png'),
+		[]
+	);
 
 	return (
 		<group visible={showGrid}>
@@ -28,32 +53,51 @@ const GridPlane: React.FC<GridPlaneProps> = ({ size }) => {
 				side={DoubleSide}
 				cellThickness={0}
 				sectionThickness={2}
-				sectionColor={"#888888"}
+				sectionColor={'#888888'}
 			/>
 
-			<mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} visible={true}>
+			<mesh
+				rotation={[-Math.PI / 2, 0, 0]}
+				position={[0, -0.01, 0]}
+				visible={true}
+			>
 				<planeGeometry args={[size + 2, size + 2]} />
-				<meshBasicMaterial map={outlineTexture} transparent side={THREE.DoubleSide} />
+				<meshBasicMaterial
+					map={outlineTexture}
+					transparent
+					side={THREE.DoubleSide}
+				/>
 			</mesh>
 
 			<mesh
 				rotation={[-Math.PI / 2, 0, Math.PI / 2]}
 				position={[12, -0.01, 0]}
 				scale={[0.5, 0.5, 0.5]}
-				visible={true}>
+				visible={true}
+			>
 				<planeGeometry args={[5, 7]} />
-				<meshBasicMaterial map={xMarkerTexture} transparent side={THREE.DoubleSide} />
+				<meshBasicMaterial
+					map={xMarkerTexture}
+					transparent
+					side={THREE.DoubleSide}
+				/>
 			</mesh>
 			<mesh
 				rotation={[-Math.PI / 2, 0, 0]}
 				position={[0, -0.01, 12]}
 				scale={[0.5, 0.5, 0.5]}
-				visible={true}>
+				visible={true}
+			>
 				<planeGeometry args={[5, 7]} />
-				<meshBasicMaterial map={zMarkerTexture} transparent side={THREE.DoubleSide} />
+				<meshBasicMaterial
+					map={zMarkerTexture}
+					transparent
+					side={THREE.DoubleSide}
+				/>
 			</mesh>
 		</group>
 	);
 };
 
 export default GridPlane;
+export { DebugGridPlane };

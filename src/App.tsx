@@ -4,7 +4,7 @@ import * as React from 'react';
 import ModelView from './pages/ModelView';
 import NavBar from './components/NavBar';
 import { Provider } from 'react-redux';
-import store from './redux/store'; // Import the store
+import store, { AppDispatch } from './redux/store'; // Import the store
 import {
 	AlertDialog,
 	AlertDialogPortal,
@@ -32,22 +32,45 @@ import { useLocalStorage } from 'react-use';
 
 import Startup from './components/Startup';
 import TextureView from './pages/TextureView';
+import { loadBBModelToMesh } from './util/fileUtil';
+import { useMeshStoreSelector } from './hooks/useRedux';
+import { useDispatch, useSelector } from 'react-redux';
+import { loadMesh } from './redux/reducers/meshReducer';
+import { get } from 'http';
+import { getLocalStorage } from './storage/localStorage';
 
 function App() {
 	const [count, setCount] = useState(0);
 	const [visible, setVisible] = React.useState(true);
 
 	//file stuff to be added
-	const [File, setFile] = useState(false);
+	const [fileLoaded, setFileLoaded] = useState(false);
 	var [isStartup, setStartup] = React.useState(true);
-	var blurApp = useState(false);
-	var showSAnim = useState(false);
 
 	const [currentView, setCurrentView] = useState<JSX.Element>(<ModelView />);
 
-	var sp = new URLSearchParams(window.location.search);
+	//need to do alternate means since outside Provider
+	const dispatch = store.dispatch as AppDispatch;
+	const meshStore = store.getState().mesh;
 
+	// store.dispatch( loadMesh( newState));
 
+	//url parameters
+	React.useEffect(() => {
+		const params = new URLSearchParams(window.location.search);
+
+		const idParam = params.get('id');
+
+		if (idParam) {
+			const data = JSON.parse(getLocalStorage(idParam) ?? '{}');
+			if (data && data.mesh) {
+				console.log('Loaded from URL', data);
+				dispatch(loadMesh(data));
+			} else {
+				console.log('No data found at URL');
+			}
+		}
+	}, []);
 
 	return (
 		<Provider store={store}>
@@ -63,7 +86,6 @@ function App() {
 					}}
 				/>
 				{currentView}
-
 				{isStartup && <Startup setStartup={setStartup} />}
 			</div>
 		</Provider>

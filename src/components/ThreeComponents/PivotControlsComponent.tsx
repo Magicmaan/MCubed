@@ -23,7 +23,8 @@ import { OnDragStartProps } from './custom_PivotControl/context';
 
 const PivotControlsComponent: React.FC<{
 	selectionAnchorRef: React.MutableRefObject<THREE.Group<THREE.Object3DEventMap> | null>;
-}> = ({ selectionAnchorRef }) => {
+	usingGimbal: React.MutableRefObject<boolean>;
+}> = ({ selectionAnchorRef, usingGimbal }) => {
 	const preMatrix = new THREE.Matrix4();
 	const preMatrixInv = new THREE.Matrix4();
 	const viewportStore = useViewportSelector();
@@ -73,7 +74,7 @@ const PivotControlsComponent: React.FC<{
 		pivotRef.current?.updateMatrixWorld(true);
 		invalidate();
 		forceUpdate();
-	}, [selectedID]);
+	}, [selectedID, forceUpdate, meshData, selectionAnchorRef]);
 
 	const visible = React.useRef(false);
 	//console.log(three);
@@ -118,9 +119,24 @@ const PivotControlsComponent: React.FC<{
 				| 'Rotator'
 				| 'Sphere';
 			dispatch(setControls({ zoom: false, pan: false, rotate: false }));
+			usingGimbal.current = true;
 			preMatrix.copy(
 				selectionAnchorRef.current?.matrix || new THREE.Matrix4()
 			);
+			// selectionAnchorRef.current?.matrixWorld.setPosition(
+			// 	selectedCube.current?.position[0] || 0,
+			// 	selectedCube.current?.position[1] || 0,
+			// 	selectedCube.current?.position[2] || 0
+			// );
+			// selectionAnchorRef.current?.matrixWorld.makeRotationFromEuler(
+			// 	new THREE.Euler(
+			// 		selectedCube.current?.rotation[0] || 0,
+			// 		selectedCube.current?.rotation[1] || 0,
+			// 		selectedCube.current?.rotation[2] || 0
+			// 	)
+			// );
+
+			selectionAnchorRef.current?.updateMatrixWorld(true);
 			preMatrixInv.copy(preMatrix).invert();
 			invalidate();
 		},
@@ -130,11 +146,15 @@ const PivotControlsComponent: React.FC<{
 		(matrix: THREE.Matrix4) => {
 			if (!selectionAnchorRef.current) return;
 
+			const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
+			console.log('matrix in position', pos);
 			// the magic sauce..
-			const matrixToApply = preMatrixInv
-				.clone()
-				.multiply(matrix)
-				.multiply(preMatrix);
+			const matrixToApply = matrix.clone();
+
+			// preMatrixInv
+			// 	.clone()
+			// 	.multiply(matrix)
+			// 	.multiply(preMatrix);
 			//idek how this works, but it does
 			if (dragType.current === 'Rotator') {
 				matrixToApply.setPosition(
@@ -147,9 +167,9 @@ const PivotControlsComponent: React.FC<{
 			}
 
 			selectionAnchorRef.current.matrix.copy(matrixToApply);
-			selectionAnchorRef.current.matrixWorld.copy(matrixToApply);
+			//selectionAnchorRef.current.matrixWorld.copy(matrixToApply);
 			pivotRef.current?.matrix.copy(matrixToApply);
-			pivotRef.current?.matrixWorld.copy(matrixToApply);
+			//pivotRef.current?.matrixWorld.copy(matrixToApply);
 
 			// if (dragType.current === 'Rotator') {
 			// 	selectionAnchorRef.current.matrix.setPosition(oldPos);
@@ -184,6 +204,7 @@ const PivotControlsComponent: React.FC<{
 		if (selectionAnchorRef.current instanceof THREE.Object3D) {
 			selectionAnchorRef.current.updateMatrixWorld(true);
 		}
+		usingGimbal.current = false;
 		const prePosition = new THREE.Vector3();
 		preMatrix.decompose(
 			prePosition,
@@ -195,6 +216,7 @@ const PivotControlsComponent: React.FC<{
 
 		//re enable camera controls
 		dispatch(setControls({ zoom: true, pan: true, rotate: true }));
+		usingGimbal.current = false;
 	}, [selectedID]);
 
 	useFrame(() => {
@@ -242,6 +264,7 @@ const PivotControlsComponent: React.FC<{
 				depthTest={false}
 				visible={visible.current}
 				enabled={visible.current}
+				usingGimbal={usingGimbal}
 			>
 				{/* Box is placeholder, needed to attach pivot controls */}
 				<Box matrixAutoUpdate={false} args={[0, 0, 0]} />

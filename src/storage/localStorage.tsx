@@ -11,8 +11,6 @@ const setLocalStorage = (key: string, value: string) => {
 	localStorage.setItem(key, value);
 };
 
-
-
 export {
 	getLocalStorage,
 	getLocalStorageKeys,

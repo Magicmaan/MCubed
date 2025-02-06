@@ -104,6 +104,7 @@ type PivotControlsProps = {
 	visible?: boolean;
 	userData?: { [key: string]: any };
 	children?: React.ReactNode;
+	usingGimbal: React.MutableRefObject<boolean>;
 };
 
 export const PivotControls: ForwardRefComponent<
@@ -141,6 +142,7 @@ export const PivotControls: ForwardRefComponent<
 			visible = true,
 			userData,
 			children,
+			usingGimbal,
 			...props
 		},
 		fRef
@@ -231,6 +233,7 @@ export const PivotControls: ForwardRefComponent<
 				userData,
 				annotations,
 				annotationsClass,
+				usingGimbal,
 			}),
 			[
 				onDragStart,
@@ -251,6 +254,7 @@ export const PivotControls: ForwardRefComponent<
 				autoTransform,
 				annotations,
 				annotationsClass,
+				usingGimbal,
 			]
 		);
 
@@ -319,17 +323,32 @@ export const PivotControls: ForwardRefComponent<
 							ref={gizmoRef}
 							position={offset}
 							rotation={rotation}
+							onPointerDown={(e) =>
+								console.log('down PIVOT GROUP')
+							}
 						>
 							{enabled && (
 								<>
 									{!disableAxes && activeAxes[0] && (
-										<AxisArrow axis={0} direction={xDir} />
+										<AxisArrow
+											axis={0}
+											direction={xDir}
+											usingGimbal={usingGimbal}
+										/>
 									)}
 									{!disableAxes && activeAxes[1] && (
-										<AxisArrow axis={1} direction={yDir} />
+										<AxisArrow
+											axis={1}
+											direction={yDir}
+											usingGimbal={usingGimbal}
+										/>
 									)}
 									{!disableAxes && activeAxes[2] && (
-										<AxisArrow axis={2} direction={zDir} />
+										<AxisArrow
+											axis={2}
+											direction={zDir}
+											usingGimbal={usingGimbal}
+										/>
 									)}
 									{!disableSliders &&
 										activeAxes[0] &&
@@ -338,6 +357,7 @@ export const PivotControls: ForwardRefComponent<
 												axis={2}
 												dir1={xDir}
 												dir2={yDir}
+												usingGimbal={usingGimbal}
 											/>
 										)}
 									{!disableSliders &&
@@ -347,6 +367,7 @@ export const PivotControls: ForwardRefComponent<
 												axis={1}
 												dir1={zDir}
 												dir2={xDir}
+												usingGimbal={usingGimbal}
 											/>
 										)}
 									{!disableSliders &&
@@ -356,6 +377,7 @@ export const PivotControls: ForwardRefComponent<
 												axis={0}
 												dir1={yDir}
 												dir2={zDir}
+												usingGimbal={usingGimbal}
 											/>
 										)}
 									{!disableRotations &&
@@ -365,6 +387,7 @@ export const PivotControls: ForwardRefComponent<
 												axis={2}
 												dir1={xDir}
 												dir2={yDir}
+												usingGimbal={usingGimbal}
 											/>
 										)}
 									{!disableRotations &&
@@ -374,6 +397,7 @@ export const PivotControls: ForwardRefComponent<
 												axis={1}
 												dir1={zDir}
 												dir2={xDir}
+												usingGimbal={usingGimbal}
 											/>
 										)}
 									{!disableRotations &&
@@ -383,6 +407,7 @@ export const PivotControls: ForwardRefComponent<
 												axis={0}
 												dir1={yDir}
 												dir2={zDir}
+												usingGimbal={usingGimbal}
 											/>
 										)}
 									{!disableScaling && activeAxes[0] && (

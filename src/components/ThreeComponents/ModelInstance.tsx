@@ -13,8 +13,10 @@ import { CubeProps } from '../../types/three';
 
 const ModelInstance: React.FC<{
 	selectionAnchorRef: React.MutableRefObject<THREE.Group<THREE.Object3DEventMap> | null>;
-}> = ({ selectionAnchorRef }) => {
+	usingGimbal: React.MutableRefObject<boolean>;
+}> = ({ selectionAnchorRef, usingGimbal }) => {
 	const renderMode = useViewportSelector().renderMode;
+	const cameraControls = useViewportSelector().cameraControls;
 	const modelData = useMeshDataSelector();
 	const textures = useMeshTextureSelector();
 	//TODO, switch to dataURL
@@ -30,6 +32,9 @@ const ModelInstance: React.FC<{
 	//uses raycaster to select cubes
 	const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
 		if (!scene) return;
+		console.log('cameraControls', cameraControls);
+		console.log('usingGimbal', usingGimbal);
+		if (usingGimbal.current) return;
 		const intersects = scene.raycaster
 			.intersectObjects(scene.scene.children, true)
 			.filter((i) => i.object.type === 'Cube');

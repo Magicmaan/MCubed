@@ -12,7 +12,11 @@ import {
 	useMeshStoreSelector,
 	useViewportSelector,
 } from '../hooks/useRedux';
-import { toggleGrid, toggleStats } from '../redux/reducers/viewportReducer';
+import {
+	toggleGrid,
+	toggleStats,
+	toggleWorldGrid,
+} from '../redux/reducers/viewportReducer';
 import { RootState } from '../redux/store';
 import { connect, useDispatch } from 'react-redux';
 import {
@@ -40,7 +44,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
 import { Button } from './ui/button';
 import ErrorAlert from './templates/ErrorAlert';
-import { saveMesh } from '../redux/reducers/meshReducer';
+import { saveMesh, setName } from '../redux/reducers/meshReducer';
 import { setLocalStorage } from '../storage/localStorage';
 
 const styles = {
@@ -49,6 +53,48 @@ const styles = {
 	menubarContent: `dark rounded-sm dark:bg-popup-bg `,
 	menubarSeparator: `m-0 h-6 w-0.5 bg-secondary-500 p-0`,
 	menuItem: `dark:hover:bg-button-selected dark:focus:bg-button-selected`,
+};
+
+import {
+	Card,
+	CardHeader,
+	CardTitle,
+	CardContent,
+	CardFooter,
+} from './ui/card';
+import { PopoverContent, PopoverTrigger, Popover } from './ui/popover';
+import { Input } from './ui/input';
+
+const ProjectInfo: React.FC = () => {
+	const meshStore = useMeshStoreSelector();
+	const viewportData = useViewportSelector();
+	const dispatch = useAppDispatch();
+
+	return (
+		<Card className="flex min-h-[36rem] w-24 min-w-[46rem] flex-col justify-between overflow-hidden shadow-md shadow-black dark:bg-popup-bg">
+			<CardHeader>
+				<CardTitle>Project</CardTitle>
+			</CardHeader>
+			<CardContent className="flex h-40 max-h-full w-full flex-grow flex-row items-stretch justify-stretch gap-4">
+				<Input
+					className="flex w-1/2 bg-transparent dark:bg-opacity-50"
+					type="text"
+					placeholder={'Project Name'}
+					onChange={(e) => {
+						dispatch(setName(e.target.value));
+					}}
+					onKeyDownCapture={(e) => {
+						if (e.key === 'Enter') {
+							e.currentTarget.blur();
+						}
+					}}
+				/>
+			</CardContent>
+			<CardFooter>
+				<Button variant={'default'}>Close</Button>
+			</CardFooter>
+		</Card>
+	);
 };
 
 const NavBar: React.FC<{
@@ -95,6 +141,29 @@ const NavBar: React.FC<{
 
 			<MenubarMenu>
 				<MenubarTrigger className={styles.menubarTrigger}>
+					Project
+				</MenubarTrigger>
+				<MenubarContent className={styles.menubarContent}>
+					<Popover>
+						<PopoverTrigger
+							className={
+								styles.menuItem +
+								'relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-neutral-100 focus:text-neutral-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 dark:bg-transparent dark:focus:bg-neutral-800 dark:focus:text-neutral-50'
+							}
+						>
+							Info
+						</PopoverTrigger>
+						<PopoverContent className="dark pointer-events-auto absolute left-0 top-0 h-screen w-screen border-none bg-transparent shadow-none drop-shadow-none dark:bg-transparent">
+							<ProjectInfo />
+						</PopoverContent>
+					</Popover>
+					<MenubarSeparator />
+				</MenubarContent>
+			</MenubarMenu>
+
+			<MenubarSeparator className="m-0 h-6 w-0.5 bg-secondary-500 p-0"></MenubarSeparator>
+			<MenubarMenu>
+				<MenubarTrigger className={styles.menubarTrigger}>
 					Edit
 				</MenubarTrigger>
 				<MenubarContent className={styles.menubarContent}>
@@ -127,6 +196,16 @@ const NavBar: React.FC<{
 						}}
 					>
 						Show Grid
+					</MenubarCheckboxItem>
+					<MenubarCheckboxItem
+						className={styles.menuItem}
+						checked={viewportData.showWorldGrid}
+						onClick={(e) => {
+							dispatch(toggleWorldGrid());
+							e.preventDefault();
+						}}
+					>
+						Show World Grid
 					</MenubarCheckboxItem>
 					<MenubarCheckboxItem
 						className={styles.menuItem}

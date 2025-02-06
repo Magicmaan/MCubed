@@ -69,7 +69,8 @@ export const AxisRotator: React.FC<{
 	dir1: THREE.Vector3;
 	dir2: THREE.Vector3;
 	axis: 0 | 1 | 2;
-}> = ({ dir1, dir2, axis }) => {
+	usingGimbal: React.MutableRefObject<boolean>;
+}> = ({ dir1, dir2, axis, usingGimbal }) => {
 	const {
 		rotationLimits,
 		annotations,
@@ -147,7 +148,7 @@ export const AxisRotator: React.FC<{
 			// @ts-ignore
 			e.target.setPointerCapture(e.pointerId);
 		},
-		[annotations, camControls, onDragStart, axis]
+		[annotations, camControls, onDragStart, axis, selectedCube]
 	);
 
 	const onPointerMove = React.useCallback(
@@ -210,12 +211,10 @@ export const AxisRotator: React.FC<{
 					degrees = toDegrees(angle.current);
 					divRef.current.innerText = `${degrees.toFixed(0)}º`;
 				}
-				console.log('Normal: ', normal);
 
 				const pos = new THREE.Vector3().setFromMatrixPosition(
 					objRef.current.matrixWorld
 				);
-				console.log('Position: ', pos);
 
 				const tempRot = new THREE.Matrix4().makeRotationAxis(
 					normal,
@@ -224,7 +223,6 @@ export const AxisRotator: React.FC<{
 				const rot = new THREE.Euler().setFromRotationMatrix(tempRot);
 				rotMatrix.setPosition(pos);
 				rotMatrix.makeRotationFromEuler(rot);
-				console.log('Rotation: ', rot);
 
 				// posNew
 				// 	.copy(origin)
@@ -235,7 +233,7 @@ export const AxisRotator: React.FC<{
 				onDrag(rotMatrix);
 			}
 		},
-		[annotations, onDrag, isHovered, rotationLimits, axis]
+		[annotations, onDrag, isHovered, rotationLimits, axis, selectedCube]
 	);
 
 	const onPointerUp = React.useCallback(
@@ -299,6 +297,8 @@ export const AxisRotator: React.FC<{
 			onPointerMove={onPointerMove}
 			onPointerUp={onPointerUp}
 			onPointerOut={onPointerOut}
+			onPointerEnter={() => (usingGimbal.current = true)}
+			onPointerLeave={() => (usingGimbal.current = false)}
 			matrix={matrixL}
 			matrixAutoUpdate={false}
 		>

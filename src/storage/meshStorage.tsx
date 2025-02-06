@@ -1,7 +1,11 @@
 import path from 'path';
 import fs from 'fs';
 import { MeshState, MeshStateSerialised } from '../redux/reducers/meshReducer';
-import { setLocalStorage } from './localStorage';
+import {
+	getLocalStorage,
+	getLocalStorageKeys,
+	setLocalStorage,
+} from './localStorage';
 import { v4 as uuidv4 } from 'uuid';
 
 const serialiseMeshState = (meshState: MeshState): string | null => {
@@ -30,12 +34,35 @@ const saveMeshState = (meshState: MeshState) => {
 	if (serialisedMesh) {
 		setLocalStorage(key, serialisedMesh);
 	}
-	console.log('Saved mesh state with key', key);
 };
 
-const readBBModel = (path: string) => {
-	const data = fs.readFileSync(path, 'utf8');
-	console.log(data);
+//get all mesh states from local storage
+const getMeshStorage = () => {
+	const storageKeys = getLocalStorageKeys();
+	const storageValues = storageKeys.map((key) => {
+		const data = getLocalStorage(key);
+		if (data) {
+			try {
+				const obj = JSON.parse(data) as MeshState;
+				//console.log(obj);
+				if (obj.mesh && obj.mesh.length > 0) {
+					return obj;
+				}
+			} catch (e) {
+				console.log('Error parsing', e);
+			}
+		}
+	});
+	storageValues
+		.sort((a, b) => {
+			if (a && b) {
+				return a.creationDate - b.creationDate;
+			}
+			return 0;
+		})
+		.reverse();
+
+	return storageValues;
 };
 
-export { serialiseMeshState, saveMeshState, readBBModel };
+export { serialiseMeshState, saveMeshState, getMeshStorage };

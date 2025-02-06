@@ -44,7 +44,8 @@ export const PlaneSlider: React.FC<{
 	dir1: THREE.Vector3;
 	dir2: THREE.Vector3;
 	axis: 0 | 1 | 2;
-}> = ({ dir1, dir2, axis }) => {
+	usingGimbal: React.MutableRefObject<boolean>;
+}> = ({ dir1, dir2, axis, usingGimbal }) => {
 	const {
 		translation,
 		translationLimits,
@@ -278,6 +279,8 @@ export const PlaneSlider: React.FC<{
 					onPointerMove={onPointerMove}
 					onPointerUp={onPointerUp}
 					onPointerOut={onPointerOut}
+					onPointerEnter={() => (usingGimbal.current = true)}
+					onPointerLeave={() => (usingGimbal.current = false)}
 					scale={scale / 2}
 					userData={userData}
 					position={[-scale / 10, -scale / 10, 0]}

@@ -28,6 +28,7 @@ type viewportState = {
 	showStats?: boolean;
 	selected?: string; // selected objects
 	mesh?: any[]; // mesh array
+	showWorldGrid?: boolean; // new value for showing world grid
 };
 const viewportInitialState: viewportState = {
 	cameraSettings: {
@@ -50,15 +51,13 @@ const viewportInitialState: viewportState = {
 	showStats: false,
 	selected: '0', // initialize selected as an empty array
 	mesh: [], // initialize mesh as an empty array
+	showWorldGrid: false, // initialize showWorldGrid
 };
 
 const viewportSlice = createSlice({
 	name: 'viewport',
 	initialState: viewportInitialState,
 	reducers: {
-		test(state) {
-			console.log('Test reducer for mesh');
-		},
 		setRenderMode(
 			state,
 			action: PayloadAction<viewportState['renderMode']>
@@ -110,14 +109,15 @@ const viewportSlice = createSlice({
 		) {
 			state.cameraSettings = action.payload;
 		},
-
+		toggleWorldGrid(state) {
+			state.showWorldGrid = !state.showWorldGrid;
+		},
 		// Define your reducers here
 	},
 });
 
 export default viewportSlice;
 export const {
-	test,
 	setControls,
 	setCameraLock,
 	setCamera,
@@ -126,4 +126,5 @@ export const {
 	meshAdd,
 	toggleStats,
 	setSelected,
+	toggleWorldGrid,
 } = viewportSlice.actions;

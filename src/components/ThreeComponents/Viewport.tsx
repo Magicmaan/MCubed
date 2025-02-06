@@ -12,7 +12,7 @@ import { Stats } from '@react-three/drei';
 import { useLoader } from '@react-three/fiber';
 
 import { loadTexture } from '../../util/textureUtil';
-import GridPlane from './GridPlane';
+import GridPlane, { DebugGridPlane } from './GridPlane';
 import {
 	useAppDispatch,
 	useAppSelector,
@@ -64,6 +64,7 @@ const Viewport: React.FC = () => {
 	const renderMode = viewportData.renderMode;
 
 	const selectionAnchorRef = React.useRef<THREE.Group | null>(null);
+	const usingGimbal = React.useRef(false);
 	const texture = React.useMemo(() => {
 		return loadTexture('/src/assets/textures/s1.png');
 	}, []);
@@ -129,9 +130,14 @@ const Viewport: React.FC = () => {
 			<ambientLight />
 			<pointLight position={[10, 10, 10]} />
 
-			<ModelInstance selectionAnchorRef={selectionAnchorRef} />
+			<ModelInstance
+				selectionAnchorRef={selectionAnchorRef}
+				usingGimbal={usingGimbal}
+			/>
 
 			<GridPlane size={16} />
+
+			<DebugGridPlane />
 			<OrbitControls
 				enableZoom={cameraControls?.zoom && cameraLock}
 				enablePan={cameraControls?.pan && cameraLock}
@@ -198,7 +204,7 @@ const Viewport: React.FC = () => {
 			{showStats && <Stats className="bg-red-500 text-lg" />}
 
 			<PivotControlsComponent
-				useGimbal={cameraControls}
+				usingGimbal={usingGimbal}
 				selectionAnchorRef={selectionAnchorRef}
 			/>
 			<group ref={selectionAnchorRef} matrixAutoUpdate={false} />

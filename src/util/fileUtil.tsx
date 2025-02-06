@@ -1,4 +1,4 @@
-import { CubeProps, THREETextureProps } from '../types/three';
+import { CubeProps, MeshState, THREETextureProps } from '../types/three';
 import { BBModelCube, BBModelFile } from '../types/types';
 import { v4 as uuidv4 } from 'uuid';
 import { BoxUVMap } from './textureUtil';
@@ -107,15 +107,48 @@ const mapCube = (cube: BBModelCube, uvWidth: number, uvHeight: number) => {
 		depth: size[2],
 	}).setPosition(cube.uv_offset[0], cube.uv_offset[1]);
 
+	//this is janky as hell
+	//i dont understand format, for some reason the front and back faces are flipped??
 	const uvMap = UvMapN.toUVMap(uvWidth, uvHeight);
-
 	const temp = uvMap.front;
 	uvMap.front = uvMap.back;
 	uvMap.back = temp;
-
+	//ignore for now
 	if (cube.mirror_uv) {
 		console.log('Mirroring UV');
 	}
+
+	console.log('Origin is not the same as position');
+	const pivot = cube.origin; // The rotation pivot (center of rotation)
+	const rotatedPosition = [0, 0, 0]; // Initialize rotated position
+
+	const cosX = Math.cos(rotation[0]);
+	const sinX = Math.sin(rotation[0]);
+	const cosY = Math.cos(rotation[1]);
+	const sinY = Math.sin(rotation[1]);
+	const cosZ = Math.cos(rotation[2]);
+	const sinZ = Math.sin(rotation[2]);
+
+	// Apply rotation to compute new position relative to the origin
+	rotatedPosition[0] =
+		(position[0] - pivot[0]) * (cosY * cosZ) +
+		(position[1] - pivot[1]) * (cosX * sinZ + sinX * sinY * cosZ) +
+		(position[2] - pivot[2]) * (sinX * sinZ - cosX * sinY * cosZ);
+
+	rotatedPosition[1] =
+		(position[0] - pivot[0]) * (-cosY * sinZ) +
+		(position[1] - pivot[1]) * (cosX * cosZ - sinX * sinY * sinZ) +
+		(position[2] - pivot[2]) * (sinX * cosZ + cosX * sinY * sinZ);
+
+	rotatedPosition[2] =
+		(position[0] - pivot[0]) * sinY +
+		(position[1] - pivot[1]) * (-sinX * cosY) +
+		(position[2] - pivot[2]) * (cosX * cosY);
+
+	// Compute final world-space position from origin
+	position[0] = rotatedPosition[0] + pivot[0];
+	position[1] = rotatedPosition[1] + pivot[1];
+	position[2] = rotatedPosition[2] + pivot[2];
 
 	// Create a new cube
 	return {
@@ -136,7 +169,6 @@ const mapCube = (cube: BBModelCube, uvWidth: number, uvHeight: number) => {
 
 const loadBBModelToMesh = async (file: File) => {
 	const data = JSON.parse(await getData(file)) as BBModelFile;
-
 	let mesh: CubeProps[] = [];
 	let textures: THREETextureProps[] = [];
 	if (verifyBBModel(data)) {
@@ -163,7 +195,18 @@ const loadBBModelToMesh = async (file: File) => {
 		throw new Error('Invalid BBModel file');
 	}
 
-	return { mesh, textures };
+	const newState = {
+		name: data.name,
+		texture: textures,
+		mesh: mesh,
+		key: uuidv4(),
+		hasChanged: true,
+		creationDate: Date.now(),
+		lastModified: Date.now(),
+	} as MeshState;
+
+	return newState;
+
 	// Load data as mesh
 	//const JSONData = JSON.parse(data);
 };

@@ -54,7 +54,8 @@ const offsetMatrix = /* @__PURE__ */ new THREE.Matrix4();
 export const AxisArrow: React.FC<{
 	direction: THREE.Vector3;
 	axis: 0 | 1 | 2;
-}> = ({ direction, axis }) => {
+	usingGimbal: React.MutableRefObject<boolean>;
+}> = ({ direction, axis, usingGimbal }) => {
 	const {
 		translation,
 		translationLimits,
@@ -123,6 +124,7 @@ export const AxisArrow: React.FC<{
 				divRef.current.innerText = `${translation.current[axis].toFixed(2)}`;
 				divRef.current.style.display = 'block';
 			}
+
 			e.stopPropagation();
 			const rotation = new THREE.Matrix4().extractRotation(
 				objRef.current.matrixWorld
@@ -133,7 +135,15 @@ export const AxisArrow: React.FC<{
 				selectedCube.current?.position[1] || 0,
 				selectedCube.current?.position[2] || 0
 			);
-			const dir = direction.clone().applyMatrix4(rotation).normalize();
+
+			let dir = direction.clone();
+
+			//move locally or globally
+			const localMovement = true;
+			if (localMovement) {
+				dir = dir.applyMatrix4(rotation).normalize();
+			}
+
 			clickInfo.current = { clickPoint, dir };
 			offset0.current = translation.current[axis];
 			onDragStart({
@@ -167,11 +177,6 @@ export const AxisArrow: React.FC<{
 					e.ray.direction
 				);
 
-				// if (Math.abs(offset - previousDistance) > 0.01) {
-				// 	previousDistance = offset;
-				// 	return;
-				// }
-
 				// used to get movement based on key modifiers
 				offset = round(offset, moveMultiplier.current, 0);
 
@@ -193,10 +198,8 @@ export const AxisArrow: React.FC<{
 				const rotation = new THREE.Matrix4().extractRotation(
 					objRef.current.matrixWorld
 				);
-				const rotatedDir = dir
-					.clone()
-					.applyMatrix4(rotation)
-					.normalize();
+				const rotatedDir = dir.clone().normalize();
+
 				offsetMatrix.makeTranslation(
 					rotatedDir.x * offset,
 					rotatedDir.y * offset,
@@ -205,6 +208,9 @@ export const AxisArrow: React.FC<{
 
 				setDragOffset(offset);
 				onDrag(offsetMatrix);
+
+				const pos = new THREE.Vector3();
+				pos.setFromMatrixPosition(offsetMatrix);
 			}
 		},
 		[annotations, onDrag, isHovered, translation, translationLimits, axis]
@@ -215,6 +221,7 @@ export const AxisArrow: React.FC<{
 			if (annotations) {
 				divRef.current.style.display = 'none';
 			}
+			usingGimbal.current = false;
 			e.stopPropagation();
 			clickInfo.current = null;
 			onDragEnd();
@@ -276,6 +283,8 @@ export const AxisArrow: React.FC<{
 					onPointerMove={onPointerMove}
 					onPointerUp={onPointerUp}
 					onPointerOut={onPointerOut}
+					onPointerEnter={() => (usingGimbal.current = true)}
+					onPointerLeave={() => (usingGimbal.current = false)}
 				>
 					//
 					{annotations && (

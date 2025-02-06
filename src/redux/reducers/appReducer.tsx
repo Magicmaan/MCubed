@@ -22,6 +22,9 @@ type appState = {
 	saved: boolean;
 	fromFile: boolean;
 	filePath?: string;
+
+	past: MeshState[];
+	future: MeshState[];
 };
 
 const appInitialState: appState = {
@@ -31,6 +34,9 @@ const appInitialState: appState = {
 	model: undefined,
 	saved: false,
 	fromFile: false,
+
+	past: [],
+	future: [],
 };
 
 const appSlice = createSlice({

@@ -29,7 +29,7 @@ import {
 } from '../redux/reducers/meshReducer';
 import { MenubarSeparator } from './ui/menubar';
 import Icon from '../assets/icons/solid/.all';
-import { serialiseMeshState } from '../storage/meshStorage';
+import { getMeshStorage, serialiseMeshState } from '../storage/meshStorage';
 import { toFormatted } from '../util/dateUtil';
 import { getData, loadBBModelToMesh } from '../util/fileUtil';
 import { text } from 'stream/consumers';
@@ -41,28 +41,9 @@ const Startup: React.FC<{
 	//clearLocalStorage();
 
 	const dispatch = useAppDispatch();
-
 	const meshStore = useMeshStoreSelector();
-	//const serialisedMesh = serialiseMeshState(meshStore);
-	//if (serialisedMesh) {
-	//	setLocalStorage(meshStore.key, serialisedMesh);
-	//}
 
-	const storageKeys = getLocalStorageKeys();
-	const storageValues = storageKeys.map((key) => {
-		const data = getLocalStorage(key);
-		if (data) {
-			console.log('key', key);
-			const obj = JSON.parse(data) as MeshState;
-			//console.log(obj);
-			return obj;
-		}
-	});
-	storageValues
-		.sort((a, b) => {
-			return a.creationDate - b.creationDate;
-		})
-		.reverse();
+	const storageValues = getMeshStorage();
 
 	return (
 		<div className="absolute inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -137,18 +118,8 @@ const Startup: React.FC<{
 											file
 										);
 										loadBBModelToMesh(file).then(
-											({ mesh, textures }) => {
-												const state = {
-													...meshStore,
-													mesh: mesh,
-													key: uuidv4(),
-													texture: [
-														...meshStore.texture,
-														...textures,
-													],
-												} as MeshState;
-												console.log('new mesh', state);
-												dispatch(loadMesh(state));
+											(meshState) => {
+												dispatch(loadMesh(meshState));
 												setStartup(false);
 
 												console.log('Loaded file');

@@ -21,7 +21,7 @@ const cubeCount = 1;
 
 const o1 = 1 / 8;
 type CubePropsIndex = Expand<CubeProps & { index: number }>;
-console.log('Sample UV', UV_template);
+
 const UVo = {
 	top: [o1, 0, o1 * 2, o1],
 	bottom: [o1 * 2, 0, o1 * 3, o1],
@@ -31,7 +31,7 @@ const UVo = {
 	back: [o1 * 2, o1, o1 * 3, o1 * 2],
 	left: [0, o1, o1, o1 * 2],
 };
-console.log('Sample UV', UVo);
+
 const meshInitialState: MeshState = {
 	name: 'default',
 	key: uuidv4(),
@@ -123,7 +123,6 @@ const meshSlice = createSlice({
 						.toUVMap(128, 128) as any;
 				}
 				const afterTime = new Date().toISOString();
-				console.log('After modification at', afterTime);
 			}
 		},
 		meshModifyIndex(
@@ -148,7 +147,6 @@ const meshSlice = createSlice({
 						.toUVMap(128, 128) as any;
 				}
 				const afterTime = new Date().toISOString();
-				console.log('After modification at', afterTime);
 			}
 		},
 
@@ -158,6 +156,13 @@ const meshSlice = createSlice({
 		},
 		loadMesh(state, action: PayloadAction<MeshStateSerialised>) {
 			Object.assign(state, action.payload);
+		},
+
+		setName(state, action: PayloadAction<string>) {
+			if (state.name !== action.payload) {
+				state.name = action.payload;
+				state.hasChanged = true;
+			}
 		},
 	},
 });
@@ -172,5 +177,6 @@ export const {
 	meshRemoveCube,
 	saveMesh,
 	loadMesh,
+	setName,
 } = meshSlice.actions;
 export type { MeshState, MeshStateSerialised };

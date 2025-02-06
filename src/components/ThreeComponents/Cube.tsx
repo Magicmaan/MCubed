@@ -103,6 +103,7 @@ const Cube: React.FC<{
 				cube.position[2]
 			);
 			ref.current?.position.copy(worldPos);
+			ref.current?.matrixWorld.setPosition(worldPos);
 			ref.current?.matrixWorld.makeRotationFromEuler(
 				new THREE.Euler(
 					cube.rotation[0],
