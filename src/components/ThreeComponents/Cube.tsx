@@ -9,14 +9,14 @@ import {
 	useViewportSelectedSelector,
 	useViewportSelector,
 } from '../../hooks/useRedux';
-import { setControls } from '../../redux/reducers/viewportReducer';
+import { setControls, setSelected } from '../../redux/reducers/viewportReducer';
 import { BoxUVMap, boxUVToVertexArray } from '../../util/textureUtil';
 import {
 	CubeProps,
 	THREEObjectProps,
 	THREETextureProps,
 } from '../../types/three';
-import { meshModifyID } from '../../redux/reducers/meshReducer';
+import { meshModifyID, meshRemoveCube } from '../../redux/reducers/meshReducer';
 import {
 	Menu,
 	Item,
@@ -26,6 +26,7 @@ import {
 } from 'react-contexify';
 import { ContextInfoItem } from '../templates/ContextMenu';
 import { Button } from './ui/button';
+import { useKey } from 'react-use';
 
 const Cube: React.FC<{
 	cube: CubeProps;
@@ -42,6 +43,7 @@ const Cube: React.FC<{
 	if (!textureSource) {
 		renderMode = 'solid';
 	}
+	const dispatch = useAppDispatch();
 
 	const outlineVisible = React.useRef(false);
 	const selected = React.useRef(false);
@@ -54,6 +56,13 @@ const Cube: React.FC<{
 	texture.magFilter = THREE.NearestFilter;
 	texture.wrapS = THREE.RepeatWrapping;
 	texture.wrapT = THREE.RepeatWrapping;
+
+	const deleteCube = () => {
+		if (selectedID === cube.id) {
+			dispatch(meshRemoveCube({ id: cube.id }));
+		}
+	};
+	useKey('Delete', deleteCube, {}, [selectedID]);
 
 	const MENU_ID = 'context_cube_' + cube.id;
 
@@ -80,7 +89,6 @@ const Cube: React.FC<{
 		invalidate();
 	}, [selectedID]);
 
-	const dispatch = useAppDispatch();
 	const viewport = useViewportSelector();
 	const clickTimer = React.useRef<number>(0);
 	const isMouseDown = React.useRef(false);
@@ -190,6 +198,7 @@ const Cube: React.FC<{
 					}
 				}}
 				userData={{ id: cube.id }}
+				customDepthMaterial={new THREE.MeshDepthMaterial()}
 			>
 				<boxGeometry
 					args={[cube.size[0], cube.size[1], cube.size[2]]}
@@ -201,6 +210,8 @@ const Cube: React.FC<{
 						map={texture}
 						attach="material"
 						transparent={true}
+						depthTest={false}
+						depthFunc={THREE.NeverDepth}
 					/>
 				) : (
 					<>

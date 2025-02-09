@@ -181,22 +181,48 @@ const NumberDisplaySingle = ({
 				className="pointer-events-auto flex h-full w-auto items-start justify-start border-none bg-transparent text-start outline-none"
 				tabIndex={index * 10 + Math.round(Math.random() * 10)}
 				onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+					if (!setValue) return;
 					if (e.key === 'Enter') e.currentTarget.blur();
 					if (!allowedKeys.includes(e.key)) {
 						e.preventDefault();
 						return;
 					}
-					if (e.key === 'ArrowUp' && setValue)
+					if (e.key === 'ArrowUp')
 						setValue(value + 1 * getMultiplier());
-					if (e.key === 'ArrowDown' && setValue)
+					if (e.key === 'ArrowDown')
 						setValue(value - 1 * getMultiplier());
-					if (e.key === 'r' && setValue) setValue(Math.round(value));
-					if (e.key === 't' && setValue) setValue(Math.trunc(value));
-					if (e.key === 'f' && setValue) setValue(-value);
+
 					if (e.key === 'Escape') e.currentTarget.blur();
 				}}
-				onChange={() => {}}
+				onChange={(e) => {
+					if (!setValue) return;
+					if (!/^[0-9.\-+*/]*$/.test(e.target.value)) {
+						return;
+					}
+					if (
+						e.target.value === '' ||
+						e.target.value === '-' ||
+						e.target.value === '.' ||
+						e.target.value === '-.' ||
+						e.target.value === '+.' ||
+						e.target.value === '+'
+					) {
+						setInputValue(value.toFixed(decimalPlaces));
+						return;
+					}
+
+					setInputValue(e.target.value);
+				}}
+				onPaste={(e) => {
+					e.preventDefault();
+					const text = e.clipboardData.getData('text');
+					if (!/^[0-9.\-+*/]*$/.test(text)) {
+						return;
+					}
+					setInputValue(text);
+				}}
 				onBlur={(e) => {
+					if (!setValue) return;
 					let text = e.target.value;
 					if (['+', '-', '*', '/'].some((op) => text.includes(op))) {
 						const firstTwoChars = text.slice(0, 2);
@@ -214,10 +240,10 @@ const NumberDisplaySingle = ({
 							text = value.toFixed(decimalPlaces);
 						}
 					}
-					if (!text || isNaN(parseFloat(text))) {
+					if (!text || isNaN(parseFloat(text)) || text === '.') {
 						text = value.toFixed(decimalPlaces);
 					}
-					if (setValue) setValue(parseFloat(text));
+					setValue(parseFloat(text));
 				}}
 				onFocus={(e) => e.target.select()}
 			/>

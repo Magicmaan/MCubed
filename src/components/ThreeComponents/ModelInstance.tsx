@@ -32,21 +32,21 @@ const ModelInstance: React.FC<{
 	//uses raycaster to select cubes
 	const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
 		if (!scene) return;
-		console.log('cameraControls', cameraControls);
-		console.log('usingGimbal', usingGimbal);
+		//console.log('cameraControls', cameraControls);
+		//console.log('usingGimbal', usingGimbal);
 		if (usingGimbal.current) return;
 		const intersects = scene.raycaster
 			.intersectObjects(scene.scene.children, true)
 			.filter((i) => i.object.type === 'Cube');
 		if (intersects.length === 0) return;
 
-		console.log('intersects click', intersects);
+		//console.log('intersects click', intersects);
 
 		dispatch(reduxSetSelected(intersects[0].object.userData.id));
 	};
 
 	return (
-		<group onPointerDown={handlePointerDown}>
+		<group onPointerDown={handlePointerDown} type="ModelInstance">
 			{modelData.map((cube, index) => (
 				<Cube
 					cube={cube as CubeProps}

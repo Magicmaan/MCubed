@@ -37,18 +37,20 @@ import {
 	useViewportSelectedSelector,
 	useViewportSelector,
 } from '../hooks/useRedux';
-import { setSelected as reduxSetSelected } from '../redux/reducers/viewportReducer';
+import {
+	setSelected as reduxSetSelected,
+	setSelected,
+} from '../redux/reducers/viewportReducer';
 import { invalidate } from '@react-three/fiber';
 import { eventNames } from 'process';
 import { ContextInfoItem } from './templates/ContextMenu';
 import { Button } from './ui/button';
 import { CubeProps } from '../types/three';
+import { useKey } from 'react-use';
 
 const ModelItem: React.FC<{
 	item: CubeProps;
-	selected?: number;
-	setSelected: (id: number) => void;
-}> = ({ item, selected: old, setSelected }) => {
+}> = ({ item }) => {
 	const dispatch = useAppDispatch();
 	const selected = useViewportSelectedSelector();
 	const MENU_ID = 'context_model_part_' + item.id;
@@ -73,15 +75,23 @@ const ModelItem: React.FC<{
 			return;
 		}
 		if (item.id === selected) {
-			setSelected(-1);
+			dispatch(reduxSetSelected(-1));
 			console.log('selected');
 		} else {
 			console.log('not selected');
-			setSelected(item.id);
+			dispatch(reduxSetSelected(item.id));
 		}
 
 		event.preventDefault();
 	};
+
+	// const deleteCube = () => {
+	// 	if (selected === item.id) {
+	// 		dispatch(meshRemoveCube({ id: item.id }));
+	// 		dispatch(setSelected(-1));
+	// 	}
+	// };
+	// useKey('Delete', deleteCube);
 
 	return (
 		<button
@@ -160,14 +170,7 @@ const ModelPartView: React.FC = () => {
 
 			<div className="h-full w-full flex-1 flex-col flex-nowrap items-center justify-center space-y-1 overflow-y-scroll">
 				{meshData.map((item, index) => (
-					<ModelItem
-						item={item}
-						key={index}
-						selected={selected}
-						setSelected={(id: number) => {
-							dispatch(reduxSetSelected(id));
-						}}
-					/>
+					<ModelItem item={item} key={index} />
 				))}
 			</div>
 		</SideBarWidget>

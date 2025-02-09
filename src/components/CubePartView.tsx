@@ -121,26 +121,6 @@ const CubePartView: React.FC = () => {
 		event.preventDefault();
 	};
 
-	const pivotSetVec = (x: number, y: number, z: number) => {
-		if (selected !== -1) {
-			console.log('Setting pivot for', selected, 'to', [x, y, z]);
-			dispatch(meshModifyID({ id: cube.id, pivot: [x, y, z] }));
-		}
-	};
-	const pivotContextMenuID = 'cubePartView_pivot';
-	const { show: showPivotContextMenu } = useContextMenu({
-		id: pivotContextMenuID,
-	});
-	const handlePivotContextMenu = (
-		event: React.MouseEvent<HTMLButtonElement, MouseEvent>
-	) => {
-		//document.getElementById("model_part_" + item.id)?.click();
-		showPivotContextMenu({
-			event,
-		});
-		event.preventDefault();
-	};
-
 	return (
 		<SideBarWidget name={cube?.name ?? 'Cube Selector'}>
 			{cube ? (
@@ -463,106 +443,6 @@ const CubePartView: React.FC = () => {
 							<ContextItem label="Round Rotation" />
 							<ContextItem label="Truncate Rotation" />
 							<ContextItem label="Set Rotation to Zero" />
-						</Menu>
-					</div>
-
-					<div
-						className="pointer-events-auto flex h-auto w-full flex-col items-center justify-center rounded-sm border-main-800 bg-main-500 p-1"
-						onContextMenuCapture={(e) => {
-							handlePositionContextMenu(e);
-						}}
-						onClick={(e) => {
-							console.log('click');
-							e.currentTarget.focus();
-							e.preventDefault();
-						}}
-						onMouseOver={(e) => {
-							e.currentTarget.focus();
-						}}
-						onPaste={(e) => {
-							const data = e.clipboardData.getData('text');
-							const datasplit = getClipboardDataAsVector(data);
-							positionSetVec(
-								datasplit.x,
-								datasplit.y,
-								datasplit.z
-							);
-						}}
-						onCopy={(e) => {
-							console.log('copy');
-							e.clipboardData.setData(
-								'text/plain',
-								cube.position.join(' ')
-							);
-							console.log('Copied', cube.position.join(' '));
-							e.preventDefault();
-						}}
-						onFocus={() => {
-							console.log('focus');
-						}}
-					>
-						<div className="flex h-full w-full flex-col space-y-1 p-1 text-sm">
-							<p className="ml-2">Pivot</p>
-							<div className="flex h-auto w-full flex-row items-center justify-between overflow-hidden px-2">
-								<NumberDisplayVec3
-									vec={cube.pivot}
-									setVec={pivotSetVec}
-								/>
-								<button
-									className="m-0 ml-1 flex h-full w-min items-center justify-center rounded-md bg-transparent p-1 px-0 hover:bg-button-hover"
-									onClick={(e) => {
-										handlePivotContextMenu(e);
-									}}
-								>
-									<Icon
-										name="ellipsis-vertical"
-										height={18}
-										width={18}
-										colour="white"
-									/>
-								</button>
-							</div>
-						</div>
-						<Menu
-							id={pivotContextMenuID}
-							theme="contextTheme"
-							className="text-sm"
-						>
-							<ContextInfoItem
-								label={'Pivot ' + cube.position.join(' ')}
-								title="Pivot of cube"
-							/>
-							<ContextCopyPasteItem
-								shiftKey={true}
-								copyTitle="Copy Vector"
-								pasteTitle="Paste Vector"
-								copyFunc={() => {
-									console.log('Copy');
-									navigator.clipboard.writeText(
-										cube.pivot.join(' ')
-									);
-								}}
-								pasteFunc={() => {
-									console.log('Paste');
-									navigator.clipboard
-										.readText()
-										.then((text) => {
-											const datasplit =
-												stringToVector(text);
-											console.log('Pasted', datasplit);
-											pivotSetVec(
-												datasplit.x,
-												datasplit.y,
-												datasplit.z
-											);
-										});
-								}}
-							/>
-							<Separator />
-
-							<ContextItem label="Round Pivot" />
-							<ContextItem label="Truncate Pivot" />
-							<ContextItem label="Set Pivot to Zero" />
 						</Menu>
 					</div>
 				</div>

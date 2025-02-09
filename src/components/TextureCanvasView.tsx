@@ -257,11 +257,16 @@ class UVMap {
 }
 
 const TextureCanvasView: React.FC = () => {
-	const viewportStore = useViewportSelector();
-	const meshStore = useMeshStoreSelector();
+	const meshTextures = useMeshTextureSelector();
 	const meshData = useMeshDataSelector();
-	const currentTexture = meshStore.texture.find((t) => t.active);
-	const templateTexture = meshStore.texture.find((t) => t.id === 'TEMPLATE');
+	const currentTexture = useMemo(
+		() => meshTextures.find((t) => t.active),
+		[meshTextures]
+	);
+	const templateTexture = useMemo(
+		() => meshTextures.find((t) => t.id === 'TEMPLATE'),
+		[meshTextures]
+	);
 
 	const activeTexture = useMemo(() => {
 		const src = currentTexture || templateTexture;
@@ -286,6 +291,19 @@ const TextureCanvasView: React.FC = () => {
 		);
 	}, [meshData]);
 
+	const onChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (file) {
+			getBase64(file)
+				.then((result) => {
+					console.log(result);
+				})
+				.catch((err) => {
+					console.error(err);
+				});
+		}
+	}, []);
+
 	return (
 		<SideBarWidget name="Texture">
 			<div
@@ -300,17 +318,7 @@ const TextureCanvasView: React.FC = () => {
 					className="pointer-events-auto"
 					type="file"
 					accept="image/png"
-					onClick={(e) => {}}
-					onChange={(e) => {
-						const file = e.target.files?.[0];
-						if (file) {
-							getBase64(file)
-								.then((result) => {
-									textureData.current = result as string;
-								})
-								.catch((err) => {});
-						}
-					}}
+					onChange={onChange}
 				/>
 				<TextureItem texture={currentTexture} />
 				<TextureItem texture={templateTexture} />

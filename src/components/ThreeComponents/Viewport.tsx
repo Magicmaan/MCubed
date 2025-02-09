@@ -7,6 +7,7 @@ import {
 	PerspectiveCamera,
 	Grid,
 	Sphere,
+	useTexture,
 } from '@react-three/drei';
 import { Stats } from '@react-three/drei';
 import { useLoader } from '@react-three/fiber';
@@ -18,6 +19,7 @@ import {
 	useAppSelector,
 	useMeshDataSelector,
 	useMeshStoreSelector,
+	useMeshTextureSelector,
 	useViewportCameraLockSelector,
 	useViewportCameraSelector,
 	useViewportCameraSettingsSelector,
@@ -35,12 +37,79 @@ import ModelInstance from './ModelInstance';
 import { RootState } from '@react-three/fiber';
 import { int } from 'three/webgpu';
 
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+
 const GetSceneRef: React.FC<{
 	setThree: React.Dispatch<React.SetStateAction<RootState | undefined>>;
 }> = ({ setThree }) => {
 	const threeScene = useThree();
 	setThree(threeScene);
 	return <></>;
+};
+
+const ExportSceneButton: React.FC = () => {
+	const scene = useThree().scene;
+
+	const model = scene.children.find(
+		(child) => child.type === 'ModelInstance'
+	);
+
+	const newScene = new THREE.Scene();
+	model?.children.forEach((child) => {
+		newScene.add(child.clone());
+	});
+	const activeTexture = useMeshTextureSelector().find(
+		(texture) => texture.active
+	);
+
+	console.log('newScene', newScene);
+	const exportScene = () => {
+		const exporter = new GLTFExporter();
+		const options = {
+			trs: false,
+			onlyVisible: true,
+			truncateDrawRange: true,
+			embedImages: true,
+			animations: [],
+			forceIndices: false,
+			forcePowerOfTwoTextures: false,
+			includeCustomExtensions: false,
+		};
+
+		exporter.parse(
+			newScene,
+			// called when the gltf has been generated
+			function (gltf) {
+				console.log('scene', scene);
+				console.log(gltf);
+				//downloadJSON(gltf);
+				const download = document.createElement('a');
+				download.href = URL.createObjectURL(
+					new Blob([JSON.stringify(gltf)], {
+						type: 'application/json',
+					})
+				);
+				download.download = 'scene.gltf';
+
+				download.click();
+			},
+			// called when there is an error in the generation
+			function (error) {
+				console.log('An error happened');
+			},
+			options
+		);
+	};
+
+	useEffect(() => {
+		window.addEventListener('keydown', (e) => {
+			if (e.key === 'e') {
+				exportScene();
+			}
+		});
+	}, []);
+
+	return <group></group>;
 };
 
 const Viewport: React.FC = () => {
@@ -134,6 +203,8 @@ const Viewport: React.FC = () => {
 				selectionAnchorRef={selectionAnchorRef}
 				usingGimbal={usingGimbal}
 			/>
+
+			<ExportSceneButton />
 
 			<GridPlane size={16} />
 
