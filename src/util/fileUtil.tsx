@@ -3,6 +3,7 @@ import { BBModelCube, BBModelFile } from '../types/types';
 import { v4 as uuidv4 } from 'uuid';
 import { BoxUVMap } from './textureUtil';
 import path from 'path';
+import { Euler } from 'three';
 
 // const getBase64 = (file) => {
 // 	// Make new FileReader
@@ -86,16 +87,24 @@ const mapCube = (cube: BBModelCube, uvWidth: number, uvHeight: number) => {
 		Math.abs(cube.to[1] - cube.from[1]),
 		Math.abs(cube.to[2] - cube.from[2]),
 	];
-	const position = [
-		cube.from[0] + size[0] / 2,
-		cube.from[1] + size[1] / 2,
-		cube.from[2] + size[2] / 2,
-	];
+	// const position = [
+	// 	cube.from[0] + size[0] / 2,
+	// 	cube.from[1] + size[1] / 2,
+	// 	cube.from[2] + size[2] / 2,
+	// ];
+	const position = cube.origin;
 
 	if (cube.rotation === undefined) {
 		cube.rotation = [0, 0, 0];
 	}
-	const rotation = cube.rotation.map((angle) => (angle * Math.PI) / 180);
+	const temprot = cube.rotation.map((angle) => (angle * Math.PI) / 180);
+
+	// blockbench uses ZYX rotation order
+	// we need to convert it to XYZ as that is what three.js uses
+	const rotation = new Euler(temprot[0], temprot[1], temprot[2], 'ZYX')
+		.reorder('XYZ')
+		.toArray();
+
 	if (cube.uv_offset === undefined) {
 		cube.uv_offset = [0, 0];
 	}
