@@ -103,7 +103,10 @@ const meshSlice = createSlice({
 			}
 		},
 
-		meshModifyID(state, action: PayloadAction<Partial<CubeProps>>) {
+		meshModifyID(
+			state,
+			action: PayloadAction<Partial<CubeProps> & { updateUV?: boolean }>
+		) {
 			const p = action.payload;
 			const index = state.mesh.findIndex((item) => item.id === p.id);
 
@@ -118,9 +121,7 @@ const meshSlice = createSlice({
 						width: p.size[0],
 						height: p.size[1],
 						depth: p.size[2],
-					})
-						.setPosition(1, 1)
-						.toUVMap(128, 128) as any;
+					}).toUVMap(128, 128) as any;
 				}
 				const afterTime = new Date().toISOString();
 			}
@@ -150,9 +151,49 @@ const meshSlice = createSlice({
 			}
 		},
 
+		textureAdd(state, action: PayloadAction<THREETextureProps>) {
+			state.texture.push(action.payload);
+			state.textureCount++;
+		},
+		textureSetActive(state, action: PayloadAction<string>) {
+			//uses id to set active texture
+			const index = state.texture.findIndex(
+				(item) => item.id === action.payload
+			);
+			if (index !== -1) {
+				const oldTexture =
+					state.texture[
+						state.texture.findIndex((item) => item.active)
+					];
+				const newTexture = state.texture[index];
+				state.texture.forEach((item) => (item.active = false));
+				newTexture.active = true;
+
+				// update UVs if the texture size has changed
+				if (
+					oldTexture &&
+					(oldTexture.width !== newTexture.width ||
+						oldTexture.height !== newTexture.height)
+				) {
+					state.mesh.forEach((cube) => {
+						const uv = new BoxUVMap({ cubeID: cube.id })
+							.fromUVMap(
+								cube.uv,
+								oldTexture.width,
+								oldTexture.height
+							)
+							.toUVMap(newTexture.width, newTexture.height);
+						cube.uv = uv;
+					});
+				}
+			}
+		},
+		saveMeshCache(state) {
+			saveMeshState(state, true);
+		},
 		saveMesh(state) {
 			console.log('Saving mesh state');
-			setLocalStorage(state.key, JSON.stringify(state));
+			saveMeshState(state);
 		},
 		loadMesh(state, action: PayloadAction<MeshStateSerialised>) {
 			Object.assign(state, action.payload);
@@ -163,6 +204,15 @@ const meshSlice = createSlice({
 				state.name = action.payload;
 				state.hasChanged = true;
 			}
+		},
+
+		reset(state) {
+			Object.assign(state, meshInitialState);
+			// generate a new key
+			state.key = uuidv4();
+			const url = new URL(window.location.href);
+			url.searchParams.delete('id');
+			window.history.replaceState({}, document.title, url.toString());
 		},
 	},
 });
@@ -177,6 +227,10 @@ export const {
 	meshRemoveCube,
 	saveMesh,
 	loadMesh,
+	saveMeshCache,
 	setName,
+	textureAdd,
+	textureSetActive,
+	reset,
 } = meshSlice.actions;
 export type { MeshState, MeshStateSerialised };

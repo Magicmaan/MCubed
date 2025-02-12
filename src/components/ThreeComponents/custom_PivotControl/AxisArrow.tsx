@@ -367,7 +367,7 @@ export const AxisArrow: React.FC<{
 						</mesh>
 
 						{/* shows Axis value on hover */}
-						<Html position={[0, scale * 1.07, 0]} center>
+						{/* <Html position={[0, scale * 1.07, 0]} center>
 							<div
 								id="test-123"
 								aria-busy={dragOffset != 0}
@@ -394,7 +394,7 @@ export const AxisArrow: React.FC<{
 										: axisValToString(axis)}
 								</div>
 							</div>
-						</Html>
+						</Html> */}
 					</group>
 				</group>
 			</group>

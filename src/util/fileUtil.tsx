@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { BoxUVMap } from './textureUtil';
 import path from 'path';
 import { Euler } from 'three';
+import { read } from 'fs';
 
 // const getBase64 = (file) => {
 // 	// Make new FileReader
@@ -19,13 +20,19 @@ import { Euler } from 'three';
 // 	});
 // };
 
-const getBase64 = (file: Blob): string => {
+const getBase64 = (file: Blob): Promise<string> => {
+	console.log('Getting base64');
 	let result = '';
 	const reader = new FileReader();
 	reader.readAsDataURL(file);
-	reader.onload = () => {
-		return reader.result as string;
-	};
+	// reader.onload = () => {
+	// 	return reader.result as string;
+	// };
+	return new Promise((resolve) => {
+		reader.onload = () => {
+			resolve(reader.result as string);
+		};
+	});
 	//while (reader.readyState !== 2) {} // Wait until the file is read
 };
 
@@ -171,7 +178,7 @@ const mapCube = (cube: BBModelCube, uvWidth: number, uvHeight: number) => {
 		scale: cube.inflate,
 		visible: true,
 		id: cube.uuid,
-		auto_uv: true,
+		auto_uv: false,
 		uv: uvMap,
 	} as CubeProps;
 };

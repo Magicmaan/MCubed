@@ -13,7 +13,11 @@ import {
 	useMeshTextureSelector,
 	useViewportSelector,
 } from '../hooks/useRedux';
-import { meshModifyIndex } from '../redux/reducers/meshReducer';
+import {
+	meshModifyIndex,
+	textureAdd,
+	textureSetActive,
+} from '../redux/reducers/meshReducer';
 import ToggleButtonIcon from './templates/ToggleButtonIcon';
 import { BoxUVMap, loadTexture } from '../util/textureUtil';
 import { getBase64 } from '../util/fileUtil';
@@ -23,6 +27,8 @@ import { temp, uv } from 'three/webgpu';
 import TextureCanvas from './TextureCanvas';
 import { THREETextureProps } from '../types/three';
 import { Item, Menu, useContextMenu } from 'react-contexify';
+import { v4 as uuidv4 } from 'uuid';
+import { meshAdd } from '../redux/reducers/viewportReducer';
 
 //TODO:
 // - Add ability to change UV map
@@ -267,6 +273,7 @@ const TextureCanvasView: React.FC = () => {
 		() => meshTextures.find((t) => t.id === 'TEMPLATE'),
 		[meshTextures]
 	);
+	const dispatch = useAppDispatch();
 
 	const activeTexture = useMemo(() => {
 		const src = currentTexture || templateTexture;
@@ -294,13 +301,18 @@ const TextureCanvasView: React.FC = () => {
 	const onChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
 		if (file) {
-			getBase64(file)
-				.then((result) => {
-					console.log(result);
-				})
-				.catch((err) => {
-					console.error(err);
-				});
+			const data = getBase64(file).then((data) => {
+				const texture = {
+					name: file.name,
+					data: data,
+					width: 16,
+					height: 16,
+					active: false,
+					id: uuidv4(),
+				} as THREETextureProps;
+
+				dispatch(textureAdd(texture));
+			});
 		}
 	}, []);
 
@@ -320,8 +332,12 @@ const TextureCanvasView: React.FC = () => {
 					accept="image/png"
 					onChange={onChange}
 				/>
-				<TextureItem texture={currentTexture} />
-				<TextureItem texture={templateTexture} />
+
+				{meshTextures.map((texture) => {
+					return <TextureItem texture={texture} />;
+				})}
+				{/* <TextureItem texture={activeTexture} /> */}
+				{/* <TextureItem texture={templateTexture} /> */}
 			</div>
 		</SideBarWidget>
 	);
@@ -345,11 +361,19 @@ const TextureItem: React.FC<{
 		event.stopPropagation();
 	};
 
+	const onClick = () => {
+		dispatch(textureSetActive(texture?.id || 'default'));
+	};
+
 	return (
 		<button
 			id={'texture_' + (texture?.id || 'default')}
 			onContextMenuCapture={handleContextMenu}
-			className="pointer-events-auto flex h-14 w-full select-none flex-row flex-nowrap items-center justify-start gap-2 rounded-md bg-secondary hover:bg-button-hover focus:outline-none"
+			onClick={onClick}
+			aria-pressed={texture?.active}
+			className={
+				'pointer-events-auto flex h-14 w-full select-none flex-row flex-nowrap items-center justify-start gap-2 rounded-md bg-secondary hover:bg-button-hover focus:outline-none aria-pressed:bg-button-selected'
+			}
 		>
 			<div className="aspect-square h-full w-auto items-center justify-center bg-red-500">
 				<img src={texture?.data} className="h-full w-full" />

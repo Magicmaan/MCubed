@@ -26,6 +26,7 @@ import {
 	loadMesh,
 	MeshState,
 	MeshStateSerialised,
+	reset,
 } from '../redux/reducers/meshReducer';
 import { MenubarSeparator } from './ui/menubar';
 import Icon from '../assets/icons/solid/.all';
@@ -57,20 +58,13 @@ const Startup: React.FC<{
 							className="m-0 flex w-full justify-start rounded-sm text-start"
 							variant={'outline'}
 							onClick={(e) => {
+								dispatch(reset());
 								setStartup(false);
 							}}
 						>
 							Cube Model
 						</Button>
-						<Button
-							className="m-0 flex w-full justify-start text-start"
-							variant={'outline'}
-							onClick={(e) => {
-								setStartup(false);
-							}}
-						>
-							Mesh Model
-						</Button>
+
 						<div className="flex h-full w-10 grow"></div>
 						<MenubarSeparator />
 						<div className="flex h-full w-10 grow"></div>
@@ -83,19 +77,6 @@ const Startup: React.FC<{
 									'file_selector'
 								) as HTMLInputElement;
 								input.click();
-								//input.type = 'file';
-								//input.accept = '.bbmodel';
-								// input.onchange = (e) => {
-								// 	const file = (e.target as HTMLInputElement)
-								// 		.files;
-								// 	if (file && file.length > 0) {
-								// 		console.log(
-								// 			'Selected file path:',
-								// 			file[0]
-								// 		);
-								// 	}
-								// };
-								// input.click();
 							}}
 						>
 							Open
@@ -148,6 +129,18 @@ const Startup: React.FC<{
 											onMouseDown={(e) => {
 												console.log('Loaded', value);
 												dispatch(loadMesh(value));
+												const url = new URL(
+													window.location.href
+												);
+												url.searchParams.set(
+													'id',
+													value.key
+												);
+												window.history.pushState(
+													{},
+													'',
+													url.toString()
+												);
 												setStartup(false);
 											}}
 										>

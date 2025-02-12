@@ -12,7 +12,7 @@ import {
 import { Stats } from '@react-three/drei';
 import { useLoader } from '@react-three/fiber';
 
-import { loadTexture } from '../../util/textureUtil';
+import { boxUVToVertexArray, loadTexture } from '../../util/textureUtil';
 import GridPlane, { DebugGridPlane } from './GridPlane';
 import {
 	useAppDispatch,
@@ -50,20 +50,48 @@ const GetSceneRef: React.FC<{
 const ExportSceneButton: React.FC = () => {
 	const scene = useThree().scene;
 
-	const model = scene.children.find(
-		(child) => child.type === 'ModelInstance'
+	const meshData = useMeshDataSelector();
+	const textureData = useMeshTextureSelector().find(
+		(texture) => texture.active === true
 	);
-
+	const templateData = useMeshTextureSelector().find(
+		(texture) => texture.id === 'TEMPLATE'
+	);
+	const texture = useTexture(textureData?.data || templateData?.data);
 	const newScene = new THREE.Scene();
-	model?.children.forEach((child) => {
-		newScene.add(child.clone());
-	});
-	const activeTexture = useMeshTextureSelector().find(
-		(texture) => texture.active
-	);
 
-	console.log('newScene', newScene);
+	// Export scene function
 	const exportScene = () => {
+		// Add meshes to the new scene
+		meshData.forEach((cube) => {
+			const geometry = new THREE.BoxGeometry(
+				cube.size[0],
+				cube.size[1],
+				cube.size[2]
+			);
+			const material = new THREE.MeshBasicMaterial({
+				map: texture,
+			});
+			geometry.setAttribute(
+				'uv',
+				new THREE.Float32BufferAttribute(boxUVToVertexArray(cube.uv), 2)
+			);
+
+			const mesh = new THREE.Mesh(geometry, material);
+			mesh.position.set(
+				cube.position[0],
+				cube.position[1],
+				cube.position[2]
+			);
+			mesh.rotation.set(
+				cube.rotation[0],
+				cube.rotation[1],
+				cube.rotation[2]
+			);
+
+			newScene.add(mesh);
+		});
+
 		const exporter = new GLTFExporter();
 		const options = {
 			trs: false,
@@ -78,11 +106,7 @@ const ExportSceneButton: React.FC = () => {
 
 		exporter.parse(
 			newScene,
-			// called when the gltf has been generated
-			function (gltf) {
-				console.log('scene', scene);
-				console.log(gltf);
-				//downloadJSON(gltf);
+			(gltf) => {
 				const download = document.createElement('a');
 				download.href = URL.createObjectURL(
 					new Blob([JSON.stringify(gltf)], {
@@ -90,23 +114,26 @@ const ExportSceneButton: React.FC = () => {
 					})
 				);
 				download.download = 'scene.gltf';
-
 				download.click();
 			},
-			// called when there is an error in the generation
-			function (error) {
-				console.log('An error happened');
+			(error) => {
+				console.log('An error happened', error);
 			},
 			options
 		);
 	};
 
+	const handleKeyUp = (e: KeyboardEvent) => {
+		if (e.key === 'e') {
+			exportScene();
+		}
+	};
+	// Add event listener for exporting scene on 'e' key press
 	useEffect(() => {
-		window.addEventListener('keydown', (e) => {
-			if (e.key === 'e') {
-				exportScene();
-			}
-		});
+		window.addEventListener('keyup', handleKeyUp);
+		return () => {
+			window.removeEventListener('keyup', handleKeyUp);
+		};
 	}, []);
 
 	return <group></group>;

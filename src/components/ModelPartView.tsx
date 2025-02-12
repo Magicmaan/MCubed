@@ -98,7 +98,6 @@ const ModelItem: React.FC<{
 			id={'model_part_' + item.id}
 			aria-pressed={selected === item.id}
 			key={item.id}
-			data-test={'hi'}
 			onContextMenuCapture={handleContextMenu}
 			onMouseDown={(e) => {
 				handleItemClick(e);

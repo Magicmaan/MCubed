@@ -83,7 +83,7 @@ function ModelView() {
 					id="rightSidebar"
 					resizable={[true, false, false, false]}
 					className={
-						`flex-shrink-1 flex h-full w-1/6 min-w-4 flex-col items-stretch justify-stretch space-y-2 rounded-t-lg ` +
+						`flex-shrink-1 min-w-76 flex h-full w-1/6 flex-col items-stretch justify-stretch space-y-2 rounded-t-lg ` +
 						styles.panelContainer +
 						styles.panelOutline
 					}

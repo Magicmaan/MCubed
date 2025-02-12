@@ -5,6 +5,7 @@ import ModelView from './pages/ModelView';
 import NavBar from './components/NavBar';
 import { Provider } from 'react-redux';
 import store, { AppDispatch } from './redux/store'; // Import the store
+import { v4 as uuidv4 } from 'uuid';
 import {
 	AlertDialog,
 	AlertDialogPortal,
@@ -35,9 +36,13 @@ import TextureView from './pages/TextureView';
 import { loadBBModelToMesh } from './util/fileUtil';
 import { useMeshStoreSelector } from './hooks/useRedux';
 import { useDispatch, useSelector } from 'react-redux';
-import { loadMesh } from './redux/reducers/meshReducer';
+import { loadMesh, saveMeshCache } from './redux/reducers/meshReducer';
 import { get } from 'http';
-import { getLocalStorage } from './storage/localStorage';
+import {
+	getLocalStorage,
+	getSessionStorage,
+	setSessionStorage,
+} from './storage/localStorage';
 
 function App() {
 	const [count, setCount] = useState(0);
@@ -54,22 +59,48 @@ function App() {
 	const meshStore = store.getState().mesh;
 
 	// store.dispatch( loadMesh( newState));
+	const generateSessionStorage = () => {
+		const id = meshStore.key;
+		const storeJSON = JSON.stringify(meshStore);
+		if (id && storeJSON) {
+			dispatch(saveMeshCache());
+			const newUrl = new URL(window.location.href);
+			newUrl.searchParams.set('id', id);
+			window.history.replaceState(null, '', newUrl.toString());
+		}
+	};
 
 	//url parameters
 	React.useEffect(() => {
 		const params = new URLSearchParams(window.location.search);
-
 		const idParam = params.get('id');
 
 		if (idParam) {
-			const data = JSON.parse(getLocalStorage(idParam) ?? '{}');
+			// first check session storage, then local storage
+			// get data and load
+			const paramData =
+				getSessionStorage(idParam) || getLocalStorage(idParam) || '{}';
+			const data = JSON.parse(paramData);
 			if (data && data.mesh) {
 				console.log('Loaded from URL', data);
 				dispatch(loadMesh(data));
 			} else {
 				console.log('No data found at URL');
+				// generate new temp storage
+				generateSessionStorage();
 			}
+		} else {
+			generateSessionStorage();
 		}
+	}, []);
+
+	// interval to save to session storage
+	React.useEffect(() => {
+		const intervalId = setInterval(() => {
+			dispatch(saveMeshCache());
+			console.log('Saved to session storage');
+		}, 10000); // 10000 milliseconds = 10 seconds
+		return () => clearInterval(intervalId); // Cleanup interval on component unmount
 	}, []);
 
 	return (

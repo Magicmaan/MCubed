@@ -144,39 +144,40 @@ export const ScalingSphere: React.FC<{
 
 	const onPointerMove = React.useCallback(
 		(e: ThreeEvent<PointerEvent>) => {
-			// e.stopPropagation();
-			// if (!isHovered) setIsHovered(true);
-			// if (clickInfo.current) {
-			// 	const { clickPoint, dir, mPLG, mPLGInv, offsetMultiplier } =
-			// 		clickInfo.current;
-			// 	const [min, max] = scaleLimits?.[axis] || [1e-5, undefined]; // always limit the minimal value, since setting it very low might break the transform
-			// 	const offsetW = calculateOffset(
-			// 		clickPoint,
-			// 		dir,
-			// 		e.ray.origin,
-			// 		e.ray.direction
-			// 	);
-			// 	const offsetL = offsetW * offsetMultiplier;
-			// 	const offsetH = fixed ? offsetL : offsetL / scale;
-			// 	let newSize = Math.pow(2, offsetH * 0.2);
-			// 	newSize = Math.max(newSize, min / scale0.current);
-			// 	if (max !== undefined) {
-			// 		newSize = Math.min(newSize, max / scale0.current);
-			// 	}
-			// 	scaleCur.current = scale0.current * newSize;
-			// 	meshRef.current.position.set(0, position + offsetL, 0);
-			// 	if (annotations) {
-			// 		divRef.current.innerText = `${scaleCur.current.toFixed(2)}`;
-			// 	}
-			// 	scaleV.set(1, 1, 1);
-			// 	scaleV.setComponent(axis, newSize);
-			// 	scaleMatrix
-			// 		.identity()
-			// 		.scale(scaleV)
-			// 		.premultiply(mPLG)
-			// 		.multiply(mPLGInv);
-			// 	onDrag(scaleMatrix);
-			// }
+			e.stopPropagation();
+			if (!isHovered) setIsHovered(true);
+			if (clickInfo.current) {
+				const { clickPoint, dir, mPLG, mPLGInv, offsetMultiplier } =
+					clickInfo.current;
+				const [min, max] = scaleLimits?.[axis] || [1e-5, undefined]; // always limit the minimal value, since setting it very low might break the transform
+				const offsetW = calculateOffset(
+					clickPoint,
+					dir,
+					e.ray.origin,
+					e.ray.direction
+				);
+				
+				const offsetL = offsetW * offsetMultiplier;
+				const offsetH = fixed ? offsetL : offsetL / scale;
+				let newSize = Math.pow(2, offsetH * 0.2);
+				newSize = Math.max(newSize, min / scale0.current);
+				if (max !== undefined) {
+					newSize = Math.min(newSize, max / scale0.current);
+				}
+				scaleCur.current = scale0.current * newSize;
+				meshRef.current.position.set(0, position + offsetL, 0);
+				if (annotations) {
+					divRef.current.innerText = `${scaleCur.current.toFixed(2)}`;
+				}
+				scaleV.set(1, 1, 1);
+				scaleV.setComponent(axis, newSize);
+				scaleMatrix
+					.identity()
+					.scale(scaleV)
+					.premultiply(mPLG)
+					.multiply(mPLGInv);
+				onDrag(scaleMatrix);
+			}
 		},
 		[annotations, position, onDrag, isHovered, scaleLimits, axis]
 	);

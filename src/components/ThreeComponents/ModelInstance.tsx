@@ -10,6 +10,7 @@ import {
 import { setSelected as reduxSetSelected } from '../../redux/reducers/viewportReducer';
 import Cube from './Cube';
 import { CubeProps } from '../../types/three';
+import { BoxUVMap } from '../../util/textureUtil';
 
 const ModelInstance: React.FC<{
 	selectionAnchorRef: React.MutableRefObject<THREE.Group<THREE.Object3DEventMap> | null>;

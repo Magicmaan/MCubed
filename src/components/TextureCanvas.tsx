@@ -360,10 +360,9 @@ const TextureCanvas: React.FC<{
 			height: focusedUV.current.height,
 			depth: focusedUV.current.depth,
 		}).setPosition(
-			Math.floor((newPos.x - imagePosition.x) / imageScale),
-			Math.floor((newPos.y - imagePosition.y) / imageScale)
+			Math.max(Math.floor((newPos.x - imagePosition.x) / imageScale), 0),
+			Math.max(Math.floor((newPos.y - imagePosition.y) / imageScale), 0)
 		);
-
 		dispatch(
 			meshModifyID({
 				id: focusedUV.current.cubeID,

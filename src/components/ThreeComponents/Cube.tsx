@@ -99,11 +99,6 @@ const Cube: React.FC<{
 			ref.current?.matrixWorld.copy(
 				selectionAnchorRef.current?.matrixWorld as THREE.Matrix4
 			);
-			ref.current?.matrixWorld.decompose(
-				ref.current.position,
-				ref.current.quaternion,
-				ref.current.scale
-			);
 		} else {
 			const worldPos = new THREE.Vector3(
 				cube.position[0],
@@ -111,15 +106,14 @@ const Cube: React.FC<{
 				cube.position[2]
 			);
 			ref.current?.position.copy(worldPos);
-			ref.current?.matrixWorld.setPosition(worldPos);
-			ref.current?.matrixWorld.makeRotationFromEuler(
+			ref.current?.matrix.setPosition(worldPos);
+			ref.current?.matrix.makeRotationFromEuler(
 				new THREE.Euler(
 					cube.rotation[0],
 					cube.rotation[1],
 					cube.rotation[2]
 				)
 			);
-			ref.current?.matrixWorld.setPosition(worldPos);
 		}
 		if (
 			(cameraControls?.pan &&
@@ -159,12 +153,13 @@ const Cube: React.FC<{
 	const updateUV = React.useCallback(
 		(self: THREE.Mesh) => {
 			if (self === null || cube.uv === undefined) return;
+			console.log('updating uv');
 			self.geometry.setAttribute(
 				'uv',
 				new THREE.Float32BufferAttribute(boxUVToVertexArray(cube.uv), 2)
 			);
 		},
-		[cube.uv, cube.auto_uv]
+		[cube.uv]
 	);
 
 	return (
@@ -210,8 +205,6 @@ const Cube: React.FC<{
 						map={texture}
 						attach="material"
 						transparent={true}
-						depthTest={false}
-						depthFunc={THREE.NeverDepth}
 					/>
 				) : (
 					<>

@@ -4,6 +4,7 @@ import { createTexture } from '../../util/textureUtil';
 import * as THREE from 'three';
 import { RootState } from '@react-three/fiber';
 import { MutableRefObject } from 'react';
+import { texture } from 'three/webgpu';
 
 type viewportState = {
 	cameraSettings: {
@@ -99,6 +100,7 @@ const viewportSlice = createSlice({
 			}
 			state.mesh.push(action.payload); // Ensure payload is serializable
 		},
+
 		setSelected(state, action: PayloadAction<string | undefined>) {
 			state.selected = action.payload;
 		},

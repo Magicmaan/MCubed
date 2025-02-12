@@ -160,7 +160,7 @@ const CameraDisplay: React.FC<{
 	};
 
 	return (
-		<div className="flex aspect-square h-full w-full items-center justify-center rounded-md bg-red-500">
+		<div className="flex aspect-square h-full w-full items-center justify-center rounded-md">
 			<canvas
 				width="100%"
 				height="100%"
@@ -328,7 +328,7 @@ const InfoPanel: React.FC<{
 														/>
 													</div>
 												</div>
-												<div className="dark m-auto flex h-full w-auto flex-col justify-between space-y-1 bg-red-500">
+												<div className="dark m-auto flex h-full w-auto flex-col justify-between space-y-1">
 													<Button
 														variant={'outline'}
 														className="pointer-events-auto m-0 aspect-square h-7 w-7 p-0"
@@ -386,39 +386,14 @@ const InfoPanel: React.FC<{
 													<div className="row flex w-48 justify-start rounded-sm">
 														<NumberDisplayVec3
 															vec={[
-																(rotation.x *
-																	180) /
-																	Math.PI,
-																(rotation.y *
-																	180) /
-																	Math.PI,
-																(rotation.z *
-																	180) /
-																	Math.PI,
+																rotation.x,
+																rotation.y,
+																rotation.z,
 															]}
-															setVec={(
-																x,
-																y,
-																z
-															) => {
-																orbitRef.current?.target.copy(
-																	new THREE.Vector3(
-																		x *
-																			(Math.PI /
-																				180),
-																		y *
-																			(Math.PI /
-																				180),
-																		z *
-																			(Math.PI /
-																				180)
-																	)
-																);
-															}}
 														/>
 													</div>
 												</div>
-												<div className="dark m-auto flex h-full w-auto flex-col justify-between space-y-1 bg-red-500">
+												<div className="dark m-auto flex h-full w-auto flex-col justify-between space-y-1">
 													<Button
 														variant={'outline'}
 														title="To 0"
@@ -553,7 +528,7 @@ const InfoPanel: React.FC<{
 														/>
 													</div>
 												</div>
-												<div className="dark m-auto flex h-full w-auto flex-col justify-between space-y-1 bg-red-500">
+												<div className="dark m-auto flex h-full w-auto flex-col justify-between space-y-1">
 													<Button
 														variant={'outline'}
 														title="To 0"
@@ -654,34 +629,10 @@ const InfoPanel: React.FC<{
 												</div>
 											</div>
 										</div>
-										<CameraDisplay
+										{/* <CameraDisplay
 											camera={cam}
 											pivot={pivot}
-										/>
-										<p>Camera Controls</p>
-										<p>Lock Radius</p>
-										<button
-											onClick={() => {
-												useGimbal[1]((prev) => [
-													prev[0],
-													!prev[0],
-													prev[2],
-												]);
-											}}
-										>
-											Toggle Pan
-										</button>
-										<div>
-											<button
-												onClick={() =>
-													setRefresh(
-														(prev) => prev + 1
-													)
-												}
-											>
-												Toggle Refresh
-											</button>
-										</div>
+										/> */}
 									</div>
 								)}
 							</div>

@@ -12,11 +12,8 @@ import { meshModifyID } from '../../redux/reducers/meshReducer';
 import { setControls } from '../../redux/reducers/viewportReducer';
 import { invalidate, useFrame } from '@react-three/fiber';
 
-import { useKeyPressEvent, useUpdate } from 'react-use';
+import { useUpdate } from 'react-use';
 import { OnDragStartProps } from './custom_PivotControl/context';
-import { Scale } from 'lucide-react';
-import { modifiers, moveModifierIncrement } from '../../constants/KeyModifiers';
-import { round } from '../../util';
 
 // PLEASE DO NOT TOUCH
 // I HAVE NO IDEA HOW THIS WORKS BUT IT DOES
@@ -28,25 +25,15 @@ const PivotControlsComponent: React.FC<{
 	selectionAnchorRef: React.MutableRefObject<THREE.Group<THREE.Object3DEventMap> | null>;
 	usingGimbal: React.MutableRefObject<boolean>;
 }> = ({ selectionAnchorRef, usingGimbal }) => {
-	const moveMultiplier = React.useRef(1);
-	useKeyPressEvent(
-		modifiers.small_shift,
-		() => (moveMultiplier.current = 1),
-		() => (moveMultiplier.current = 2)
-	);
-	useKeyPressEvent(
-		modifiers.x_small_shift,
-		() => (moveMultiplier.current = 0.5),
-		() => (moveMultiplier.current = 2)
-	);
-
 	const preMatrix = new THREE.Matrix4();
 	const preMatrixInv = new THREE.Matrix4();
+
+	const previousPivotMatrix = new THREE.Matrix4();
 	const viewportStore = useViewportSelector();
 	const dispatch = useAppDispatch();
 	const isDispatching = React.useRef(false);
 	const forceUpdate = useUpdate();
-	const previousDragMatrix = new THREE.Matrix4();
+
 	const selectedID = useViewportSelectedSelector();
 
 	const meshData = useMeshDataSelector();
@@ -98,12 +85,11 @@ const PivotControlsComponent: React.FC<{
 	const dragType = React.useRef<'Arrow' | 'Slider' | 'Rotator' | 'Sphere'>(
 		'Arrow'
 	);
-	const dragAxis = React.useRef<'x' | 'y' | 'z'>('x');
 
 	const handleDispatch = async (
 		position: THREE.Vector3,
 		quaternion: THREE.Quaternion,
-		scale: THREE.Vector3
+		size: THREE.Vector3
 	) => {
 		//used to throttle dispatches, as the drag event is called wayyy too much
 		if (isDispatching.current) return;
@@ -122,8 +108,7 @@ const PivotControlsComponent: React.FC<{
 				rotation: new THREE.Euler()
 					.setFromQuaternion(quaternion)
 					.toArray() as [number, number, number],
-				size: [scale.x, scale.y, scale.z],
-				updateUV: false,
+				size: size.toArray(),
 			})
 		);
 		isDispatching.current = false;
@@ -137,19 +122,10 @@ const PivotControlsComponent: React.FC<{
 				| 'Slider'
 				| 'Rotator'
 				| 'Sphere';
-			dragAxis.current =
-				props.axis === 0 ? 'x' : props.axis === 1 ? 'y' : 'z';
 			dispatch(setControls({ zoom: false, pan: false, rotate: false }));
 			usingGimbal.current = true;
 			preMatrix.copy(
 				selectionAnchorRef.current?.matrix || new THREE.Matrix4()
-			);
-			preMatrix.scale(
-				new THREE.Vector3(
-					selectedCube.current?.size[0] || 0,
-					selectedCube.current?.size[1] || 0,
-					selectedCube.current?.size[2] || 0
-				)
 			);
 			// selectionAnchorRef.current?.matrixWorld.setPosition(
 			// 	selectedCube.current?.position[0] || 0,
@@ -176,30 +152,27 @@ const PivotControlsComponent: React.FC<{
 			if (!selectedCube.current) return;
 
 			const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
-			const scale = new THREE.Vector3().setFromMatrixScale(matrix);
-			scale.multiply(new THREE.Vector3().setFromMatrixScale(preMatrix));
-
-			//since uses percentages and maths hard, have to manually round size here
-			// slightly different behaviour for usability
-			// normal = 2
-			// shift = 1
-			// ctrl = 0.5
-			console.log('drag axis', dragAxis.current);
-			if (dragType.current === 'Sphere') {
-				if (dragAxis.current === 'x') {
-					scale.setX(round(scale.x, moveMultiplier.current, 0));
-				} else if (dragAxis.current === 'y') {
-					scale.setY(round(scale.y, moveMultiplier.current, 0));
-				} else if (dragAxis.current === 'z') {
-					scale.setZ(round(scale.z, moveMultiplier.current, 0));
-				}
-			}
-			const invertScale = new THREE.Vector3().setFromMatrixScale(
-				new THREE.Matrix4().copy(matrix).invert()
-			);
-
+			console.log('matrix in position', pos);
 			// the magic sauce..
 			const matrixToApply = matrix.clone();
+
+			// get scale delta
+			const preScale = new THREE.Vector3().setFromMatrixScale(
+				previousPivotMatrix
+			);
+			const scaleDifference = new THREE.Vector3()
+				.setFromMatrixScale(matrix)
+				.multiply({
+					x: 1 / preScale.x,
+					y: 1 / preScale.y,
+					z: 1 / preScale.z,
+				});
+			console.log('scale difference', scaleDifference);
+			const size = scaleDifference.clone().multiply({
+				x: selectedCube.current.size[0],
+				y: selectedCube.current.size[1],
+				z: selectedCube.current.size[2],
+			});
 
 			// preMatrixInv
 			// 	.clone()
@@ -216,39 +189,48 @@ const PivotControlsComponent: React.FC<{
 				);
 			}
 
-			selectionAnchorRef.current.matrix.copy(matrixToApply);
-			pivotRef.current?.matrix.copy(matrixToApply);
-			//pivotRef.current?.matrixWorld.copy(matrixToApply);
+			if (dragType.current === 'Sphere') {
+				const matrixScale = new THREE.Vector3().setFromMatrixScale(
+					matrix
+				);
+				console.log('sphere scale', matrixScale);
 
-			// if (dragType.current === 'Rotator') {
-			// 	selectionAnchorRef.current.matrix.setPosition(oldPos);
-			// 	selectionAnchorRef.current.matrixWorld.setPosition(oldPos);
+				console.log('new size', size.x, size.y, size.z);
+			}
+			const position = new THREE.Vector3();
+			const rotation = new THREE.Quaternion();
+			//const scale = new THREE.Vector3()
+			matrixToApply.decompose(position, rotation, new THREE.Vector3());
 
-			// 	pivotRef.current?.matrix.setPosition(oldPos);
-			// 	pivotRef.current?.matrixWorld.setPosition(oldPos);
-			// }
+			selectionAnchorRef.current.matrix.setPosition(position);
+			selectionAnchorRef.current.matrix.makeRotationFromQuaternion(
+				rotation
+			);
+			selectionAnchorRef.current.matrixWorld.setPosition(position);
+			selectionAnchorRef.current.matrixWorld.makeRotationFromQuaternion(
+				rotation
+			);
+
+			pivotRef.current?.matrix.setPosition(position);
+			pivotRef.current?.matrix.makeRotationFromQuaternion(rotation);
+
+			pivotRef.current?.matrixWorld.setPosition(position);
+			pivotRef.current?.matrixWorld.makeRotationFromQuaternion(rotation);
 
 			pivotRef.current?.updateMatrixWorld(true);
 			selectionAnchorRef.current.updateMatrixWorld(true);
 
 			// pass position to redux store
-			const position = new THREE.Vector3();
+			const positionOut = new THREE.Vector3();
 			const quaternion = new THREE.Quaternion();
-
+			const scale = new THREE.Vector3();
 			selectionAnchorRef.current.matrixWorld.decompose(
-				position,
+				positionOut,
 				quaternion,
-				new THREE.Vector3()
+				scale
 			);
-
-			selectionAnchorRef.current.matrix.scale(invertScale);
-			pivotRef.current?.matrix.scale(invertScale);
-			pivotRef.current?.updateMatrixWorld(true);
-			selectionAnchorRef.current.updateMatrixWorld(true);
-
-			console.log('new size', scale.x, scale.y, scale.z);
-			previousDragMatrix.copy(matrixToApply);
-			handleDispatch(position, quaternion, scale);
+			previousPivotMatrix.copy(matrixToApply);
+			handleDispatch(positionOut, quaternion, size);
 			invalidate();
 		},
 		[selectedID]
@@ -277,18 +259,13 @@ const PivotControlsComponent: React.FC<{
 	}, [selectedID]);
 
 	useFrame(() => {
+		if (selectedID === '-1') {
+			visible.current = false;
+		} else {
+			visible.current = true;
+		}
 		if (pivotRef.current) {
-			selectedCube.current = meshData.find(
-				(item) => item.id === selectedID
-			);
-
-			pivotRef.current?.matrix.setPosition(
-				new THREE.Vector3(
-					selectedCube.current?.position[0] || 0,
-					selectedCube.current?.position[1] || 0,
-					selectedCube.current?.position[2] || 0
-				)
-			);
+			pivotRef.current.scale.set(1, 1, 1);
 
 			pivotRef.current.updateMatrixWorld(true);
 		}
@@ -298,7 +275,7 @@ const PivotControlsComponent: React.FC<{
 		<group
 			//ref={pivotRef}
 			visible={visible.current}
-			onUpdate={() => {
+			onUpdate={(self) => {
 				if (selectedID === '-1') {
 					visible.current = false;
 				} else {
