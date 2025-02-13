@@ -14,7 +14,7 @@ MCubed is a cube-based modeling program written with React and Three.js, similar
 To get started with MCubed, clone the repository and install the dependencies:
 
 ```bash
-git clone https://github.com/yourusername/MCubed.git
+git clone https://github.com/Magicmaan/MCubed.git
 cd MCubed
 npm install
 ```
