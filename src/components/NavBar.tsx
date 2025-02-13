@@ -44,7 +44,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
 import { Button } from './ui/button';
 import ErrorAlert from './templates/ErrorAlert';
-import { saveMesh, setName } from '../redux/reducers/meshReducer';
+import { exportScene, saveMesh, setName } from '../redux/reducers/meshReducer';
 import { setLocalStorage } from '../storage/localStorage';
 
 const styles = {
@@ -130,6 +130,16 @@ const NavBar: React.FC<{
 						}}
 					>
 						Save
+					</MenubarItem>
+					<MenubarItem
+						className={styles.menuItem}
+						onClick={(e) => {
+							dispatch(exportScene());
+							console.log('Exporting scene');
+							e.preventDefault();
+						}}
+					>
+						Export
 					</MenubarItem>
 					<MenubarItem className={styles.menuItem}>Share</MenubarItem>
 					<MenubarSeparator />

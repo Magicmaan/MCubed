@@ -14,6 +14,8 @@ export const useAppSelector = useSelector.withTypes<RootState>();
 export const useMeshStoreSelector = () => useAppSelector(meshStore);
 export const useMeshDataSelector = () => useAppSelector(meshStore).mesh;
 export const useMeshTextureSelector = () => useAppSelector(meshStore).texture;
+export const useMeshExportSelector = () =>
+	useAppSelector(meshStore).exportScene;
 
 //viewport store
 export const useViewportSelector = () => useAppSelector(viewportStore);

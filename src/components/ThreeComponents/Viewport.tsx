@@ -18,6 +18,7 @@ import {
 	useAppDispatch,
 	useAppSelector,
 	useMeshDataSelector,
+	useMeshExportSelector,
 	useMeshStoreSelector,
 	useMeshTextureSelector,
 	useViewportCameraLockSelector,
@@ -49,7 +50,8 @@ const GetSceneRef: React.FC<{
 
 const ExportSceneButton: React.FC = () => {
 	const scene = useThree().scene;
-
+	const doExport = useMeshExportSelector();
+	const dispatch = useAppDispatch();
 	const meshData = useMeshDataSelector();
 	const textureData = useMeshTextureSelector().find(
 		(texture) => texture.active === true
@@ -123,18 +125,12 @@ const ExportSceneButton: React.FC = () => {
 		);
 	};
 
-	const handleKeyUp = (e: KeyboardEvent) => {
-		if (e.key === 'e') {
-			exportScene();
-		}
-	};
 	// Add event listener for exporting scene on 'e' key press
 	useEffect(() => {
-		window.addEventListener('keyup', handleKeyUp);
-		return () => {
-			window.removeEventListener('keyup', handleKeyUp);
-		};
-	}, []);
+		if (doExport) {
+			exportScene();
+		}
+	}, [doExport]);
 
 	return <group></group>;
 };

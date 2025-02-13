@@ -63,6 +63,7 @@ const meshInitialState: MeshState = {
 	hasChanged: false,
 	creationDate: Date.now(),
 	lastModified: Date.now(),
+	exportScene: false, // Add this line
 };
 
 // functions to modify mesh
@@ -214,6 +215,12 @@ const meshSlice = createSlice({
 			url.searchParams.delete('id');
 			window.history.replaceState({}, document.title, url.toString());
 		},
+		exportScene(state) {
+			state.exportScene = true;
+			setTimeout(() => {
+				state.exportScene = false;
+			}, 5000);
+		},
 	},
 });
 
@@ -232,5 +239,6 @@ export const {
 	textureAdd,
 	textureSetActive,
 	reset,
+	exportScene, // Add this line
 } = meshSlice.actions;
 export type { MeshState, MeshStateSerialised };
