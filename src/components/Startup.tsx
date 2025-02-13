@@ -145,7 +145,7 @@ const Startup: React.FC<{
 											}}
 										>
 											<p>{value.name}</p>
-											<div className="flex h-4 w-full flex-row items-center justify-start bg-blue-500 pl-1 text-sm">
+											<div className="flex h-4 w-full flex-row items-center justify-start bg-transparent pl-1 text-sm text-gray-400">
 												<p>
 													{toFormatted(
 														new Date(
