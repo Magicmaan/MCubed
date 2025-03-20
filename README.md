@@ -9,6 +9,8 @@ MCubed is a cube-based modeling program written with React and Three.js, similar
 - .bbmodel importing
 - Saving
 
+![GUI](public/example.png)
+
 ## Installation
 
 To get started with MCubed, clone the repository and install the dependencies:

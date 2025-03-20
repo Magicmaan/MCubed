@@ -81,6 +81,8 @@ export type MeshState = {
 	hasChanged: boolean;
 	creationDate: number;
 	lastModified: number;
+
+	exportScene: boolean;
 };
 
 export type MeshStateSerialised = {
