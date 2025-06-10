@@ -1,5 +1,6 @@
 import { ThreeEvent } from '@react-three/fiber';
 import * as THREE from 'three';
+import { v4 } from 'uuid';
 
 export type CubeProps = {
 	id: string;
@@ -35,6 +36,34 @@ export type THREETextureProps = {
 
 	active: boolean;
 	id: string;
+};
+
+export type BoxUV = {
+	top: [number, number, number, number];
+	bottom: [number, number, number, number];
+	left: [number, number, number, number];
+	right: [number, number, number, number];
+	front: [number, number, number, number];
+	back: [number, number, number, number];
+};
+
+export type CubeRepresentation = {
+	id: number;
+	name: string;
+
+	size: THREE.Vector3;
+	position: THREE.Vector3;
+	rotation: THREE.Euler;
+	pivot: THREE.Vector3;
+	scale: number;
+
+	textureID: number;
+	UV: BoxUV;
+	autoUV: boolean;
+	visible: boolean;
+	colour: string;
+
+	mesh: THREE.Mesh;
 };
 
 export type THREEObjectProps = {
