@@ -1,0 +1,28 @@
+@import 'tailwindcss';
+
+@font-face {
+	font-family: 'Pixelon';
+	src: url('/fonts/Pixelon-OGALo.ttf');
+}
+
+:root {
+	--padding-x-small: 0.25rem;
+	--padding-small: 0.5rem;
+	--padding-medium: 1rem;
+	--padding-large: 1.5rem;
+
+	--radius-small: 0.25rem;
+	--radius-medium: 0.5rem;
+	--radius-large: 0.75rem;
+}
+
+@theme {
+	--radius-sm: var(--radius-small);
+	--radius-md: var(--radius-medium);
+	--radius-lg: var(--radius-large);
+
+	/* --spacing: var(--padding-medium); */
+}
+
+@layer components {
+}

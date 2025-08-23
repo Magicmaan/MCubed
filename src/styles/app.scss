@@ -1,0 +1,79 @@
+@use 'pixel-border';
+@use 'theme';
+
+body {
+	margin: 0;
+	padding: 0;
+	font-family:
+		'Pixelon', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji',
+		'Segoe UI Emoji';
+	background-color: var(--background-default);
+}
+#root {
+	width: 100%;
+	height: 100%;
+	padding: 0;
+	margin: 0;
+}
+.app-layout {
+	display: grid;
+	grid-template-areas:
+		'top top top'
+		'left main right'
+		'footer footer footer';
+
+	grid-template-rows: auto 1fr 0.125fr;
+	grid-template-columns: auto 0.75fr auto;
+
+	width: 100%;
+	height: 100%;
+	min-height: 100vh;
+	min-width: 100vw;
+	padding: var(--padding-small);
+	gap: var(--padding-medium);
+}
+
+.layout-section {
+	/* background-color: red; */
+	width: 100%;
+	height: 100%;
+	// padding: var(--padding-small) !important;
+	position: relative;
+	background-color: green;
+	@extend .pixel-border-1-red;
+	> :first-child {
+		position: inherit;
+		width: 100%;
+		height: 100%;
+	}
+}
+.layout-main {
+	grid-area: main;
+	pointer-events: none;
+	z-index: -500000;
+}
+.layout-top {
+	grid-area: top;
+	position: sticky;
+}
+.layout-left {
+	grid-area: left;
+	position: sticky;
+}
+
+.layout-right {
+	grid-area: right;
+	position: sticky;
+}
+.layout-footer {
+	grid-area: footer;
+	position: sticky;
+}
+
+.viewport {
+	width: 100%;
+	height: 100%;
+	position: relative;
+	background-color: red;
+	pointer-events: auto;
+}

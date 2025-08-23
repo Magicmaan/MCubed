@@ -1,0 +1,89 @@
+:root {
+	--border-color: var(--border-default);
+	--border-color-pressed: var(--border-pressed);
+	--focus-ring-color: var(--focus-ring);
+	--text-color: var(--text-default);
+	--highlight-background: var(--accent-default);
+	--highlight-background-pressed: var(--accent-pressed);
+	--highlight-foreground: var(--accent-foreground);
+
+	--padding: 16px;
+	--border-color: #eee;
+	--overlay-background: rgba(255, 255, 255, 0.8);
+	--focus-ring-color: #005fcc;
+	--highlight-background: #005fcc;
+	--highlight-foreground: #fff;
+	--highlight-foreground-pressed: #fff;
+	--highlight-background-pressed: #004bbd;
+}
+
+.react-aria-Checkbox {
+	--selected-color: var(--highlight-background);
+	--selected-color-pressed: var(--highlight-background-pressed);
+	--checkmark-color: var(--highlight-foreground);
+
+	display: flex;
+	/* This is needed so the HiddenInput is positioned correctly */
+	position: relative;
+	align-items: center;
+	gap: 0.571rem;
+	font-size: 1.143rem;
+	color: var(--text-color);
+	forced-color-adjust: none;
+
+	.checkbox {
+		width: 1.143rem;
+		height: 1.143rem;
+		border: 2px solid var(--border-color);
+		border-radius: 4px;
+		transition: all 200ms;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+	}
+
+	svg {
+		width: 1rem;
+		height: 1rem;
+		fill: none;
+		stroke: var(--checkmark-color);
+		stroke-width: 3px;
+		stroke-dasharray: 22px;
+		stroke-dashoffset: 66;
+		transition: all 200ms;
+	}
+
+	&[data-pressed] .checkbox {
+		border-color: var(--border-color-pressed);
+	}
+
+	&[data-focus-visible] .checkbox {
+		outline: 2px solid var(--focus-ring-color);
+		outline-offset: 2px;
+	}
+
+	&[data-selected],
+	&[data-indeterminate] {
+		.checkbox {
+			border-color: var(--selected-color);
+			background: var(--selected-color);
+		}
+
+		&[data-pressed] .checkbox {
+			border-color: var(--selected-color-pressed);
+			background: var(--selected-color-pressed);
+		}
+
+		svg {
+			stroke-dashoffset: 44;
+		}
+	}
+
+	&[data-indeterminate] {
+		& svg {
+			stroke: none;
+			fill: var(--checkmark-color);
+		}
+	}
+}

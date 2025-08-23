@@ -1,0 +1,50 @@
+:root {
+	--pixel-size: 3;
+	--pixel-size-2: calc(var(--pixel-size) * 2);
+}
+
+@function svg-border($color) {
+	$svg: "<svg width='12' height='12' viewBox='0 0 12 12' xmlns='http://www.w3.org/2000/svg' fill='#{$color}'><path d='M 2 0 h 8 v 2 H 2 Z M 10 2 H 12 V 10 H 10 Z M 10 10 V 12 H 2 V 10 Z M 2 2 V 10 H 0 V 2 Z'/></svg>";
+	@return url('data:image/svg+xml;utf8,#{$svg}');
+}
+
+@mixin pixel-border-1($color) {
+	// border: calc(var(--pixel-size) * 1px) solid transparent;
+	// padding: calc(var(--pixel-size) * 1px);
+	box-sizing: border-box;
+
+	&::before {
+		content: '';
+		box-sizing: border-box;
+		position: absolute;
+		top: calc(var(--pixel-size) * -2px);
+		left: calc(var(--pixel-size) * -2px);
+		bottom: calc(var(--pixel-size) * -2px);
+		right: calc(var(--pixel-size) * -2px);
+
+		border: calc(var(--pixel-size) * 1px) solid transparent;
+		border-image-slice: var(--pixel-size);
+		border-image-width: var(--pixel-size);
+		border-image-outset: 0;
+		border-image-source: svg-border($color);
+		padding: calc(var(--pixel-size) * 1px);
+	}
+}
+
+.pixel-border-1-red {
+	@include pixel-border-1('red');
+}
+.pixel-border-1-green {
+	@include pixel-border-1('green');
+}
+.pixel-border-1-blue {
+	@include pixel-border-1('blue');
+}
+
+.pixel-border-box {
+	border: calc(var(--pixel-size) * 2px) solid var(--pixel-border);
+	padding: calc(var(--pixel-size) * 1px);
+	// border: var(--pixel-size-2) solid var(--pixel-border);
+	border: calc(var(--pixel-size) * 1px) solid red;
+	box-sizing: border-box;
+}
