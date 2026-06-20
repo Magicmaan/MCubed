@@ -1,309 +1,132 @@
-import { useState, useEffect } from 'react';
 import * as THREE from 'three';
-import * as React from 'react';
-import { Canvas, useThree, invalidate } from '@react-three/fiber';
-import {
-	OrbitControls,
-	PerspectiveCamera,
-	Grid,
-	Sphere,
-	useTexture,
-} from '@react-three/drei';
-import { Stats } from '@react-three/drei';
-import { useLoader } from '@react-three/fiber';
-
-import { boxUVToVertexArray, loadTexture } from '../../util/textureUtil';
+import { Canvas, invalidate, useThree } from '@react-three/fiber';
+import { OrbitControls, PerspectiveCamera, Sphere } from '@react-three/drei';
 import GridPlane, { DebugGridPlane } from './GridPlane';
-import {
-	useAppDispatch,
-	useAppSelector,
-	useMeshDataSelector,
-	useMeshExportSelector,
-	useMeshStoreSelector,
-	useMeshTextureSelector,
-	useViewportCameraLockSelector,
-	useViewportCameraSelector,
-	useViewportCameraSettingsSelector,
-	useViewportSelectedSelector,
-	useViewportSelector,
-} from '../../hooks/useRedux';
 import PivotControlsComponent from './PivotControlsComponent';
-import InfoPanel from './ui/InfoPanel';
-import {
-	setCameraLock,
-	setControls,
-	setSelected,
-} from '../../redux/reducers/viewportReducer';
 import ModelInstance from './ModelInstance';
-import { RootState } from '@react-three/fiber';
-import { int } from 'three/webgpu';
+import { Cube } from '../../types/mesh';
+import { useCubeActionBus } from '../../events/cubeActionBus';
+import {
+	RefObject,
+	useEffect,
+	useRef,
+	useState,
+} from 'react';
 
-import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+const rendererPixelRatio = 0.5;
+function RendererResolution() {
+	const { gl, size } = useThree();
 
-const GetSceneRef: React.FC<{
-	setThree: React.Dispatch<React.SetStateAction<RootState | undefined>>;
-}> = ({ setThree }) => {
-	const threeScene = useThree();
-	setThree(threeScene);
-	return <></>;
-};
-
-const ExportSceneButton: React.FC = () => {
-	const scene = useThree().scene;
-	const doExport = useMeshExportSelector();
-	const dispatch = useAppDispatch();
-	const meshData = useMeshDataSelector();
-	const textureData = useMeshTextureSelector().find(
-		(texture) => texture.active === true
-	);
-	const templateData = useMeshTextureSelector().find(
-		(texture) => texture.id === 'TEMPLATE'
-	);
-	const texture = useTexture(textureData?.data || templateData?.data);
-	const newScene = new THREE.Scene();
-
-	// Export scene function
-	const exportScene = () => {
-		// Add meshes to the new scene
-		meshData.forEach((cube) => {
-			const geometry = new THREE.BoxGeometry(
-				cube.size[0],
-				cube.size[1],
-				cube.size[2]
-			);
-			const material = new THREE.MeshBasicMaterial({
-				map: texture,
-			});
-			geometry.setAttribute(
-				'uv',
-				new THREE.Float32BufferAttribute(boxUVToVertexArray(cube.uv), 2)
-			);
-
-			const mesh = new THREE.Mesh(geometry, material);
-			mesh.position.set(
-				cube.position[0],
-				cube.position[1],
-				cube.position[2]
-			);
-			mesh.rotation.set(
-				cube.rotation[0],
-				cube.rotation[1],
-				cube.rotation[2]
-			);
-
-			newScene.add(mesh);
-		});
-
-		const exporter = new GLTFExporter();
-		const options = {
-			trs: false,
-			onlyVisible: true,
-			truncateDrawRange: true,
-			embedImages: true,
-			animations: [],
-			forceIndices: false,
-			forcePowerOfTwoTextures: false,
-			includeCustomExtensions: false,
-		};
-
-		exporter.parse(
-			newScene,
-			(gltf) => {
-				const download = document.createElement('a');
-				download.href = URL.createObjectURL(
-					new Blob([JSON.stringify(gltf)], {
-						type: 'application/json',
-					})
-				);
-				download.download = 'scene.gltf';
-				download.click();
-			},
-			(error) => {
-				console.log('An error happened', error);
-			},
-			options
-		);
-	};
-
-	// Add event listener for exporting scene on 'e' key press
 	useEffect(() => {
-		if (doExport) {
-			exportScene();
-		}
-	}, [doExport]);
-
-	return <group></group>;
-};
-
-const Viewport: React.FC = () => {
-	const viewportContainer = useState<HTMLDivElement | null>(
-		document.getElementById('viewportContainer') as HTMLDivElement
-	);
-
-	const isUsingCamera = React.useRef(false);
-	const threeScene = React.useRef<RootState | undefined>(undefined);
-
-	const viewportData = useViewportSelector();
-	const cameraControls = useViewportCameraSelector();
-	const cameraLock = useViewportCameraLockSelector();
-	const showGrid = viewportData.showGrid;
-	const showStats = viewportData.showStats;
-	const selected = useViewportSelectedSelector();
-	const dispatch = useAppDispatch();
-
-	const camera = useViewportCameraSettingsSelector();
-
-	const renderMode = viewportData.renderMode;
-
-	const selectionAnchorRef = React.useRef<THREE.Group | null>(null);
-	const usingGimbal = React.useRef(false);
-	const texture = React.useMemo(() => {
-		return loadTexture('/src/assets/textures/s1.png');
-	}, []);
-
-	const cameraRef = React.useRef<THREE.PerspectiveCamera>(null);
-
-	const orbitRef = React.useRef<
-		typeof OrbitControls & { target: THREE.Vector3 }
-	>(null!);
-	const cameraPivot = React.useRef<THREE.Vector3>(
-		orbitRef.current?.target ?? new THREE.Vector3(0, 0, 0)
-	);
-	const pivotPointRef = React.useRef<THREE.Group>(null);
-
-	const setPivotPosition = (position: THREE.Vector3) => {
-		cameraPivot.current.copy(position);
-		if (pivotPointRef.current) {
-			pivotPointRef.current.position.copy(position);
-		}
-	};
-
-	const savedCameraControls = React.useRef(cameraControls);
-
-	const handlePointerMove = (e: ThreeEvent<PointerEvent>) => {
+		gl.setPixelRatio(rendererPixelRatio);
+		gl.setSize(size.width, size.height, false);
+		gl.domElement.classList.add('pixel-perfect-renderer');
+		gl.domElement.style.imageRendering = 'pixelated';
 		invalidate();
-	};
+	}, [gl, size.height, size.width]);
+
+	return null;
+}
+
+function CameraPivot({
+	pivotPointRef,
+}: {
+	pivotPointRef: RefObject<THREE.Group | null>;
+}) {
+	return (
+		<group ref={pivotPointRef} position={[0, 0, 0]}>
+			<Sphere args={[0.125, 16, 16]} position={[0, 0, 0]}>
+				<meshBasicMaterial
+					color="#ffffff"
+					opacity={0.5}
+					transparent
+				/>
+			</Sphere>
+		</group>
+	);
+}
+
+function Viewport() {
+	const cubeRef = useRef<Cube | null>(null);
+	const selectionAnchorRef = useRef<THREE.Group | null>(null);
+	const usingGimbal = useRef(false);
+	const pivotPointRef = useRef<THREE.Group | null>(null);
+	const orbitRef = useRef<any>(null);
+	const [orbitEnabled, setOrbitEnabled] = useState(true);
+	const { dispatchCubeAction, selectedCubeId } = useCubeActionBus();
 
 	return (
 		<Canvas
 			id="viewport"
+			dpr={rendererPixelRatio}
 			frameloop="demand"
-			className="z-10 h-full w-full bg-transparent"
+			className="pixel-perfect-renderer z-10 h-full w-full bg-transparent"
 			gl={{
-				antialias: true,
+				antialias: false,
+				powerPreference: 'high-performance',
 				toneMapping: THREE.NoToneMapping,
 			}}
-			onPointerUp={() => {
-				isUsingCamera.current = false;
-			}}
-			onMouseEnter={() => {
-				dispatch(setCameraLock(true));
-			}}
-			onMouseLeave={() => {
-				if (!isUsingCamera.current) {
-					dispatch(setCameraLock(false));
-				}
-			}}
 			onPointerMissed={() => {
-				dispatch(setSelected('-1'));
+				if (selectedCubeId) {
+					dispatchCubeAction(selectedCubeId, { type: 'unselect' });
+				}
 				invalidate();
 			}}
-			onPointerMove={handlePointerMove}
+			onPointerMove={() => invalidate()}
 		>
-			<GetSceneRef setThree={(scene) => (threeScene.current = scene)} />
-			{/* <GetSceneRef setThree={setThreeScene} /> */}
+			<RendererResolution />
 			<PerspectiveCamera
 				makeDefault
-				fov={camera.fov}
-				position={camera.position}
+				fov={75}
+				position={[10, 10, 10]}
 				manual={false}
-				ref={cameraRef}
-			></PerspectiveCamera>
+			/>
 			<ambientLight />
 			<pointLight position={[10, 10, 10]} />
 
 			<ModelInstance
-				selectionAnchorRef={selectionAnchorRef}
-				usingGimbal={usingGimbal}
+				cubeRef={cubeRef}
 			/>
 
-			<ExportSceneButton />
-
 			<GridPlane size={16} />
-
 			<DebugGridPlane />
+
 			<OrbitControls
-				enableZoom={cameraControls?.zoom && cameraLock}
-				enablePan={cameraControls?.pan && cameraLock}
-				enableRotate={cameraControls?.rotate && cameraLock}
+				enableZoom={orbitEnabled}
+				enablePan={orbitEnabled}
+				enableRotate={orbitEnabled}
 				enableDamping
 				ref={orbitRef}
 				onStart={() => {
 					pivotPointRef.current?.position.copy(
-						orbitRef.current?.target
+						orbitRef.current?.target ?? new THREE.Vector3()
 					);
 				}}
-				onChange={(e) => {
+				onChange={() => {
 					pivotPointRef.current?.position.copy(
-						orbitRef.current?.target
+						orbitRef.current?.target ?? new THREE.Vector3()
 					);
-
-					// if (e?.target.object && threeScene.current) {
-					// 	const cameraPosition = e?.target.object.position;
-					// 	const cameraDirection = new THREE.Vector3();
-					// 	e?.target.object.getWorldDirection(cameraDirection);
-					// 	raycaster.setFromCamera(
-					// 		new THREE.Vector2(0.5, 0.5),
-					// 		e?.target.object
-					// 	);
-
-					// 	const intersects = raycaster.intersectObjects(
-					// 		threeScene.current.scene.children,
-					// 		true
-					// 	);
-					// 	if (intersects.length > 0) {
-					// 		const mesh = intersects[0].object;
-					// 		if (mesh) {
-					// 			// Camera is intersecting with a mesh
-					// 		}
-					// 	}
-					// }
+					invalidate();
 				}}
 				onEnd={() => {
 					pivotPointRef.current?.position.copy(
-						orbitRef.current?.target
+						orbitRef.current?.target ?? new THREE.Vector3()
 					);
+					invalidate();
 				}}
-				target={cameraPivot.current}
+				target={[0, 0, 0]}
 			/>
 
-			<group ref={pivotPointRef} position={[0, 0, 0]}>
-				<Sphere args={[0.125, 16, 16]} position={[0, 0, 0]}>
-					<meshBasicMaterial
-						color="#ffffff"
-						opacity={0.5}
-						transparent
-					/>
-				</Sphere>
-
-				<InfoPanel
-					scene={threeScene}
-					camera={cameraRef}
-					pivot={pivotPointRef}
-					orbit={orbitRef}
-					useGimbal={cameraControls}
-				/>
-			</group>
-
-			{showStats && <Stats className="bg-red-500 text-lg" />}
+			<CameraPivot pivotPointRef={pivotPointRef} />
 
 			<PivotControlsComponent
 				usingGimbal={usingGimbal}
 				selectionAnchorRef={selectionAnchorRef}
+				setOrbitEnabled={setOrbitEnabled}
 			/>
 			<group ref={selectionAnchorRef} matrixAutoUpdate={false} />
 		</Canvas>
 	);
-};
+}
 
 export default Viewport;

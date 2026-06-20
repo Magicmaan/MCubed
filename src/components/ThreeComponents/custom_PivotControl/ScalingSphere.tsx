@@ -1,11 +1,10 @@
-import * as React from 'react';
+import { useCallback, useContext, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { ThreeEvent, useThree } from '@react-three/fiber';
 
-import { Html } from '@react-three/drei';
 import { context } from './context';
 import { calculateScaleFactor } from '@react-three/drei/core/calculateScaleFactor';
-import { Canvas, useLoader } from '@react-three/fiber';
+import { useLoader } from '@react-three/fiber';
 import icon from '../../../assets/dot.png';
 
 const vec1 = /* @__PURE__ */ new THREE.Vector3();
@@ -41,14 +40,16 @@ const upV = /* @__PURE__ */ new THREE.Vector3(0, 1, 0);
 const scaleV = /* @__PURE__ */ new THREE.Vector3();
 const scaleMatrix = /* @__PURE__ */ new THREE.Matrix4();
 
-export const ScalingSphere: React.FC<{
+export function ScalingSphere({
+	direction,
+	axis,
+}: {
 	direction: THREE.Vector3;
 	axis: 0 | 1 | 2;
-}> = ({ direction, axis }) => {
+}) {
 	const {
 		scaleLimits,
 		annotations,
-		annotationsClass,
 		depthTest,
 		scale,
 		lineWidth,
@@ -60,26 +61,26 @@ export const ScalingSphere: React.FC<{
 		onDrag,
 		onDragEnd,
 		userData,
-	} = React.useContext(context);
+	} = useContext(context);
 
 	const size = useThree((state) => state.size);
 	// @ts-expect-error new in @react-three/fiber@7.0.5
 	const camControls = useThree((state) => state.controls) as {
 		enabled: boolean;
 	};
-	const divRef = React.useRef<HTMLDivElement>(null!);
-	const objRef = React.useRef<THREE.Group>(null!);
-	const meshRef = React.useRef<THREE.Mesh>(null!);
-	const scale0 = React.useRef<number>(1);
-	const scaleCur = React.useRef<number>(1);
-	const clickInfo = React.useRef<{
+	const divRef = useRef<HTMLDivElement>(null!);
+	const objRef = useRef<THREE.Group>(null!);
+	const meshRef = useRef<THREE.Mesh>(null!);
+	const scale0 = useRef<number>(1);
+	const scaleCur = useRef<number>(1);
+	const clickInfo = useRef<{
 		clickPoint: THREE.Vector3;
 		dir: THREE.Vector3;
 		mPLG: THREE.Matrix4;
 		mPLGInv: THREE.Matrix4;
 		offsetMultiplier: number;
 	} | null>(null);
-	const [isHovered, setIsHovered] = React.useState(false);
+	const [isHovered, setIsHovered] = useState(false);
 
 	const position = fixed ? 1.2 : 1.2 * scale;
 	const color_ = isHovered ? hoveredColor : axisColors[axis];
@@ -87,7 +88,7 @@ export const ScalingSphere: React.FC<{
 	texture.minFilter = THREE.NearestFilter;
 	texture.magFilter = THREE.NearestFilter;
 
-	const onPointerDown = React.useCallback(
+	const onPointerDown = useCallback(
 		(e: ThreeEvent<PointerEvent>) => {
 			if (annotations) {
 				divRef.current.innerText = `${scaleCur.current.toFixed(2)}`;
@@ -142,7 +143,7 @@ export const ScalingSphere: React.FC<{
 		]
 	);
 
-	const onPointerMove = React.useCallback(
+	const onPointerMove = useCallback(
 		(e: ThreeEvent<PointerEvent>) => {
 			e.stopPropagation();
 			if (!isHovered) setIsHovered(true);
@@ -182,7 +183,7 @@ export const ScalingSphere: React.FC<{
 		[annotations, position, onDrag, isHovered, scaleLimits, axis]
 	);
 
-	const onPointerUp = React.useCallback(
+	const onPointerUp = useCallback(
 		(e: ThreeEvent<PointerEvent>) => {
 			if (annotations) {
 				divRef.current.style.display = 'none';
@@ -199,12 +200,12 @@ export const ScalingSphere: React.FC<{
 		[annotations, camControls, onDragEnd, position]
 	);
 
-	const onPointerOut = React.useCallback((e: ThreeEvent<PointerEvent>) => {
+	const onPointerOut = useCallback((e: ThreeEvent<PointerEvent>) => {
 		e.stopPropagation();
 		setIsHovered(false);
 	}, []);
 
-	const { objScale, matrixL } = React.useMemo(() => {
+	const { objScale, matrixL } = useMemo(() => {
 		const objScale = scale;
 		const quaternion = new THREE.Quaternion().setFromUnitVectors(
 			upV,
@@ -216,17 +217,6 @@ export const ScalingSphere: React.FC<{
 		console.log('radius from scaling sphere', objScale);
 		return { objScale, matrixL };
 	}, [direction, scale, lineWidth, fixed]);
-
-	const axisValToString = (axis: 0 | 1 | 2) => {
-		switch (axis) {
-			case 0:
-				return 'X';
-			case 1:
-				return 'Y';
-			case 2:
-				return 'Z';
-		}
-	};
 
 	return (
 		<group ref={objRef}>
@@ -303,4 +293,4 @@ export const ScalingSphere: React.FC<{
 			</group>
 		</group>
 	);
-};
+}

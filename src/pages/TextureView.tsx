@@ -1,28 +1,6 @@
-import { useState } from 'react';
-import { lazy } from 'react';
-import reactLogo from './assets/react.svg';
-import viteLogo from '/vite.svg';
-import '../styles/App.css';
-import * as THREE from 'three';
-import { useThree } from '@react-three/fiber';
-import * as React from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Hud, PerspectiveCamera } from '@react-three/drei';
 
-import ModelPartView from '../components/ModelPartView';
-import { randomCubeColour } from '../constants/CubeColours.tsx';
-import ContextMenu from '../components/ContextMenu.tsx';
-import useContextMenu from '../hooks/useContextMenu.tsx';
-import CubePartView from '../components/CubePartView';
-import { is } from '@react-three/fiber/dist/declarations/src/core/utils';
-import { useAppSelector } from '../hooks/useRedux.tsx';
-import ResizeableBar from '../components/ResizeableBar.tsx';
-import SideBarWidget from '../components/templates/SideBarWidget.tsx';
-import TextureCanvasView from '../components/TextureCanvasView.tsx';
-
-const Viewport = lazy(
-	() => import('../components/ThreeComponents/Viewport.tsx')
-);
+import ResizeableBar from '../components/ResizeableBar';
+import TextureCanvasView from '../components/TextureCanvasView';
 
 const styles = {
 	pageBackground: `bg-matisse-950 p-1 `,
@@ -32,17 +10,6 @@ const styles = {
 };
 
 function TextureView() {
-	// https://github.com/pmndrs/drei/blob/master/src/web/Select.tsx
-	// look at this to improve
-	const {
-		menuVisible,
-		menuItems,
-		menuPosition,
-		showMenu,
-		hideMenu,
-		handleContextMenu,
-	} = useContextMenu();
-
 	return (
 		<div
 			className={
@@ -59,7 +26,7 @@ function TextureView() {
 						styles.panelContainer +
 						styles.panelOutline
 					}
-				></ResizeableBar>
+				/>
 
 				<div
 					id="viewportContainer"
@@ -68,11 +35,9 @@ function TextureView() {
 						styles.viewportOutline
 					}
 				>
-					<React.Suspense fallback={<div>Loading...</div>}>
-						<div className="flex h-full w-full">
-							<TextureCanvasView />
-						</div>
-					</React.Suspense>
+					<div className="flex h-full w-full">
+						<TextureCanvasView />
+					</div>
 				</div>
 
 				<ResizeableBar
@@ -83,12 +48,11 @@ function TextureView() {
 						styles.panelContainer +
 						styles.panelOutline
 					}
-				></ResizeableBar>
+				/>
 			</div>
 
 			<div
 				id="bottomBar"
-				onContextMenu={handleContextMenu}
 				className={
 					`h-12 w-full flex-shrink-0 items-center justify-center overflow-hidden rounded-b-lg ` +
 					styles.panelContainer +

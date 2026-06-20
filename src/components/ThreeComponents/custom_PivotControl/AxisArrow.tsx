@@ -1,23 +1,16 @@
-import * as React from 'react';
+import { useCallback, useContext, useMemo, useRef, useState, type RefObject } from 'react';
 import * as THREE from 'three';
-import { ThreeEvent, useFrame, useThree } from '@react-three/fiber';
-import { Line, Plane, Text, Billboard } from '@react-three/drei';
+import { ThreeEvent, useThree } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import { context } from './context';
-import { Canvas, useLoader } from '@react-three/fiber';
+import { useLoader } from '@react-three/fiber';
 import icon from '../../../assets/arrow.png';
-import { darkenColor, lightenColor } from '../../../util/textureUtil';
 import { round } from '../../../util';
-import { useKey, useKeyPress, useKeyPressEvent, useRaf } from 'react-use';
-import { useModifiers } from '../../../hooks/useControls';
+import { useKeyPressEvent } from 'react-use';
 import {
 	modifiers,
 	moveModifierIncrement,
 } from '../../../constants/KeyModifiers';
-import {
-	useMeshDataSelector,
-	useViewportSelectedSelector,
-} from '../../../hooks/useRedux';
 
 const vec1 = /* @__PURE__ */ new THREE.Vector3();
 const vec2 = /* @__PURE__ */ new THREE.Vector3();
@@ -51,11 +44,15 @@ export const calculateOffset = (
 const upV = /* @__PURE__ */ new THREE.Vector3(0, 1, 0);
 const offsetMatrix = /* @__PURE__ */ new THREE.Matrix4();
 
-export const AxisArrow: React.FC<{
+export function AxisArrow({
+	direction,
+	axis,
+	usingGimbal,
+}: {
 	direction: THREE.Vector3;
 	axis: 0 | 1 | 2;
-	usingGimbal: React.MutableRefObject<boolean>;
-}> = ({ direction, axis, usingGimbal }) => {
+	usingGimbal: RefObject<boolean>;
+}) {
 	const {
 		translation,
 		translationLimits,
@@ -67,14 +64,12 @@ export const AxisArrow: React.FC<{
 		fixed,
 		axisColors,
 		hoveredColor,
-		opacity,
 		onDragStart,
-		visible,
 		onDrag,
 		onDragEnd,
 		userData,
-	} = React.useContext(context);
-	const moveMultiplier = React.useRef(1);
+	} = useContext(context);
+	const moveMultiplier = useRef(1);
 
 	useKeyPressEvent(
 		modifiers.small_shift,
@@ -100,26 +95,17 @@ export const AxisArrow: React.FC<{
 	const camControls = useThree((state) => state.controls) as {
 		enabled: boolean;
 	};
-	const divRef = React.useRef<HTMLDivElement>(null!);
-	const objRef = React.useRef<THREE.Group>(null!);
-	const clickInfo = React.useRef<{
+	const divRef = useRef<HTMLDivElement>(null!);
+	const objRef = useRef<THREE.Group>(null!);
+	const clickInfo = useRef<{
 		clickPoint: THREE.Vector3;
 		dir: THREE.Vector3;
-	} | null>(null);
-	const offset0 = React.useRef<number>(0);
-	const [isHovered, setIsHovered] = React.useState(false);
-	const [dragOffset, setDragOffset] = React.useState(0);
-	const meshRef = React.useRef<THREE.Mesh>(null!);
-
-	const meshData = useMeshDataSelector();
-	const selectedID = useViewportSelectedSelector();
-	const selectedCube = React.useRef(
-		meshData.find((item) => item.id === selectedID)
-	);
-
-	var previousDistance = 0;
-	const onPointerDown = React.useCallback(
-		(e: ThreeEvent<PointerEvent>) => {
+		} | null>(null);
+		const offset0 = useRef<number>(0);
+		const previousDistance = useRef(0);
+		const [isHovered, setIsHovered] = useState(false);
+		const onPointerDown = useCallback(
+			(e: ThreeEvent<PointerEvent>) => {
 			if (annotations) {
 				divRef.current.innerText = `${translation.current[axis].toFixed(2)}`;
 				divRef.current.style.display = 'block';
@@ -130,10 +116,8 @@ export const AxisArrow: React.FC<{
 				objRef.current.matrixWorld
 			);
 			const clickPoint = e.point.clone();
-			const origin = new THREE.Vector3(
-				selectedCube.current?.position[0] || 0,
-				selectedCube.current?.position[1] || 0,
-				selectedCube.current?.position[2] || 0
+			const origin = new THREE.Vector3().setFromMatrixPosition(
+				objRef.current.matrixWorld
 			);
 
 			let dir = direction.clone();
@@ -144,10 +128,11 @@ export const AxisArrow: React.FC<{
 				dir = dir.applyMatrix4(rotation).normalize();
 			}
 
-			clickInfo.current = { clickPoint, dir };
-			offset0.current = translation.current[axis];
-			onDragStart({
-				component: 'Arrow',
+				clickInfo.current = { clickPoint, dir };
+				offset0.current = translation.current[axis];
+				previousDistance.current = 0;
+				onDragStart({
+					component: 'Arrow',
 				axis,
 				origin,
 				directions: [dir],
@@ -158,7 +143,7 @@ export const AxisArrow: React.FC<{
 		},
 		[annotations, direction, camControls, onDragStart, translation, axis]
 	);
-	const onPointerMove = React.useCallback(
+	const onPointerMove = useCallback(
 		(e: ThreeEvent<PointerEvent>) => {
 			e.stopPropagation();
 
@@ -166,7 +151,7 @@ export const AxisArrow: React.FC<{
 			if (clickInfo.current) {
 				const { clickPoint, dir } = clickInfo.current;
 
-				const [min, max] = translationLimits?.[axis] || [
+				const [, max] = translationLimits?.[axis] || [
 					undefined,
 					undefined,
 				];
@@ -180,12 +165,12 @@ export const AxisArrow: React.FC<{
 				// used to get movement based on key modifiers
 				offset = round(offset, moveMultiplier.current, 0);
 
-				//stops carrying on if the offset is 0.01 or less (so 0)
-				if (Math.abs(offset - previousDistance) < 0.01) {
-					previousDistance = offset;
-					return;
-				}
-				previousDistance = offset;
+					//stops carrying on if the offset is 0.01 or less (so 0)
+					if (Math.abs(offset - previousDistance.current) < 0.01) {
+						previousDistance.current = offset;
+						return;
+					}
+					previousDistance.current = offset;
 				if (max !== undefined) {
 					offset = Math.min(offset, max - offset0.current);
 				}
@@ -195,9 +180,6 @@ export const AxisArrow: React.FC<{
 				}
 
 				// used to translate along angle
-				const rotation = new THREE.Matrix4().extractRotation(
-					objRef.current.matrixWorld
-				);
 				const rotatedDir = dir.clone().normalize();
 
 				offsetMatrix.makeTranslation(
@@ -206,7 +188,6 @@ export const AxisArrow: React.FC<{
 					rotatedDir.z * offset
 				);
 
-				setDragOffset(offset);
 				onDrag(offsetMatrix);
 
 				const pos = new THREE.Vector3();
@@ -216,7 +197,7 @@ export const AxisArrow: React.FC<{
 		[annotations, onDrag, isHovered, translation, translationLimits, axis]
 	);
 
-	const onPointerUp = React.useCallback(
+	const onPointerUp = useCallback(
 		(e: ThreeEvent<PointerEvent>) => {
 			if (annotations) {
 				divRef.current.style.display = 'none';
@@ -228,18 +209,17 @@ export const AxisArrow: React.FC<{
 			camControls && (camControls.enabled = true);
 			// @ts-ignore - releasePointerCapture & PointerEvent#pointerId is not in the type definition
 			e.target.releasePointerCapture(e.pointerId);
-			setDragOffset(0);
 		},
 		[annotations, camControls, onDragEnd]
 	);
 
-	const onPointerOut = React.useCallback((e: ThreeEvent<PointerEvent>) => {
+	const onPointerOut = useCallback((e: ThreeEvent<PointerEvent>) => {
 		e.stopPropagation();
 		setIsHovered(false);
 	}, []);
 
 	const { cylinderLength, coneWidth, coneLength, matrixL } =
-		React.useMemo(() => {
+		useMemo(() => {
 			const coneWidth = fixed ? (lineWidth / scale) * 1.6 : scale / 20;
 			const coneLength = fixed ? 0.2 : scale / 4;
 			const cylinderLength = fixed ? 1 - coneLength : scale - coneLength;
@@ -257,17 +237,6 @@ export const AxisArrow: React.FC<{
 	const texture = useLoader(THREE.TextureLoader, icon);
 	texture.minFilter = THREE.NearestFilter;
 	texture.magFilter = THREE.NearestFilter;
-
-	const axisValToString = (axis: 0 | 1 | 2) => {
-		switch (axis) {
-			case 0:
-				return 'X';
-			case 1:
-				return 'Y';
-			case 2:
-				return 'Z';
-		}
-	};
 
 	//console.log("Axis color:", axisColors[axis].toString());
 	//console.log("Darkened color:", darkenColor(axisColors[axis].toString(), 2));
@@ -400,4 +369,4 @@ export const AxisArrow: React.FC<{
 			</group>
 		</>
 	);
-};
+}

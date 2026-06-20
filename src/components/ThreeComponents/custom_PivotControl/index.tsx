@@ -1,15 +1,21 @@
 import { useFrame, useThree } from '@react-three/fiber';
-import * as React from 'react';
 import * as THREE from 'three';
+import {
+	forwardRef,
+	useImperativeHandle,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+	type ReactNode,
+	type RefObject,
+} from 'react';
 
 import { ForwardRefComponent } from '@react-three/drei/helpers/ts-utils';
 import { AxisArrow } from './AxisArrow';
 import { AxisRotator } from './AxisRotator';
-import { PlaneSlider } from './PlaneSlider';
 import { ScalingSphere } from './ScalingSphere';
 import { OnDragStartProps, context } from './context';
 import { calculateScaleFactor } from '@react-three/drei/core/calculateScaleFactor';
-import { useViewportSelector } from '../../../hooks/useRedux';
 
 const mL0 = /* @__PURE__ */ new THREE.Matrix4();
 const mW0 = /* @__PURE__ */ new THREE.Matrix4();
@@ -103,14 +109,14 @@ type PivotControlsProps = {
 	opacity?: number;
 	visible?: boolean;
 	userData?: { [key: string]: any };
-	children?: React.ReactNode;
-	usingGimbal: React.MutableRefObject<boolean>;
+	children?: ReactNode;
+	usingGimbal: RefObject<boolean>;
 };
 
 export const PivotControls: ForwardRefComponent<
 	PivotControlsProps,
 	THREE.Group
-> = /* @__PURE__ */ React.forwardRef<THREE.Group, PivotControlsProps>(
+> = /* @__PURE__ */ forwardRef<THREE.Group, PivotControlsProps>(
 	(
 		{
 			enabled = true,
@@ -148,23 +154,18 @@ export const PivotControls: ForwardRefComponent<
 		fRef
 	) => {
 		const invalidate = useThree((state) => state.invalidate);
-		const parentRef = React.useRef<THREE.Group>(null!);
-		const ref = React.useRef<THREE.Group>(null!);
-		const gizmoRef = React.useRef<THREE.Group>(null!);
-		const childrenRef = React.useRef<THREE.Group>(null!);
-		const translation = React.useRef<[number, number, number]>([0, 0, 0]);
-		const cameraScale = React.useRef<THREE.Vector3>(
+		const parentRef = useRef<THREE.Group>(null!);
+		const ref = useRef<THREE.Group>(null!);
+		const gizmoRef = useRef<THREE.Group>(null!);
+		const childrenRef = useRef<THREE.Group>(null!);
+		const translation = useRef<[number, number, number]>([0, 0, 0]);
+		const cameraScale = useRef<THREE.Vector3>(
 			new THREE.Vector3(1, 1, 1)
 		);
-		const gizmoScale = React.useRef<THREE.Vector3>(
+		const gizmoScale = useRef<THREE.Vector3>(
 			new THREE.Vector3(1, 1, 1)
 		);
-		const selectedRef = React.useRef<number>(
-			useViewportSelector().selected ?? -1
-		);
-		const selected = selectedRef.current;
-
-		React.useLayoutEffect(() => {
+		useLayoutEffect(() => {
 			if (!anchor) return;
 			childrenRef.current.updateWorldMatrix(true, true);
 
@@ -190,7 +191,7 @@ export const PivotControls: ForwardRefComponent<
 			invalidate();
 		});
 
-		const config = React.useMemo(
+		const config = useMemo(
 			() => ({
 				onDragStart: (props: OnDragStartProps) => {
 					mL0.copy(ref.current.matrix);
@@ -298,16 +299,10 @@ export const PivotControls: ForwardRefComponent<
 			const scaleFactor = (distance / (state.size.height / 2)) * 100; // Adjust the divisor to control the size
 			gizmoRef.current.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
-			if (selectedRef.current === -1) {
-				gizmoRef.current.visible = false;
-				enabled = false;
-			} else {
-				gizmoRef.current.visible = true;
-				enabled = true;
-			}
+			gizmoRef.current.visible = visible && enabled;
 		});
 
-		React.useImperativeHandle(fRef, () => ref.current, []);
+		useImperativeHandle(fRef, () => ref.current, []);
 
 		return (
 			<context.Provider value={config}>
@@ -323,9 +318,6 @@ export const PivotControls: ForwardRefComponent<
 							ref={gizmoRef}
 							position={offset}
 							rotation={rotation}
-							onPointerDown={(e) =>
-								console.log('down PIVOT GROUP')
-							}
 						>
 							{enabled && (
 								<>
@@ -350,36 +342,7 @@ export const PivotControls: ForwardRefComponent<
 											usingGimbal={usingGimbal}
 										/>
 									)}
-									{!disableSliders &&
-										activeAxes[0] &&
-										activeAxes[1] && (
-											<PlaneSlider
-												axis={2}
-												dir1={xDir}
-												dir2={yDir}
-												usingGimbal={usingGimbal}
-											/>
-										)}
-									{!disableSliders &&
-										activeAxes[0] &&
-										activeAxes[2] && (
-											<PlaneSlider
-												axis={1}
-												dir1={zDir}
-												dir2={xDir}
-												usingGimbal={usingGimbal}
-											/>
-										)}
-									{!disableSliders &&
-										activeAxes[2] &&
-										activeAxes[1] && (
-											<PlaneSlider
-												axis={0}
-												dir1={yDir}
-												dir2={zDir}
-												usingGimbal={usingGimbal}
-											/>
-										)}
+								
 									{!disableRotations &&
 										activeAxes[0] &&
 										activeAxes[1] && (
@@ -438,61 +401,3 @@ export const PivotControls: ForwardRefComponent<
 		);
 	}
 );
-
-export const onDragStart = (
-	props: OnDragStartProps,
-	boxRef2: React.RefObject<THREE.Mesh>,
-	useGimbal: [boolean, React.Dispatch<React.SetStateAction<boolean>>],
-	invalidate: React.MutableRefObject<(arg0: number) => void>,
-	preMatrix: THREE.Matrix4
-) => {
-	useGimbal[1](false);
-	invalidate.current(1);
-	preMatrix.copy(boxRef2.current.matrix);
-};
-
-export const onDrag = (
-	l: THREE.Matrix4,
-	deltaL: THREE.Matrix4,
-	w: THREE.Matrix4,
-	deltaW: THREE.Matrix4,
-	boxRef2: React.RefObject<THREE.Mesh>,
-	invalidate: React.MutableRefObject<(arg0: number) => void>,
-	preMatrix: THREE.Matrix4
-) => {
-	const translationScale = 0.1; // Adjust this value to control the movement scale
-	var pivotMatrix = new THREE.Matrix4();
-	pivotMatrix
-		.copy(preMatrix)
-		.multiply(
-			new THREE.Matrix4().makeTranslation(
-				deltaL.elements[12] * translationScale,
-				deltaL.elements[13] * translationScale,
-				deltaL.elements[14] * translationScale
-			)
-		);
-	if (boxRef2.current) {
-		boxRef2.current.matrix.copy(pivotMatrix);
-		boxRef2.current.matrix.decompose(
-			boxRef2.current.position,
-			boxRef2.current.quaternion,
-			boxRef2.current.scale
-		);
-	}
-	invalidate.current();
-};
-
-export const onDragEnd = (
-	boxRef2: React.RefObject<THREE.Mesh>,
-	useGimbal: [boolean, React.Dispatch<React.SetStateAction<boolean>>],
-	invalidate: React.MutableRefObject<(arg0: number) => void>
-) => {
-	useGimbal[1](true);
-	if (boxRef2.current) {
-		boxRef2.current.updateMatrixWorld();
-	}
-	invalidate.current(10);
-};
-
-export const preMatrix = new THREE.Matrix4();
-export const preMatrixInv = new THREE.Matrix4();

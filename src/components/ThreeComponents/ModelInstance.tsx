@@ -1,64 +1,54 @@
-import * as React from 'react';
 import * as THREE from 'three';
-import { ThreeEvent, useThree } from '@react-three/fiber';
-import {
-	useAppDispatch,
-	useMeshDataSelector,
-	useMeshTextureSelector,
-	useViewportSelector,
-} from '../../hooks/useRedux';
-import { setSelected as reduxSetSelected } from '../../redux/reducers/viewportReducer';
+import { invalidate } from '@react-three/fiber';
+import { useEffect, useMemo, type RefObject } from 'react';
 import Cube from './Cube';
-import { CubeProps } from '../../types/three';
-import { BoxUVMap } from '../../util/textureUtil';
+import { Cube as CubeObject } from '../../types/mesh';
+import { useCubeActionBus } from '../../events/cubeActionBus';
 
-const ModelInstance: React.FC<{
-	selectionAnchorRef: React.MutableRefObject<THREE.Group<THREE.Object3DEventMap> | null>;
-	usingGimbal: React.MutableRefObject<boolean>;
-}> = ({ selectionAnchorRef, usingGimbal }) => {
-	const renderMode = useViewportSelector().renderMode;
-	const cameraControls = useViewportSelector().cameraControls;
-	const modelData = useMeshDataSelector();
-	const textures = useMeshTextureSelector();
-	//TODO, switch to dataURL
-
-	let texture = textures.find((texture) => texture.active === true);
-	if (renderMode === 'solid' || texture === undefined) {
-		texture = textures.find((texture) => texture.id === 'TEMPLATE');
-	}
-	const dispatch = useAppDispatch();
-	const scene = useThree();
-
-	//cube select logic
-	//uses raycaster to select cubes
-	const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
-		if (!scene) return;
-		//console.log('cameraControls', cameraControls);
-		//console.log('usingGimbal', usingGimbal);
-		if (usingGimbal.current) return;
-		const intersects = scene.raycaster
-			.intersectObjects(scene.scene.children, true)
-			.filter((i) => i.object.type === 'Cube');
-		if (intersects.length === 0) return;
-
-		//console.log('intersects click', intersects);
-
-		dispatch(reduxSetSelected(intersects[0].object.userData.id));
-	};
-
-	return (
-		<group onPointerDown={handlePointerDown} type="ModelInstance">
-			{modelData.map((cube, index) => (
-				<Cube
-					cube={cube as CubeProps}
-					key={cube.id}
-					index={index}
-					texture={texture}
-					selectionAnchorRef={selectionAnchorRef}
-				/>
-			))}
-		</group>
+function ModelInstance({
+	cubeRef,
+}: {
+	cubeRef: RefObject<CubeObject | null>;
+}) {
+	const {
+		dispatchCubeAction,
+		registerCube,
+		unregisterCube,
+	} =
+		useCubeActionBus();
+	const cube = useMemo(
+		() =>
+			new CubeObject({
+				name: 'Cube',
+				position: new THREE.Vector3(0, 1, 0),
+				size: new THREE.Vector3(2, 2, 2),
+				colour: new THREE.Color(0xffffff),
+			}),
+		[]
 	);
-};
+
+	useEffect(() => {
+		registerCube(cube);
+		cubeRef.current = cube;
+		dispatchCubeAction(cube.cubeId, { type: 'select' });
+		invalidate();
+
+		return () => {
+			if (cubeRef.current === cube) {
+				cubeRef.current = null;
+			}
+			unregisterCube(cube);
+			cube.dispose();
+		};
+	}, [
+		cube,
+		cubeRef,
+		dispatchCubeAction,
+		registerCube,
+		unregisterCube,
+	]);
+
+	return <Cube cube={cube} />;
+}
 
 export default ModelInstance;

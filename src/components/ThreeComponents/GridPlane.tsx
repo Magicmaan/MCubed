@@ -1,10 +1,6 @@
-import React from 'react';
-import { Canvas } from '@react-three/fiber';
-import { Grid, useTexture, Text } from '@react-three/drei';
-import { DoubleSide } from 'three';
-import { loadTexture } from '../../util/textureUtil';
-import * as THREE from 'three';
-import { useViewportSelector } from '../../hooks/useRedux';
+import { Grid } from '@react-three/drei';
+import { DoubleSide, NearestFilter, TextureLoader } from 'three';
+import { useMemo } from 'react';
 
 interface GridPlaneProps {
 	size: number;
@@ -13,10 +9,18 @@ interface GridPlaneProps {
 	color?: string;
 }
 
-const DebugGridPlane: React.FC = () => {
-	const showWorldGrid = useViewportSelector().showWorldGrid;
+function loadNearestTexture(textureLoader: TextureLoader, url: string) {
+	const texture = textureLoader.load(url);
+	texture.magFilter = NearestFilter;
+	texture.minFilter = NearestFilter;
+	texture.generateMipmaps = false;
+	texture.needsUpdate = true;
+	return texture;
+}
+
+function DebugGridPlane() {
 	return (
-		<group visible={showWorldGrid}>
+		<group visible={false}>
 			<Grid
 				args={[256, 256]}
 				cellSize={16}
@@ -27,26 +31,25 @@ const DebugGridPlane: React.FC = () => {
 			/>
 		</group>
 	);
-};
+}
 
-const GridPlane: React.FC<GridPlaneProps> = ({ size }) => {
-	const showGrid = useViewportSelector().showGrid;
-
-	const outlineTexture = React.useMemo(
-		() => loadTexture('/src/assets/grid.png'),
-		[]
+function GridPlane({ size }: GridPlaneProps) {
+	const textureLoader = useMemo(() => new TextureLoader(), []);
+	const outlineTexture = useMemo(
+		() => loadNearestTexture(textureLoader, '/src/assets/grid.png'),
+		[textureLoader]
 	);
-	const xMarkerTexture = React.useMemo(
-		() => loadTexture('/src/assets/x_marker.png'),
-		[]
+	const xMarkerTexture = useMemo(
+		() => loadNearestTexture(textureLoader, '/src/assets/x_marker.png'),
+		[textureLoader]
 	);
-	const zMarkerTexture = React.useMemo(
-		() => loadTexture('/src/assets/z_marker.png'),
-		[]
+	const zMarkerTexture = useMemo(
+		() => loadNearestTexture(textureLoader, '/src/assets/z_marker.png'),
+		[textureLoader]
 	);
 
 	return (
-		<group visible={showGrid}>
+		<group visible>
 			<Grid
 				args={[size, size]}
 				cellSize={size}
@@ -65,7 +68,7 @@ const GridPlane: React.FC<GridPlaneProps> = ({ size }) => {
 				<meshBasicMaterial
 					map={outlineTexture}
 					transparent
-					side={THREE.DoubleSide}
+					side={DoubleSide}
 				/>
 			</mesh>
 
@@ -79,7 +82,7 @@ const GridPlane: React.FC<GridPlaneProps> = ({ size }) => {
 				<meshBasicMaterial
 					map={xMarkerTexture}
 					transparent
-					side={THREE.DoubleSide}
+					side={DoubleSide}
 				/>
 			</mesh>
 			<mesh
@@ -92,12 +95,12 @@ const GridPlane: React.FC<GridPlaneProps> = ({ size }) => {
 				<meshBasicMaterial
 					map={zMarkerTexture}
 					transparent
-					side={THREE.DoubleSide}
+					side={DoubleSide}
 				/>
 			</mesh>
 		</group>
 	);
-};
+}
 
 export default GridPlane;
 export { DebugGridPlane };

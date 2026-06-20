@@ -1,23 +1,23 @@
-import React from 'react';
 import Icon from '../../assets/icons/solid/.all';
+import type { CSSProperties, ReactNode } from 'react';
 
 interface SideBarWidgetProps {
-	style?: React.CSSProperties;
+	style?: CSSProperties;
 	name: string;
-	children?: React.ReactNode;
+	children?: ReactNode;
 	showExitButton?: boolean;
 	onExit?: () => void;
 	className?: string;
 }
 
-const SideBarWidget: React.FC<SideBarWidgetProps> = ({
+function SideBarWidget({
 	style,
 	className,
 	name,
 	children,
 	showExitButton,
 	onExit,
-}) => {
+}: SideBarWidgetProps) {
 	return (
 		<div
 			id={name}
@@ -25,7 +25,7 @@ const SideBarWidget: React.FC<SideBarWidgetProps> = ({
 			style={style}
 		>
 			<div className="flex h-auto w-full select-none flex-row flex-nowrap items-center justify-between">
-				<p className="border-1 static p-2 pr-4 text-left font-Inter font-semibold">
+				<p className="pixel-border-2 pixel-border-white ring-amber-400 static p-2 pr-4 text-left font-Inter font-semibold">
 					{name}
 				</p>
 				{showExitButton && (
@@ -47,6 +47,6 @@ const SideBarWidget: React.FC<SideBarWidgetProps> = ({
 			{children}
 		</div>
 	);
-};
+}
 
 export default SideBarWidget;

@@ -1,6 +1,6 @@
 import { useKeyPress } from 'react-use';
 import * as keys from '../constants/KeyModifiers';
-import { round, roundClosest } from '../util';
+import { round } from '../util';
 
 /**
  * Custom hook that provides key modifier states and utility functions for calculating multipliers and rounding values.

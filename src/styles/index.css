@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 @layer components {
 	.expand-element-group-500 {
@@ -25,7 +23,11 @@
 	}
 
 	.viewportBackground {
-		@apply pattern-rectangles pattern-main-500 pattern-bg-main-900 pattern-size-20;
+		background-color: #0f0f0f;
+		background-image:
+			linear-gradient(rgb(39 64 96 / 0.25) 1px, transparent 1px),
+			linear-gradient(90deg, rgb(39 64 96 / 0.25) 1px, transparent 1px);
+		background-size: 20px 20px;
 	}
 }
 
@@ -71,6 +73,11 @@ a:hover {
 	height: 100%;
 	max-height: 100%;
 	min-height: 100%;
+}
+
+.pixel-perfect-renderer {
+	image-rendering: pixelated;
+	image-rendering: crisp-edges;
 }
 
 body {

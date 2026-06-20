@@ -1,27 +1,5 @@
-import { useState } from 'react';
-import * as React from 'react';
-import {
-	NavButton,
-	NavChildButton,
-	NavChildCheck,
-	NavChildItem,
-} from './NavButton';
-import '../styles/App.css';
-import {
-	useAppDispatch,
-	useMeshStoreSelector,
-	useViewportSelector,
-} from '../hooks/useRedux';
-import {
-	toggleGrid,
-	toggleStats,
-	toggleWorldGrid,
-} from '../redux/reducers/viewportReducer';
-import { RootState } from '../redux/store';
-import { connect, useDispatch } from 'react-redux';
 import {
 	Menubar,
-	MenubarCheckboxItem,
 	MenubarContent,
 	MenubarItem,
 	MenubarMenu,
@@ -29,23 +7,17 @@ import {
 	MenubarShortcut,
 	MenubarTrigger,
 } from './ui/menubar';
+import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
-} from './ui/alert-dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-
+	Card,
+	CardContent,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from './ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Input } from './ui/input';
 import { Button } from './ui/button';
-import ErrorAlert from './templates/ErrorAlert';
-import { exportScene, saveMesh, setName } from '../redux/reducers/meshReducer';
-import { setLocalStorage } from '../storage/localStorage';
 
 const styles = {
 	menubar: `dark rounded-none outline-none dark:bg-matisse-950 p-1 pt-0 dark:border-matisse-900`,
@@ -55,21 +27,7 @@ const styles = {
 	menuItem: `dark:hover:bg-button-selected dark:focus:bg-button-selected`,
 };
 
-import {
-	Card,
-	CardHeader,
-	CardTitle,
-	CardContent,
-	CardFooter,
-} from './ui/card';
-import { PopoverContent, PopoverTrigger, Popover } from './ui/popover';
-import { Input } from './ui/input';
-
-const ProjectInfo: React.FC = () => {
-	const meshStore = useMeshStoreSelector();
-	const viewportData = useViewportSelector();
-	const dispatch = useAppDispatch();
-
+function ProjectInfo() {
 	return (
 		<Card className="flex min-h-[36rem] w-24 min-w-[46rem] flex-col justify-between overflow-hidden shadow-md shadow-black dark:bg-popup-bg">
 			<CardHeader>
@@ -79,34 +37,28 @@ const ProjectInfo: React.FC = () => {
 				<Input
 					className="flex w-1/2 bg-transparent dark:bg-opacity-50"
 					type="text"
-					placeholder={'Project Name'}
-					onChange={(e) => {
-						dispatch(setName(e.target.value));
-					}}
-					onKeyDownCapture={(e) => {
-						if (e.key === 'Enter') {
-							e.currentTarget.blur();
+					placeholder="Project Name"
+					onKeyDownCapture={(event) => {
+						if (event.key === 'Enter') {
+							event.currentTarget.blur();
 						}
 					}}
 				/>
 			</CardContent>
 			<CardFooter>
-				<Button variant={'default'}>Close</Button>
+				<Button variant="default">Close</Button>
 			</CardFooter>
 		</Card>
 	);
-};
+}
 
-const NavBar: React.FC<{
-	view: JSX.Element;
+function NavBar({
+	view,
+	setView,
+}: {
+	view: 'model' | 'texture';
 	setView: (state: 'model' | 'texture') => void;
-}> = ({ view, setView }) => {
-	const hasOpened = useState(false);
-	const currentButton = useState('');
-	const viewportData = useViewportSelector();
-	const meshStore = useMeshStoreSelector();
-	const dispatch = useAppDispatch();
-
+}) {
 	return (
 		<Menubar className={styles.menubar + ' border-0 border-b-4'}>
 			<MenubarMenu>
@@ -121,24 +73,8 @@ const NavBar: React.FC<{
 						New Window
 					</MenubarItem>
 					<MenubarSeparator />
-					<MenubarItem
-						className={styles.menuItem}
-						onClick={(e) => {
-							dispatch(saveMesh());
-							console.log('Saved');
-							e.preventDefault();
-						}}
-					>
-						Save
-					</MenubarItem>
-					<MenubarItem
-						className={styles.menuItem}
-						onClick={(e) => {
-							dispatch(exportScene());
-							console.log('Exporting scene');
-							e.preventDefault();
-						}}
-					>
+					<MenubarItem className={styles.menuItem}>Save</MenubarItem>
+					<MenubarItem className={styles.menuItem}>
 						Export
 					</MenubarItem>
 					<MenubarItem className={styles.menuItem}>Share</MenubarItem>
@@ -147,7 +83,7 @@ const NavBar: React.FC<{
 				</MenubarContent>
 			</MenubarMenu>
 
-			<MenubarSeparator className="m-0 h-6 w-0.5 bg-secondary-500 p-0"></MenubarSeparator>
+			<MenubarSeparator className={styles.menubarSeparator} />
 
 			<MenubarMenu>
 				<MenubarTrigger className={styles.menubarTrigger}>
@@ -158,7 +94,7 @@ const NavBar: React.FC<{
 						<PopoverTrigger
 							className={
 								styles.menuItem +
-								'relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-neutral-100 focus:text-neutral-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 dark:bg-transparent dark:focus:bg-neutral-800 dark:focus:text-neutral-50'
+								' relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-neutral-100 focus:text-neutral-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 dark:bg-transparent dark:focus:bg-neutral-800 dark:focus:text-neutral-50'
 							}
 						>
 							Info
@@ -167,74 +103,31 @@ const NavBar: React.FC<{
 							<ProjectInfo />
 						</PopoverContent>
 					</Popover>
-					<MenubarSeparator />
 				</MenubarContent>
 			</MenubarMenu>
 
-			<MenubarSeparator className="m-0 h-6 w-0.5 bg-secondary-500 p-0"></MenubarSeparator>
+			<MenubarSeparator className={styles.menubarSeparator} />
+
 			<MenubarMenu>
 				<MenubarTrigger className={styles.menubarTrigger}>
 					Edit
 				</MenubarTrigger>
 				<MenubarContent className={styles.menubarContent}>
-					<MenubarItem className={styles.menuItem}>
-						New Tab <MenubarShortcut>⌘T</MenubarShortcut>
-					</MenubarItem>
-					<MenubarItem className={styles.menuItem}>
-						New Window
-					</MenubarItem>
+					<MenubarItem className={styles.menuItem}>Undo</MenubarItem>
+					<MenubarItem className={styles.menuItem}>Redo</MenubarItem>
 					<MenubarSeparator />
-					<MenubarItem className={styles.menuItem}>Share</MenubarItem>
-					<MenubarSeparator />
-					<MenubarItem className={styles.menuItem}>Print</MenubarItem>
-				</MenubarContent>
-			</MenubarMenu>
-
-			<MenubarSeparator className="m-0 h-6 w-0.5 bg-secondary-500 p-0"></MenubarSeparator>
-
-			<MenubarMenu>
-				<MenubarTrigger className={styles.menubarTrigger}>
-					View
-				</MenubarTrigger>
-				<MenubarContent className={styles.menubarContent}>
-					<MenubarCheckboxItem
-						className={styles.menuItem}
-						checked={viewportData.showGrid}
-						onClick={(e) => {
-							dispatch(toggleGrid());
-							e.preventDefault();
-						}}
-					>
-						Show Grid
-					</MenubarCheckboxItem>
-					<MenubarCheckboxItem
-						className={styles.menuItem}
-						checked={viewportData.showWorldGrid}
-						onClick={(e) => {
-							dispatch(toggleWorldGrid());
-							e.preventDefault();
-						}}
-					>
-						Show World Grid
-					</MenubarCheckboxItem>
-					<MenubarCheckboxItem
-						className={styles.menuItem}
-						checked={viewportData.showStats}
-						onClick={(e) => {
-							dispatch(toggleStats());
-							e.preventDefault();
-						}}
-					>
-						Show Stats
-					</MenubarCheckboxItem>
+					<MenubarItem className={styles.menuItem}>Copy</MenubarItem>
+					<MenubarItem className={styles.menuItem}>Paste</MenubarItem>
 				</MenubarContent>
 			</MenubarMenu>
 
 			<div className="absolute right-1/2 h-auto w-auto translate-x-1/2 items-center">
 				<Tabs
-					defaultValue="model"
+					value={view}
 					className="flex w-44"
-					onValueChange={(e) => setView(e as 'model' | 'texture')}
+					onValueChange={(value) =>
+						setView(value as 'model' | 'texture')
+					}
 				>
 					<TabsList className="flex w-auto justify-evenly gap-2">
 						<TabsTrigger value="model">Model</TabsTrigger>
@@ -242,12 +135,8 @@ const NavBar: React.FC<{
 					</TabsList>
 				</Tabs>
 			</div>
-			<ErrorAlert
-				error="This is an error message"
-				info="An Error occured "
-			/>
 		</Menubar>
 	);
-};
+}
 
 export default NavBar;

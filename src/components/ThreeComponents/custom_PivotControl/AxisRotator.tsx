@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useCallback, useContext, useMemo, useRef, useState, type RefObject } from 'react';
 import * as THREE from 'three';
 import { ThreeEvent, useLoader, useThree } from '@react-three/fiber';
 import { Line } from '@react-three/drei';
@@ -6,12 +6,6 @@ import { Html } from '@react-three/drei';
 import { context } from './context';
 import icon from '../../../assets/curve.png';
 import { useModifiers } from '../../../hooks/useControls';
-import { round } from '../../../util';
-import { rotateModifierIncrement } from '../../../constants/KeyModifiers';
-import {
-	useMeshDataSelector,
-	useViewportSelectedSelector,
-} from '../../../hooks/useRedux';
 
 const clickDir = /* @__PURE__ */ new THREE.Vector3();
 const intersectionDir = /* @__PURE__ */ new THREE.Vector3();
@@ -61,16 +55,20 @@ const minimizeAngle = (angle: number) => {
 };
 
 const rotMatrix = /* @__PURE__ */ new THREE.Matrix4();
-const posNew = /* @__PURE__ */ new THREE.Vector3();
 const ray = /* @__PURE__ */ new THREE.Ray();
 const intersection = /* @__PURE__ */ new THREE.Vector3();
 
-export const AxisRotator: React.FC<{
+export function AxisRotator({
+	dir1,
+	dir2,
+	axis,
+	usingGimbal,
+}: {
 	dir1: THREE.Vector3;
 	dir2: THREE.Vector3;
 	axis: 0 | 1 | 2;
-	usingGimbal: React.MutableRefObject<boolean>;
-}> = ({ dir1, dir2, axis, usingGimbal }) => {
+	usingGimbal: RefObject<boolean>;
+}) {
 	const {
 		rotationLimits,
 		annotations,
@@ -86,22 +84,18 @@ export const AxisRotator: React.FC<{
 		onDrag,
 		onDragEnd,
 		userData,
-	} = React.useContext(context);
-
-	const meshData = useMeshDataSelector();
-	const selectedID = useViewportSelectedSelector();
-	const selectedCube = meshData.find((item) => item.id === selectedID);
+	} = useContext(context);
 
 	// @ts-expect-error new in @react-three/fiber@7.0.5
 	const camControls = useThree((state) => state.controls) as {
 		enabled: boolean;
 	};
-	const divRef = React.useRef<HTMLDivElement>(null!);
-	const objRef = React.useRef<THREE.Group>(null!);
-	const angle0 = React.useRef<number>(0);
-	const angle = React.useRef<number>(0);
-	const { keyModifiers, getMultiplier, getRounded } = useModifiers();
-	const clickInfo = React.useRef<{
+	const divRef = useRef<HTMLDivElement>(null!);
+	const objRef = useRef<THREE.Group>(null!);
+	const angle0 = useRef<number>(0);
+	const angle = useRef<number>(0);
+	const { getRounded } = useModifiers();
+	const clickInfo = useRef<{
 		clickPoint: THREE.Vector3;
 		origin: THREE.Vector3;
 		e1: THREE.Vector3;
@@ -109,9 +103,9 @@ export const AxisRotator: React.FC<{
 		normal: THREE.Vector3;
 		plane: THREE.Plane;
 	} | null>(null);
-	const [isHovered, setIsHovered] = React.useState(false);
+	const [isHovered, setIsHovered] = useState(false);
 
-	const onPointerDown = React.useCallback(
+	const onPointerDown = useCallback(
 		(e: ThreeEvent<PointerEvent>) => {
 			if (annotations) {
 				divRef.current.innerText = `${toDegrees(angle.current).toFixed(0)}º`;
@@ -119,10 +113,8 @@ export const AxisRotator: React.FC<{
 			}
 			e.stopPropagation();
 			const clickPoint = e.point.clone();
-			const origin = new THREE.Vector3(
-				selectedCube?.position[0] || 0,
-				selectedCube?.position[1] || 0,
-				selectedCube?.position[2] || 0
+			const origin = new THREE.Vector3().setFromMatrixPosition(
+				objRef.current.matrixWorld
 			);
 			const e1 = new THREE.Vector3()
 				.setFromMatrixColumn(objRef.current.matrixWorld, 0)
@@ -148,10 +140,10 @@ export const AxisRotator: React.FC<{
 			// @ts-ignore
 			e.target.setPointerCapture(e.pointerId);
 		},
-		[annotations, camControls, onDragStart, axis, selectedCube]
+		[annotations, camControls, onDragStart, axis]
 	);
 
-	const onPointerMove = React.useCallback(
+	const onPointerMove = useCallback(
 		(e: ThreeEvent<PointerEvent>) => {
 			e.stopPropagation();
 			if (!isHovered) setIsHovered(true);
@@ -233,10 +225,10 @@ export const AxisRotator: React.FC<{
 				onDrag(rotMatrix);
 			}
 		},
-		[annotations, onDrag, isHovered, rotationLimits, axis, selectedCube]
+		[annotations, onDrag, isHovered, rotationLimits, axis]
 	);
 
-	const onPointerUp = React.useCallback(
+	const onPointerUp = useCallback(
 		(e: ThreeEvent<PointerEvent>) => {
 			if (annotations) {
 				divRef.current.style.display = 'none';
@@ -252,12 +244,12 @@ export const AxisRotator: React.FC<{
 		[annotations, camControls, onDragEnd]
 	);
 
-	const onPointerOut = React.useCallback((e: any) => {
+	const onPointerOut = useCallback((e: any) => {
 		e.stopPropagation();
 		setIsHovered(false);
 	}, []);
 
-	const matrixL = React.useMemo(() => {
+	const matrixL = useMemo(() => {
 		const dir1N = dir1.clone().normalize();
 		const dir2N = dir2.clone().normalize();
 		return new THREE.Matrix4().makeBasis(
@@ -269,7 +261,7 @@ export const AxisRotator: React.FC<{
 
 	const r = fixed ? 0.65 : scale * 0.65;
 
-	const arc = React.useMemo(() => {
+	const arc = useMemo(() => {
 		const segments = 32;
 		const points: THREE.Vector3[] = [];
 		const scaleFactor = 1.03; // Increase the arc size by 10%
@@ -342,4 +334,4 @@ export const AxisRotator: React.FC<{
 			/>
 		</group>
 	);
-};
+}

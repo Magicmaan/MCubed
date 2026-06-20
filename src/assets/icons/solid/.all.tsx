@@ -71,7 +71,6 @@ const Icon = ({
 	colour,
 	alt_text,
 	center_x,
-	center_y,
 }: IconProps) => {
 	var icon = icons[name];
 	var viewBox = '0 0 500 500';

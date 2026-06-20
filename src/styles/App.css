@@ -1,70 +1,24 @@
-.navButton {
-	@apply bg-blue-500 px-1 py-1 font-bold text-white;
-}
-.navButton:hover {
-	@apply scale-95 bg-blue-300;
-}
-.navButton:focus {
-	@apply scale-95 bg-blue-300;
+@import "tailwindcss";
+
+:root {
+    list-style-type: none;
 }
 
-.logo {
-	height: 6em;
-	padding: 1.5em;
-	will-change: filter;
-	transition: filter 300ms;
-}
-.logo:hover {
-	filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-	filter: drop-shadow(0 0 2em #61dafbaa);
+@theme inline {
+    
+    --pixel-border-colour: red;
+
 }
 
-@keyframes logo-spin {
-	from {
-		transform: rotate(0deg);
-	}
-	to {
-		transform: rotate(360deg);
-	}
-}
+@utility pixel-border-* {
+    --box-shadow-width: calc(--value(integer)*1px);
+    --pixel-box-shadow: calc(-1 * (var(--box-shadow-width))) 0 0 0 var(--tw-ring-color), var(--box-shadow-width) 0 0 0 var(--tw-ring-color), 0 var(--box-shadow-width) 0 0 var(--tw-ring-color), 0 calc(-1 * (var(--box-shadow-width))) 0 0 var(--tw-ring-color);
+    
+        box-shadow: var(--pixel-box-shadow)
+        
+    }
 
-@media (prefers-reduced-motion: no-preference) {
-	a:nth-of-type(2) .logo {
-		animation: logo-spin infinite 20s linear;
-	}
-}
 
-.card {
-	padding: 2em;
-}
 
-.read-the-docs {
-	color: #888;
-}
-
-.contexify_theme-contextTheme {
-	--contexify-zIndex: 666;
-	--contexify-menu-minWidth: 220px;
-	--contexify-menu-padding: 6px;
-	--contexify-menu-radius: 0.25rem;
-	--contexify-menu-bgColor: #161f2a;
-	--contexify-menu-shadow: 1px 2px 2px rgba(0, 0, 0, 0.1),
-		2px 4px 4px rgba(0, 0, 0, 0.1), 3px 6px 6px rgba(0, 0, 0, 0.1);
-	--contexify-menu-negatePadding: var(--contexify-menu-padding);
-
-	--contexify-separator-color: rgba(0, 0, 0, 0.4);
-	--contexify-separator-margin: 5px;
-	--contexify-itemContent-padding: 6px;
-	--contexify-activeItem-radius: 4px;
-	--contexify-item-color: #ffffff;
-	--contexify-activeItem-color: #fff;
-	--contexify-activeItem-bgColor: #3498db;
-	--contexify-rightSlot-color: #6f6e77;
-	--contexify-activeRightSlot-color: #fff;
-	--contexify-arrow-color: #6f6e77;
-	--contexify-activeArrow-color: #fff;
-
-	@apply shadow-lg shadow-black;
+@layer components {
 }
