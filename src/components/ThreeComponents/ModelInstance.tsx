@@ -1,21 +1,9 @@
 import * as THREE from 'three';
-import { invalidate } from '@react-three/fiber';
-import { useEffect, useMemo, type RefObject } from 'react';
+import { useEffect, useMemo } from 'react';
 import Cube from './Cube';
 import { Cube as CubeObject } from '../../types/mesh';
-import { useCubeActionBus } from '../../events/cubeActionBus';
 
-function ModelInstance({
-	cubeRef,
-}: {
-	cubeRef: RefObject<CubeObject | null>;
-}) {
-	const {
-		dispatchCubeAction,
-		registerCube,
-		unregisterCube,
-	} =
-		useCubeActionBus();
+function ModelInstance() {
 	const cube = useMemo(
 		() =>
 			new CubeObject({
@@ -28,27 +16,12 @@ function ModelInstance({
 	);
 
 	useEffect(() => {
-		registerCube(cube);
-		cubeRef.current = cube;
-		dispatchCubeAction(cube.cubeId, { type: 'select' });
-		invalidate();
-
 		return () => {
-			if (cubeRef.current === cube) {
-				cubeRef.current = null;
-			}
-			unregisterCube(cube);
 			cube.dispose();
 		};
-	}, [
-		cube,
-		cubeRef,
-		dispatchCubeAction,
-		registerCube,
-		unregisterCube,
-	]);
+	}, [cube]);
 
-	return <Cube cube={cube} />;
+	return <Cube autoSelect cube={cube} />;
 }
 
 export default ModelInstance;

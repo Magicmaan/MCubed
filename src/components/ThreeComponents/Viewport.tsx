@@ -4,14 +4,8 @@ import { OrbitControls, PerspectiveCamera, Sphere } from '@react-three/drei';
 import GridPlane, { DebugGridPlane } from './GridPlane';
 import PivotControlsComponent from './PivotControlsComponent';
 import ModelInstance from './ModelInstance';
-import { Cube } from '../../types/mesh';
 import { useCubeActionBus } from '../../events/cubeActionBus';
-import {
-	RefObject,
-	useEffect,
-	useRef,
-	useState,
-} from 'react';
+import { RefObject, useEffect, useRef, useState } from 'react';
 
 const rendererPixelRatio = 0.5;
 function RendererResolution() {
@@ -36,24 +30,44 @@ function CameraPivot({
 	return (
 		<group ref={pivotPointRef} position={[0, 0, 0]}>
 			<Sphere args={[0.125, 16, 16]} position={[0, 0, 0]}>
-				<meshBasicMaterial
-					color="#ffffff"
-					opacity={0.5}
-					transparent
-				/>
+				<meshBasicMaterial color="#ffffff" opacity={0.5} transparent />
 			</Sphere>
 		</group>
 	);
 }
 
 function Viewport() {
-	const cubeRef = useRef<Cube | null>(null);
 	const selectionAnchorRef = useRef<THREE.Group | null>(null);
 	const usingGimbal = useRef(false);
 	const pivotPointRef = useRef<THREE.Group | null>(null);
 	const orbitRef = useRef<any>(null);
 	const [orbitEnabled, setOrbitEnabled] = useState(true);
-	const { dispatchCubeAction, selectedCubeId } = useCubeActionBus();
+	const [selectedCubeId, setSelectedCubeId] = useState<string | null>(null);
+	const { dispatch, subscribe } = useCubeActionBus();
+
+	useEffect(() => {
+		const unsubscribeFromSelected = subscribe(
+			'cubeSelected',
+			({ snapshot }) => {
+				setSelectedCubeId(snapshot.id);
+			}
+		);
+		const unsubscribeFromUnselected = subscribe(
+			'cubeUnselected',
+			({ cubeId }) => {
+				setSelectedCubeId((currentCubeId) => {
+					if (currentCubeId !== cubeId) return currentCubeId;
+
+					return null;
+				});
+			}
+		);
+
+		return () => {
+			unsubscribeFromSelected();
+			unsubscribeFromUnselected();
+		};
+	}, [subscribe]);
 
 	return (
 		<Canvas
@@ -68,7 +82,10 @@ function Viewport() {
 			}}
 			onPointerMissed={() => {
 				if (selectedCubeId) {
-					dispatchCubeAction(selectedCubeId, { type: 'unselect' });
+					dispatch('cubeAction', {
+						action: { type: 'unselect' },
+						cubeId: selectedCubeId,
+					});
 				}
 				invalidate();
 			}}
@@ -84,9 +101,7 @@ function Viewport() {
 			<ambientLight />
 			<pointLight position={[10, 10, 10]} />
 
-			<ModelInstance
-				cubeRef={cubeRef}
-			/>
+			<ModelInstance />
 
 			<GridPlane size={16} />
 			<DebugGridPlane />

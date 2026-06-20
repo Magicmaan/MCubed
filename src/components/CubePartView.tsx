@@ -3,12 +3,16 @@ import {
 	type InputHTMLAttributes,
 	type PointerEvent,
 	useCallback,
-	useMemo,
+	useEffect,
 	useRef,
 	useState,
 } from 'react';
 import { Euler, Vector3 } from 'three';
-import { useCubeActionBus } from '../events/cubeActionBus';
+import {
+	type CubeSnapshot,
+	useCubeActionBus,
+	type Vec3Tuple,
+} from '../events/cubeActionBus';
 import SideBarWidget from './templates/SideBarWidget';
 
 function DisplayVec3({
@@ -23,7 +27,7 @@ function DisplayVec3({
 	step?: SliderStep;
 } & AriaAttributes) {
 	return (
-		<div className="pointer-events-auto flex h-auto w-full flex-col items-start justify-center gap-2 rounded-sm border-main-800 bg-main-500 p-1 text-sm">
+		<div className="border-main-800 bg-main-500 pointer-events-auto flex h-auto w-full flex-col items-start justify-center gap-2 rounded-sm p-1 text-sm">
 			<label className="ml-4" id={`${label}-vec3`}>
 				{label}
 			</label>
@@ -37,9 +41,11 @@ function DisplayVec3({
 							key={`${label}-${index}`}
 							value={item}
 							setValue={(newValue) => {
-								const newValues = [
-									...value,
-								] as [number, number, number];
+								const newValues = [...value] as [
+									number,
+									number,
+									number,
+								];
 								newValues[index] = newValue;
 								onChange(newValues);
 							}}
@@ -95,23 +101,29 @@ function SliderNumber({
 	const inputRef = useRef<HTMLInputElement>(null);
 	const dragRef = useRef<SliderDragState | null>(null);
 
-	const applyDragDelta = useCallback((delta: number) => {
-		const drag = dragRef.current;
-		if (!drag || !inputRef.current) return;
+	const applyDragDelta = useCallback(
+		(delta: number) => {
+			const drag = dragRef.current;
+			if (!drag || !inputRef.current) return;
 
-		drag.remainder += delta;
-		const steps = Math.trunc(drag.remainder / dragPixelsPerStep);
-		if (steps === 0) return;
+			drag.remainder += delta;
+			const steps = Math.trunc(drag.remainder / dragPixelsPerStep);
+			if (steps === 0) return;
 
-		drag.remainder -= steps * dragPixelsPerStep;
-		drag.value = Number((drag.value + steps * interval).toFixed(4));
-		inputRef.current.value = String(drag.value);
-		setValue(drag.value);
-	}, [interval, setValue]);
+			drag.remainder -= steps * dragPixelsPerStep;
+			drag.value = Number((drag.value + steps * interval).toFixed(4));
+			inputRef.current.value = String(drag.value);
+			setValue(drag.value);
+		},
+		[interval, setValue]
+	);
 
-	const handleMouseMove = useCallback((event: MouseEvent) => {
-		applyDragDelta(event.movementX - event.movementY);
-	}, [applyDragDelta]);
+	const handleMouseMove = useCallback(
+		(event: MouseEvent) => {
+			applyDragDelta(event.movementX - event.movementY);
+		},
+		[applyDragDelta]
+	);
 
 	const stopDrag = useCallback(() => {
 		if (!dragRef.current) return;
@@ -120,7 +132,10 @@ function SliderNumber({
 		unlockMouse();
 		document.removeEventListener('mousemove', handleMouseMove);
 		document.removeEventListener('mouseup', stopDrag);
-		document.removeEventListener('pointerlockchange', handlePointerLockChange);
+		document.removeEventListener(
+			'pointerlockchange',
+			handlePointerLockChange
+		);
 	}, [handleMouseMove]);
 
 	const handlePointerLockChange = useCallback(() => {
@@ -129,29 +144,35 @@ function SliderNumber({
 		}
 	}, [stopDrag]);
 
-	const handlePointerDown = useCallback(async (event: PointerEvent<HTMLInputElement>) => {
-		event.currentTarget.focus();
-		dragRef.current = {
-			remainder: 0,
-			value,
-		};
-		document.addEventListener('mousemove', handleMouseMove);
-		document.addEventListener('mouseup', stopDrag);
-		document.addEventListener('pointerlockchange', handlePointerLockChange);
+	const handlePointerDown = useCallback(
+		async (event: PointerEvent<HTMLInputElement>) => {
+			event.currentTarget.focus();
+			dragRef.current = {
+				remainder: 0,
+				value,
+			};
+			document.addEventListener('mousemove', handleMouseMove);
+			document.addEventListener('mouseup', stopDrag);
+			document.addEventListener(
+				'pointerlockchange',
+				handlePointerLockChange
+			);
 
-		try {
-			await lockMouse(event.currentTarget);
-		} catch {
-			stopDrag();
-		}
-	}, [handleMouseMove, handlePointerLockChange, setValue, stopDrag, value]);
+			try {
+				await lockMouse(event.currentTarget);
+			} catch {
+				stopDrag();
+			}
+		},
+		[handleMouseMove, handlePointerLockChange, setValue, stopDrag, value]
+	);
 
 	return (
 		<input
 			ref={inputRef}
 			step={interval}
 			role="spinbutton"
-			className="cursor-ew-resize bg-red-500 flex text-center pixel-border-4 ring-amber-400"
+			className="pixel-border-4 flex cursor-ew-resize bg-red-500 text-center ring-amber-400"
 			value={value}
 			onChange={(event) => setValue(Number(event.target.value))}
 			data-step={interval}
@@ -169,89 +190,105 @@ function SliderNumber({
 	);
 }
 
-function vectorToTuple(vector: Vector3): [number, number, number] {
-	return [
-		Number(vector.x.toFixed(4)),
-		Number(vector.y.toFixed(4)),
-		Number(vector.z.toFixed(4)),
-	];
-}
-
-function eulerToTuple(euler: Euler): [number, number, number] {
-	return [
-		Number(euler.x.toFixed(4)),
-		Number(euler.y.toFixed(4)),
-		Number(euler.z.toFixed(4)),
-	];
-}
-
 function CubePartView() {
-	const {
-		dispatchCubeAction,
-		selectedCube,
-		selectedCubeId,
-		selectedCubeVersion,
-	} = useCubeActionBus();
+	const { dispatch, subscribe } = useCubeActionBus();
+	const [selectedCubeSnapshot, setSelectedCubeSnapshot] =
+		useState<CubeSnapshot | null>(null);
 
-	const size = useMemo(() => {
-		if (!selectedCube) return [0, 0, 0] as [number, number, number];
+	useEffect(() => {
+		const unsubscribeFromSelected = subscribe(
+			'cubeSelected',
+			({ snapshot }) => {
+				setSelectedCubeSnapshot(snapshot);
+			}
+		);
+		const unsubscribeFromChanged = subscribe(
+			'cubeChanged',
+			({ snapshot }) => {
+				setSelectedCubeSnapshot((currentSnapshot) => {
+					if (currentSnapshot?.id !== snapshot.id) {
+						return currentSnapshot;
+					}
 
-		return vectorToTuple(selectedCube.size);
-	}, [selectedCube, selectedCubeVersion]);
+					return snapshot;
+				});
+			}
+		);
+		const unsubscribeFromUnselected = subscribe(
+			'cubeUnselected',
+			({ cubeId }) => {
+				setSelectedCubeSnapshot((currentSnapshot) => {
+					if (currentSnapshot?.id !== cubeId) {
+						return currentSnapshot;
+					}
 
-	const position = useMemo(() => {
-		if (!selectedCube) return [0, 0, 0] as [number, number, number];
+					return null;
+				});
+			}
+		);
 
-		return vectorToTuple(selectedCube.position);
-	}, [selectedCube, selectedCubeVersion]);
+		return () => {
+			unsubscribeFromSelected();
+			unsubscribeFromChanged();
+			unsubscribeFromUnselected();
+		};
+	}, [subscribe]);
 
-	const rotation = useMemo(() => {
-		if (!selectedCube) return [0, 0, 0] as [number, number, number];
-
-		return eulerToTuple(selectedCube.rotation);
-	}, [selectedCube, selectedCubeVersion]);
+	const selectedCubeId = selectedCubeSnapshot?.id ?? null;
+	const size: Vec3Tuple = selectedCubeSnapshot?.size ?? [0, 0, 0];
+	const position: Vec3Tuple = selectedCubeSnapshot?.position ?? [0, 0, 0];
+	const rotation: Vec3Tuple = selectedCubeSnapshot?.rotation ?? [0, 0, 0];
 
 	const updateSize = useCallback(
-		(value: [number, number, number]) => {
+		(value: Vec3Tuple) => {
 			if (!selectedCubeId) return;
 
-			dispatchCubeAction(selectedCubeId, {
-				type: 'resize',
-				size: new Vector3(value[0], value[1], value[2]),
+			dispatch('cubeAction', {
+				action: {
+					type: 'resize',
+					size: new Vector3(value[0], value[1], value[2]),
+				},
+				cubeId: selectedCubeId,
 			});
 		},
-		[dispatchCubeAction, selectedCubeId]
+		[dispatch, selectedCubeId]
 	);
 
 	const updatePosition = useCallback(
-		(value: [number, number, number]) => {
+		(value: Vec3Tuple) => {
 			if (!selectedCubeId) return;
 
-			dispatchCubeAction(selectedCubeId, {
-				type: 'move',
-				position: new Vector3(value[0], value[1], value[2]),
+			dispatch('cubeAction', {
+				action: {
+					type: 'move',
+					position: new Vector3(value[0], value[1], value[2]),
+				},
+				cubeId: selectedCubeId,
 			});
 		},
-		[dispatchCubeAction, selectedCubeId]
+		[dispatch, selectedCubeId]
 	);
 
 	const updateRotation = useCallback(
-		(value: [number, number, number]) => {
+		(value: Vec3Tuple) => {
 			if (!selectedCubeId) return;
 
-			dispatchCubeAction(selectedCubeId, {
-				type: 'rotate',
-				rotation: new Euler(value[0], value[1], value[2]),
+			dispatch('cubeAction', {
+				action: {
+					type: 'rotate',
+					rotation: new Euler(value[0], value[1], value[2]),
+				},
+				cubeId: selectedCubeId,
 			});
 		},
-		[dispatchCubeAction, selectedCubeId]
+		[dispatch, selectedCubeId]
 	);
 
 	return (
 		<SideBarWidget name="Cube">
 			<div className="flex h-5/6 min-h-72 w-full flex-col items-center justify-center gap-1 overflow-scroll">
 				<p className="text-[0.5rem] text-gray-500">
-					{selectedCube?.name ?? 'No cube selected'}
+					{selectedCubeSnapshot?.name ?? 'No cube selected'}
 				</p>
 				<DisplayVec3
 					label="Size"

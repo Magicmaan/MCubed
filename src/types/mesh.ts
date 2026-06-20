@@ -7,7 +7,6 @@ import {
 	LineBasicMaterial,
 	LineSegments,
 	Material,
-	Matrix4,
 	Mesh,
 	MeshBasicMaterial,
 	Object3DEventMap,
@@ -29,7 +28,6 @@ type CubeEventMap = Object3DEventMap & {
 	move: object;
 	rotate: object;
 	resize: object;
-	transform: object;
 };
 
 export class TextureUV {
@@ -121,10 +119,6 @@ const CubeActionSchema = z.union([
 	z.object({
 		type: z.literal('resize'),
 		size: z.instanceof(Vector3),
-	}),
-	z.object({
-		type: z.literal('matrix'),
-		matrix: z.instanceof(Matrix4),
 	}),
 	z.object({
 		type: z.literal('select'),
@@ -264,7 +258,10 @@ export class Cube extends Mesh<BoxGeometry, Material | Material[], CubeEventMap>
 	}
 
 	resize(size: Vector3): void {
-		this._size.copy(this.sanitiseSize(size));
+		const nextSize = this.sanitiseSize(size);
+		if (this._size.equals(nextSize)) return;
+
+		this._size.copy(nextSize);
 		const previousGeometry = this.geometry;
 		const previousOutlineGeometry = this.selectionOutline.geometry;
 
@@ -280,13 +277,6 @@ export class Cube extends Mesh<BoxGeometry, Material | Material[], CubeEventMap>
 		this.dispatchEvent({ type: 'resize' });
 	}
 
-	applyMatrixTransform(matrix: Matrix4): void {
-		matrix.decompose(this.position, this.quaternion, this.scale);
-		this.updateMatrix();
-		this.updateMatrixWorld(true);
-		this.dispatchEvent({ type: 'transform' });
-	}
-
 	processAction(action: CubeAction): void {
 		CubeActionSchema.parse(action);
             
@@ -299,9 +289,6 @@ export class Cube extends Mesh<BoxGeometry, Material | Material[], CubeEventMap>
 				break;
 			case 'resize':
 				this.applyResizeAction(action);
-				break;
-			case 'matrix':
-				this.unimplementedAction(action.type);
 				break;
 			case 'select':
 				this.dispatchEvent({ type: 'select', action });
@@ -316,7 +303,6 @@ export class Cube extends Mesh<BoxGeometry, Material | Material[], CubeEventMap>
 	}
 
 	applyMoveAction(action: Extract<CubeAction, { type: 'move' }>): void {
-        console.log('Applying move action:', action.position);
 		this.move(action.position);
 	}
 
@@ -326,10 +312,6 @@ export class Cube extends Mesh<BoxGeometry, Material | Material[], CubeEventMap>
 
 	applyResizeAction(action: Extract<CubeAction, { type: 'resize' }>): void {
 		this.resize(action.size);
-	}
-
-	private unimplementedAction(type: CubeAction['type']): void {
-		console.warn(`Cube action "${type}" has not been implemented.`);
 	}
 
 	private sanitiseSize(size: Vector3): Vector3 {

@@ -11,6 +11,7 @@ import {
 import { PivotControls } from './custom_PivotControl';
 import { OnDragStartProps } from './custom_PivotControl/context';
 import { useCubeActionBus } from '../../events/cubeActionBus';
+import type { Cube } from '../../types/mesh';
 
 function PivotControlsComponent({
 	selectionAnchorRef,
@@ -23,10 +24,68 @@ function PivotControlsComponent({
 }) {
 	const pivotRef = useRef<THREE.Group<THREE.Object3DEventMap>>(null);
 	const [visible, setVisible] = useState(false);
+	const [selectedCube, setSelectedCube] = useState<Cube | null>(null);
+	const [selectedCubeVersion, setSelectedCubeVersion] = useState(0);
 	const dragComponent = useRef<OnDragStartProps['component'] | null>(null);
 	const resizeStartSize = useRef(new THREE.Vector3(1, 1, 1));
-	const { dispatchCubeAction, selectedCube, selectedCubeVersion } =
-		useCubeActionBus();
+	const mountedCubes = useRef(new Map<string, Cube>());
+	const { dispatch, subscribe } = useCubeActionBus();
+
+	useEffect(() => {
+		const unsubscribeFromMounted = subscribe('cubeMounted', ({ cube }) => {
+			mountedCubes.current.set(cube.cubeId, cube);
+		});
+		const unsubscribeFromUnmounted = subscribe(
+			'cubeUnmounted',
+			({ cubeId }) => {
+				mountedCubes.current.delete(cubeId);
+				setSelectedCube((currentCube) => {
+					if (currentCube?.cubeId !== cubeId) return currentCube;
+
+					return null;
+				});
+				setSelectedCubeVersion((version) => version + 1);
+			}
+		);
+		const unsubscribeFromSelected = subscribe(
+			'cubeSelected',
+			({ cube }) => {
+				mountedCubes.current.set(cube.cubeId, cube);
+				setSelectedCube(cube);
+				setSelectedCubeVersion((version) => version + 1);
+			}
+		);
+		const unsubscribeFromUnselected = subscribe(
+			'cubeUnselected',
+			({ cubeId }) => {
+				setSelectedCube((currentCube) => {
+					if (currentCube?.cubeId !== cubeId) return currentCube;
+
+					return null;
+				});
+				setSelectedCubeVersion((version) => version + 1);
+			}
+		);
+		const unsubscribeFromChanged = subscribe(
+			'cubeChanged',
+			({ snapshot }) => {
+				setSelectedCube((currentCube) => {
+					if (currentCube?.cubeId !== snapshot.id) return currentCube;
+
+					setSelectedCubeVersion((version) => version + 1);
+					return currentCube;
+				});
+			}
+		);
+
+		return () => {
+			unsubscribeFromMounted();
+			unsubscribeFromUnmounted();
+			unsubscribeFromSelected();
+			unsubscribeFromUnselected();
+			unsubscribeFromChanged();
+		};
+	}, [subscribe]);
 
 	const syncPivotToCube = useCallback(() => {
 		if (!selectedCube || !pivotRef.current) {
@@ -79,30 +138,37 @@ function PivotControlsComponent({
 			switch (dragComponent.current) {
 				case 'Arrow':
 				case 'Slider':
-					dispatchCubeAction(selectedCube.cubeId, {
-						type: 'move',
-						position,
+					dispatch('cubeAction', {
+						action: {
+							type: 'move',
+							position,
+						},
+						cubeId: selectedCube.cubeId,
 					});
 					break;
 				case 'Rotator':
-					dispatchCubeAction(selectedCube.cubeId, {
-						type: 'rotate',
-						rotation: new THREE.Euler().setFromQuaternion(
-							quaternion
-						),
+					dispatch('cubeAction', {
+						action: {
+							type: 'rotate',
+							rotation: new THREE.Euler().setFromQuaternion(
+								quaternion
+							),
+						},
+						cubeId: selectedCube.cubeId,
 					});
 					break;
 				case 'Sphere':
-					dispatchCubeAction(selectedCube.cubeId, {
-						type: 'resize',
-						size: resizeStartSize.current.clone().multiply(scale),
+					dispatch('cubeAction', {
+						action: {
+							type: 'resize',
+							size: resizeStartSize.current
+								.clone()
+								.multiply(scale),
+						},
+						cubeId: selectedCube.cubeId,
 					});
 					break;
 				default:
-					dispatchCubeAction(selectedCube.cubeId, {
-						type: 'matrix',
-						matrix,
-					});
 					break;
 			}
 
@@ -112,7 +178,7 @@ function PivotControlsComponent({
 			selectionAnchorRef.current?.updateMatrixWorld(true);
 			invalidate();
 		},
-		[dispatchCubeAction, selectedCube, selectionAnchorRef]
+		[dispatch, selectedCube, selectionAnchorRef]
 	);
 
 	const onDragEnd = useCallback(() => {
